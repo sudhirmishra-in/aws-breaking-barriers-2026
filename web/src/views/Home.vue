@@ -14,10 +14,13 @@ const entityLabel = computed(() => (state.me?.profile ? (s.value.entity as Recor
 onMounted(async () => { try { ov.value = await api.overview(); } catch (e) { err.value = (e as Error).message; } });
 </script>
 <template>
-  <section class="hero bg-grid fade-up" style="padding-bottom:1.25rem">
-    <span class="pill">{{ s.rolesLabel }}: {{ [isProducer ? s.roleProducer : "", isReviewer ? s.roleReviewer : ""].filter(Boolean).join(" · ") }}</span>
-    <h1><span class="text-gradient">{{ s.hello }}<template v-if="state.me?.profile">, {{ state.me.profile.displayName }}</template></span></h1>
-    <p v-if="isProducer">{{ s.about }}</p>
+  <section class="hero hero-compact fade-up">
+    <div>
+      <span class="pill">{{ s.rolesLabel }}: {{ [isProducer ? s.roleProducer : "", isReviewer ? s.roleReviewer : ""].filter(Boolean).join(" · ") }}</span>
+      <h1>{{ s.hello }}<template v-if="state.me?.profile">, {{ state.me.profile.displayName }}</template></h1>
+      <span class="bar" aria-hidden="true" />
+      <p v-if="isProducer">{{ s.about }}</p>
+    </div>
   </section>
   <p v-if="err" class="banner error" role="alert">{{ err }}</p>
 

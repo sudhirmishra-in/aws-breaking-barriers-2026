@@ -77,16 +77,19 @@ function reset() { conv.value = null; messages.value = []; error.value = null; }
 
   <!-- Landing -->
   <section v-else-if="!conv" class="fade-up">
-    <div class="hero bg-grid">
-      <span class="logo-mark brand-gradient" style="display:inline-grid;width:3rem;height:3rem;border-radius:.9rem"><Sprout :size="22" aria-hidden="true" /></span>
-      <h1><span class="text-gradient">{{ s.welcome }}</span></h1>
-      <p>{{ s.about }}</p>
-      <div class="seg" role="group" :aria-label="s.language">
-        <button :aria-pressed="startLang === 'en'" @click="startLang = 'en'">English</button>
-        <button :aria-pressed="startLang === 'es'" @click="startLang = 'es'">Español</button>
+    <div class="hero">
+      <div>
+        <h1>{{ s.welcome }}</h1>
+        <span class="bar" aria-hidden="true" />
+        <p>{{ s.about }}</p>
+        <div class="seg" role="group" :aria-label="s.language">
+          <button :aria-pressed="startLang === 'en'" @click="startLang = 'en'">English</button>
+          <button :aria-pressed="startLang === 'es'" @click="startLang = 'es'">Español</button>
+        </div>
+        <div><button class="btn primary" :disabled="busy" @click="start"><MessageCircle :size="16" aria-hidden="true" />{{ busy ? s.sending : s.start }}</button></div>
+        <div v-if="error" class="banner error" role="alert">{{ error.text }} <button v-if="error.retry" class="btn sm" @click="error.retry()">{{ s.retry }}</button></div>
       </div>
-      <div><button class="btn primary" :disabled="busy" @click="start"><MessageCircle :size="16" aria-hidden="true" />{{ busy ? s.sending : s.start }}</button></div>
-      <div v-if="error" class="banner error" role="alert" style="justify-content:center">{{ error.text }} <button v-if="error.retry" class="btn sm" @click="error.retry()">{{ s.retry }}</button></div>
+      <div class="hero-art" aria-hidden="true"><div class="disc"><Sprout :size="110" :stroke-width="1.25" /></div></div>
     </div>
     <div class="grid3">
       <div class="card feat"><span class="ic brand-gradient"><MessageCircle :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat1 }}</h3><p>{{ s.feat1d }}</p></div></div>

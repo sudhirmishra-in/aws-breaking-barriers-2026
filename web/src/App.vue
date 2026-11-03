@@ -44,4 +44,5 @@ const here = () => window.location.pathname;
     {{ s.signInPrompt }} <button class="btn sm" @click="signIn(here())">{{ s.signIn }}</button>
   </div>
   <main id="main"><RouterView /></main>
+  <footer class="foot">{{ s.protoNote }}</footer>
 </template>
