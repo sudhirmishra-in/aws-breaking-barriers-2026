@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "producer-exchange"
+version = "0.1.0"
+description = "Fair Trade USA Producer Exchange Agent: multi-turn Strands agent with layered memory"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.40",
+    "pydantic>=2.11,<3",
+    "strands-agents>=1.63,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+producer-exchange = "producer_exchange.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+markers = ["aws: needs AWS credentials and creates a temporary DynamoDB table"]
+addopts = "-m 'not aws'"
