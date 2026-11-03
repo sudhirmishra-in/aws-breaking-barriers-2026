@@ -1,0 +1,123 @@
+name: Deploy sandbox
+
+# Runs only after CI succeeded on a push to main (workflow_run), or manually from main.
+# The `sandbox` GitHub environment holds the approval rules; the AWS roles trust only that environment (deploy)
+# and the main branch (smoke). Pull-request workflows never reach this file's secrets or roles.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+# One deployment at a time per environment; a queued run waits instead of cancelling a deploy in progress.
+concurrency:
+  group: deploy-sandbox
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to sandbox
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: sandbox
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      sha: ${{ steps.sha.outputs.sha }}
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    steps:
+      - id: sha
+        env:
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          echo "sha=${RUN_SHA:-$GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.sha.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - name: Build agent package and web bundle (exactly what the stack deploys)
+        run: |
+          set -euo pipefail
+          ./scripts/build_agent.sh
+          npm run build -w web
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: gha-deploy-${{ github.run_id }}
+      - name: Require CDK bootstrap (one-time prerequisite)
+        run: |
+          set -euo pipefail
+          aws ssm get-parameter --name /cdk-bootstrap/hnb659fds/version --query Parameter.Value --output text >/dev/null \
+            || { echo "::error::CDK is not bootstrapped in this account/region. An administrator must run: npx cdk bootstrap"; exit 1; }
+      - name: cdk deploy (Cognito, API, AgentCore Runtime, Guardrail, data stores, web hosting and config)
+        working-directory: infra
+        env:
+          GIT_SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          set -euo pipefail
+          npx cdk deploy FtusaExchange-sandbox --require-approval never --exclusively \
+            -c region="$AWS_REGION" -c gitSha="$GIT_SHA" -c enableCiClient=true \
+            --outputs-file "$RUNNER_TEMP/outputs.json"
+      - name: Record commit and non-secret outputs
+        env:
+          GIT_SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, os
+          o = json.load(open(os.environ["RUNNER_TEMP"] + "/outputs.json"))["FtusaExchange-sandbox"]
+          print("### Sandbox deployment")
+          print(f"- commit: `{os.environ['GIT_SHA']}`")
+          print(f"- web: {o['WebUrl']}")
+          print(f"- api: {o['ApiUrl']}")
+          print(f"- region: `{os.environ['AWS_REGION']}`")
+          print(f"- stack commit output: `{o['DeployedCommit']}`")
+          PY
+
+  smoke:
+    name: Smoke test sandbox
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.deploy.outputs.sha }}
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.13'
+      - run: uv sync --locked
+        working-directory: agent
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_SMOKE_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: gha-smoke-${{ github.run_id }}
+      - name: Smoke tests against the deployed sandbox (real Cognito, API, AgentCore, Bedrock)
+        env:
+          EXPECT_COMMIT: ${{ needs.deploy.outputs.sha }}
+        run: uv run --project agent python scripts/smoke_sandbox.py --stack FtusaExchange-sandbox --expect-commit "$EXPECT_COMMIT"

@@ -1,0 +1,64 @@
+# Architecture, trust, contracts, checklist
+
+## 1. Stack of Dreams reuse mapping (inspected, not assumed)
+| Stack of Dreams (inspected) | Here |
+|---|---|
+| Cognito, admin-created users, public PKCE client, scopes `openid email`, `oidc-client-ts`, tokens in memory | **Reused** (same pattern, new pool in this stack) |
+| API verifies Cognito *access* token (issuer, expiry, `token_use`, `client_id`); identity = `sub` only; unknown body fields rejected | **Reused**: JWT authorizer plus in-handler re-check; strict zod schemas |
+| API role needs both `InvokeAgentRuntime` and `InvokeAgentRuntimeForUser` | **Reused** |
+| Strands agent, AgentCore Runtime CodeZip, HTTP protocol, AWS_IAM invoke | **Reused** (defined in CDK instead of the agentcore CLI) |
+| Per-request limits, validation gateway, quotas | **Not reused** (out of this increment; tracked below) |
+| React 19 + Tailwind | **Diverged**: Vue 3 per the spec (approved) |
+| SAM + Python Lambdas + Function URL | **Diverged**: CDK TypeScript, TS Lambda, HTTP API (approved) |
+| us-east-2 only (org SCP) | **Diverged**: us-west-2 per instruction; verified reachable with profile `breaking-barriers-ny` |
+
+## 2. Architecture
+```mermaid
+flowchart LR
+  U[Browser: Vue 3] -- "PKCE code flow" --> C[Cognito user pool]
+  U -- "Bearer access token" --> A[HTTP API + JWT authorizer]
+  A --> L[API Lambda TS]
+  L --> D[(DynamoDB: conversations, outcomes)]
+  L -- "InvokeAgentRuntime (IAM)" --> R[AgentCore Runtime: Strands agent]
+  R -- "Converse + Guardrail" --> B[Bedrock model]
+  R -- "ApplyGuardrail (PII detect)" --> G[Guardrail]
+  CF[CloudFront + private S3] --> U
+```
+One CDK stack: KMS key, 2 DynamoDB tables (CMK), Cognito (groups `producer`, `reviewer`), HTTP API (throttled, access logs), Lambda (30-day logs), AgentCore Runtime + role, Guardrail + version, private S3 + CloudFront (OAC, security headers), error alarm. No VPC, no public data stores.
+
+## 3. Authentication and trusted context
+1. Browser signs in via Cognito (authorization code + PKCE, public client, no secret). Access token held **in memory only**; refresh re-runs the redirect (Cognito session cookie makes it silent). Trade-off: one redirect per page load, no script-readable long-lived token.
+2. API Gateway JWT authorizer checks signature, issuer, audience (`client_id`) and expiry. The Lambda re-checks `token_use=access`, client, issuer, exp; ID tokens are rejected.
+3. Identity = `sub`. Role = `cognito:groups` (`producer`/`reviewer`), checked in the service for every operation. Frontend route guards are UX only.
+4. `sub` -> producer profile is a server-written item (`PROFILE#<sub>`). Producer id, location, crop, entity type are **never read from the request**; strict schemas reject unknown fields.
+5. The backend builds the agent's trusted context (conversation id, language, mode, profile). The agent entry point binds tools to it by closure; no tool accepts a scope argument. Location/entity corrections from the producer are validated (entity allow-list) and stored as *assertions* only; they never change lookup scope.
+6. Foreign conversation ids return the same 404 as missing ones.
+
+## 4. Conversation state, consent, retention
+`workflow`: `intake -> playback_pending -> guidance_pending -> consent_pending -> closed`. Transitions are made by the application: the agent only *proposes* a playback (ignored before 2 user turns) or summary. `consent`: `unanswered|granted|declined`; `confirmation`: `none|pending|confirmed`.
+- AgentCore session id = `ftusa-conv-<conversationId>`. The backend resends history each turn, so a runtime session expiry loses nothing (the session is a cache, not the source of truth). Runtime idle timeout is 15 min (verify at deploy).
+- Retention (sandbox, shown in UI): active conversation messages expire 7 days after last activity (TTL; DynamoDB TTL deletion can lag up to ~48h); deleted immediately on finish. Closed conversation metadata (no narrative) kept 30 days. Idempotency ledger 24h. Consented summary lives in `outcomes` (PITR on) until review/deletion policy is decided [Decide].
+- Decline or early end: a `declined` outcome (owner, producer ref, timestamp, reason). No narrative. Not claimed as "nothing retained": CloudWatch/Bedrock/AgentCore operational logs and metadata may exist; app logs carry ids and events, never message text. AgentCore runtime logs payloads by default (see gaps).
+- Concurrency: per-conversation DynamoDB lock (120 s) -> second concurrent turn gets retryable 409 `turn_in_progress`. Retries: `requestId` ledger returns the stored response; outcome ids are deterministic per conversation (`rec-<id>` / `dec-<id>`) with conditional puts.
+
+## 5. API (all authenticated; JSON; errors `{error:{code,message,retryable,requestId}}`, header `x-request-id`)
+| Route | Role | Notes |
+|---|---|---|
+| `GET /me` | any | roles, trusted profile summary |
+| `POST /conversations` `{requestId,language}` | producer | creates or resumes the single active conversation |
+| `GET /conversations/current`, `GET /conversations/{id}` | producer, owner | restore after refresh |
+| `POST /conversations/{id}/messages` `{requestId,text}` | owner | 409 `playback_required` while a playback is pending |
+| `POST /conversations/{id}/playback` `{requestId,decision:confirm|correct,correction?,profileCorrection?}` | owner | confirm triggers the guidance turn |
+| `POST /conversations/{id}/consent` `{requestId,storeSummary}` | owner | only in `consent_pending` |
+| `POST /conversations/{id}/end` `{requestId}` | owner | narrative-free declined outcome |
+| `GET /reviews`, `GET /reviews/{id}`, `PUT /reviews/{id}` `{requestId,decision:approve|correct,...}` | reviewer | declined outcomes are not reviewable |
+Codes: 400 `validation_error`, 401 `unauthorized`, 403 `forbidden`/`no_profile`, 404 `not_found`, 409 `turn_in_progress|playback_required|wrong_state|conversation_closed|stale_state|already_reviewed`, 502 `agent_unavailable` (retryable; state unchanged), 500 `internal_error`. Contracts: `backend/src/contracts.ts`; agent contract: `agent/app/exchange/context.py`.
+
+## 6. Guardrails and PII
+Guardrail content filters apply on every model call (`BedrockModel(guardrail_id, guardrail_version, trace disabled)`). PII entities are configured with action `NONE` (detect, no mask/block) in the CDK template. The agent also calls `ApplyGuardrail` (INPUT) on each producer message and keeps only the entity **types** -> `piiFlag` on the conversation and record. **Unverified until deployed**: that detect-only PII filters are accepted by the service with `action: NONE` and that `ApplyGuardrail` returns assessments for them. If rejected, the decision is: Comprehend `DetectPiiEntities` (as the PRD recommends) or a BLOCK/ANONYMIZE guardrail (conflicts with flag-not-redact).
+
+## 7. Implemented vs remaining
+Implemented (code + local mocks + synth): sign-in/out, protected routes, session-expiry handling, server-side role checks, profile resolution, conversation create/resume/restore, multi-turn chat, playback confirm/correct, deterministic gates, separate storage consent, decline/end, minimal reviewer list/detail/approve/correct, EN/ES UI, synthetic label, idempotency + locking, evidence-unavailable tool contracts, CDK stack.
+**Not verified (needs deployment):** real Cognito login, JWT authorizer behaviour, real AgentCore invocation and session behavior, Bedrock model access, Strands structured output on the live model, Spanish quality, guardrail PII detect mode, DynamoDB conditional behavior, CloudFront/CSP with Cognito.
+**Remaining MVP (explicitly not done):** evidence grounding (regional context, Athena/Glue), peer examples, standards (APS/FPS) validation and per-claim citations, the 11-tag set and tagging, bilingual record quality evaluation, Comprehend/PII handling decision, evaluation harness (tag agreement >= 80%, 0 cross-producer returns, 100% cited), warehouse joins to Premium/survey/certification data, out-of-scope refusal tests with real model, per-user quotas/cost caps (Stack of Dreams has these), KMS-encrypted/limited runtime log retention, CI/one-command deploy polish, feedback capture ("was this helpful?"), accessibility audit, real FTUSA sign-off.
+**Decisions open:** storage-consent timing (implemented: after guidance, plus end-anytime), model choice/access, outcome retention after review, whether to keep AgentCore runtime payload logging for PII workloads.

@@ -1,0 +1,33 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional producers, places and notes. Not real FTUSA data.",
+  "producers": [
+    {
+      "producerId": "SYN-P-001",
+      "seedUsername": "producer.demo1@example.com",
+      "preferredLanguage": "en",
+      "displayName": "Synthetic Producer One",
+      "entityType": "cooperative",
+      "location": "Synthetic Highlands (fictional region)",
+      "crop": "coffee",
+      "history": [
+        {"period": "synthetic-year-1", "note": "Synthetic record: invested a Premium in a shared drying patio."},
+        {"period": "synthetic-year-2", "note": "Synthetic record: reported lower yield after a late rainy season."}
+      ]
+    },
+    {
+      "producerId": "SYN-P-002",
+      "seedUsername": "productor.demo2@example.com",
+      "preferredLanguage": "es",
+      "displayName": "Productor Sintetico Dos",
+      "entityType": "smallholder",
+      "location": "Valle Sintetico (region ficticia)",
+      "crop": "cacao",
+      "history": [
+        {"period": "synthetic-year-1", "note": "Synthetic record: Premium used for fermentation boxes."}
+      ]
+    }
+  ],
+  "reviewers": [
+    {"seedUsername": "reviewer.demo@example.com", "displayName": "Synthetic Reviewer"}
+  ]
+}

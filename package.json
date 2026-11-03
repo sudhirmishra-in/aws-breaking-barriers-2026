@@ -1,0 +1,18 @@
+{
+  "name": "ftusa-producer-exchange",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "infra",
+    "backend",
+    "web"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck -ws",
+    "test": "npm run test -ws --if-present",
+    "build:web": "npm run build -w web",
+    "synth": "npm run synth -w infra",
+    "lint": "npm run lint -w web",
+    "build": "npm run build -w web && npm run build -w backend"
+  }
+}

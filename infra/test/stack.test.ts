@@ -1,0 +1,49 @@
+// Template assertions on the synthesized stack. No AWS calls.
+import { describe, expect, it } from "vitest";
+import * as cdk from "aws-cdk-lib";
+import { Template, Match } from "aws-cdk-lib/assertions";
+import { ExchangeStack } from "../lib/exchange-stack";
+
+const app = new cdk.App();
+const stack = new ExchangeStack(app, "T", {
+  env: { account: "111111111111", region: "us-west-2" }, envName: "test", modelId: "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  extraCallbackUrls: ["http://localhost:5173/auth/callback"], extraLogoutUrls: ["http://localhost:5173/"],
+  agentZip: "../agent/dist/agent.zip", webDist: "../web/dist", gitSha: "abc123", enableCiClient: true,
+});
+const t = Template.fromStack(stack);
+
+describe("stack", () => {
+  it("uses a public PKCE client without a secret and no password flows", () => {
+    t.hasResourceProperties("AWS::Cognito::UserPoolClient", { GenerateSecret: false, AllowedOAuthFlows: ["code"], ExplicitAuthFlows: Match.absent() });
+  });
+  it("disables self sign-up", () => t.hasResourceProperties("AWS::Cognito::UserPool", { AdminCreateUserConfig: { AllowAdminCreateUserOnly: true } }));
+  it("authorises the API with a JWT authorizer", () => t.hasResourceProperties("AWS::ApiGatewayV2::Authorizer", { AuthorizerType: "JWT" }));
+  it("guardrail PII filters are detect-only", () => {
+    const g = Object.values(t.findResources("AWS::Bedrock::Guardrail"))[0] as any;
+    for (const e of g.Properties.SensitiveInformationPolicyConfig.PiiEntitiesConfig) expect([e.Action, e.InputAction, e.OutputAction]).toEqual(["NONE", "NONE", "NONE"]);
+  });
+  it("runtime is IAM-authorised code zip on python 3.13", () => {
+    t.hasResourceProperties("AWS::BedrockAgentCore::Runtime", { ProtocolConfiguration: "HTTP", AgentRuntimeArtifact: { CodeConfiguration: Match.objectLike({ Runtime: "PYTHON_3_13" }) } });
+    expect(JSON.stringify(Object.values(t.findResources("AWS::BedrockAgentCore::Runtime"))[0])).not.toContain("AuthorizerConfiguration");
+  });
+  it("tables are encrypted with a CMK and the web bucket blocks public access", () => {
+    t.allResourcesProperties("AWS::DynamoDB::GlobalTable", { SSESpecification: Match.objectLike({ SSEEnabled: true, SSEType: "KMS" }) });
+    t.hasResourceProperties("AWS::S3::Bucket", { PublicAccessBlockConfiguration: { BlockPublicAcls: true, RestrictPublicBuckets: true } });
+  });
+});
+
+import { CiRolesStack } from "../lib/ci-roles-stack";
+describe("ci roles", () => {
+  const ci = Template.fromStack(new CiRolesStack(new cdk.App(), "C", { env: { account: "111111111111", region: "us-west-2" }, envName: "sandbox", githubRepo: "o/r", deployBranch: "main", createOidcProvider: true }));
+  it("trusts only the named repo, with exact sub conditions and the STS audience", () => {
+    const roles = Object.values(ci.findResources("AWS::IAM::Role")) as any[];
+    const subs = roles.map((r) => JSON.stringify(r.Properties.AssumeRolePolicyDocument)).filter((x) => x.includes("AssumeRoleWithWebIdentity"));
+    expect(subs).toHaveLength(2);
+    expect(subs.some((s) => s.includes("repo:o/r:environment:sandbox"))).toBe(true);
+    expect(subs.some((s) => s.includes("repo:o/r:ref:refs/heads/main"))).toBe(true);
+    for (const s of subs) { expect(s).toContain("sts.amazonaws.com"); expect(s).not.toContain("StringLike"); expect(s).not.toContain("repo:o/r:*"); }
+  });
+  it("no role carries wildcard admin", () => {
+    expect(JSON.stringify(ci.toJSON())).not.toMatch(/"Action":"\*"|"Action":\["\*"\]/);
+  });
+});
