@@ -1,0 +1,796 @@
+<title>Producer Exchange Memory Replay</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: the compiled prompt sits in the middle, fed by L1 on the left and L0 on the right. Each scene says what changed. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --sunken: #f4f6f8;
+  --ink: #131a22;
+  --muted: #566270;
+  --line: #d5dbe2;
+  --read: #1f5fbf;
+  --read-soft: #e3edfb;
+  --write: #bb4d0c;
+  --write-soft: #fbeadf;
+  --person: #0b7a58;
+  --person-soft: #dff3ec;
+  --blocked: #a32f3f;
+  --blocked-soft: #f9e4e7;
+  --bar: #9aa9b9;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1419; --surface: #182029; --sunken: #121920; --ink: #e6ebf0; --muted: #9dabb8; --line: #2e3a46;
+    --read: #7fb2ff; --read-soft: #182c47; --write: #f59a5e; --write-soft: #3a2415;
+    --person: #4fd1a5; --person-soft: #123229; --blocked: #f28b99; --blocked-soft: #3b1c22; --bar: #5e6e7d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1419; --surface: #182029; --sunken: #121920; --ink: #e6ebf0; --muted: #9dabb8; --line: #2e3a46;
+  --read: #7fb2ff; --read-soft: #182c47; --write: #f59a5e; --write-soft: #3a2415;
+  --person: #4fd1a5; --person-soft: #123229; --blocked: #f28b99; --blocked-soft: #3b1c22; --bar: #5e6e7d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+button, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--read); outline-offset: 2px; }
+code { font-family: var(--font-mono); font-size: .92em; }
+.wrap { max-width: 1480px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px 56px; display: grid; gap: 8px; }
+
+header { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: baseline; justify-content: space-between; }
+h1 { font-family: var(--font-display); font-size: clamp(22px, 2.3vw, 27px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.lead { margin: 0; color: var(--muted); font-size: 13px; flex: 1 1 380px; }
+.legend { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 12.5px; color: var(--muted); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.legend i { width: 18px; border-top: 3px solid; border-radius: 2px; }
+
+/* Rail: one bar per model run, grouped into chapters. */
+.rail-box { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px 4px; display: grid; gap: 2px; }
+.rail-scroll { overflow-x: auto; }
+.rail { display: flex; gap: 12px; min-width: 900px; }
+.group { display: grid; gap: 1px; min-width: 0; }
+.group-title { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.group-title span { font-weight: 400; }
+.chapters { display: grid; gap: 3px; }
+.chapter { background: none; border: 0; border-top: 3px solid var(--line); padding: 0 1px 1px; display: grid; grid-template-rows: 26px auto; gap: 2px; text-align: left; min-width: 0; }
+.chapter:hover { border-top-color: var(--muted); }
+.chapter.past { border-top-color: var(--bar); }
+.chapter.on { border-top-color: var(--read); }
+.chapter .bars { display: flex; align-items: flex-end; gap: 2px; height: 26px; }
+.chapter .bar { flex: 1 1 0; max-width: 18px; background: var(--bar); border-radius: 3px 3px 0 0; min-height: 3px; }
+.chapter .bar.on { background: var(--read); }
+.chapter .nobar { font-size: 10.5px; color: var(--muted); align-self: flex-end; white-space: nowrap; }
+.chapter .name { font-size: 12px; font-weight: 500; white-space: nowrap; }
+.chapter.on .name { font-weight: 600; }
+.tip { position: fixed; z-index: 30; background: var(--ink); color: var(--surface); font-size: 12px; padding: 4px 8px; border-radius: 4px; pointer-events: none; white-space: nowrap; }
+
+/* The scene: controls, narration and exactly what changed. */
+.now { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 8; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 16px; align-items: start; }
+.controls { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; max-width: 270px; }
+.controls button { border: 1px solid var(--line); background: var(--sunken); border-radius: 4px; padding: 4px 9px; min-height: 32px; }
+.controls button:hover { background: var(--bg); }
+#play { background: var(--ink); color: var(--surface); border-color: var(--ink); font-weight: 600; min-width: 70px; }
+#play:hover { background: var(--ink); opacity: .88; }
+.controls label { font-size: 12.5px; color: var(--muted); display: inline-flex; gap: 4px; align-items: center; }
+.controls select { border: 1px solid var(--line); background: var(--sunken); border-radius: 4px; padding: 4px; min-height: 32px; }
+.stepno { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; flex-basis: 100%; }
+.tell { min-width: 0; display: grid; gap: 3px; }
+.where { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.tell p { margin: 0; font-size: 15.5px; line-height: 1.35; min-height: 2.7em; max-width: 118ch; }
+.deltas { display: grid; gap: 2px; min-height: 22px; }
+.delta { display: flex; gap: 5px; flex-wrap: wrap; align-items: baseline; font-size: 12px; }
+.delta b { font-weight: 600; width: 56px; flex: none; }
+.delta.p b { color: var(--read); }
+.delta.m b { color: var(--write); }
+.delta.l b { color: var(--person); }
+.delta span { font-family: var(--font-mono); font-size: 11px; padding: 0 5px; border-radius: 3px; overflow-wrap: anywhere; }
+.delta.p span { background: var(--read-soft); }
+.delta.m span { background: var(--write-soft); }
+.delta.l span { background: var(--person-soft); }
+
+.panes { display: grid; grid-template-columns: minmax(280px, .9fr) minmax(400px, 1.22fr) minmax(350px, 1.08fr); gap: 8px; align-items: start; }
+.col { display: grid; gap: 8px; min-width: 0; }
+.pane { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 0; display: grid; }
+.pane > h2 { font-family: var(--font-display); font-size: 15.5px; margin: 0; padding: 6px 10px 5px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.pane h2 small { font-family: var(--font-body); font-size: 11.5px; font-weight: 400; color: var(--muted); }
+.lbl { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+
+/* Conversation */
+.conv { position: relative; display: grid; gap: 6px; padding: 8px 10px; height: 318px; overflow-y: auto; align-content: start; }
+.bubble { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-width: 0; }
+.bubble.producer { background: var(--person-soft); border-color: transparent; }
+.bubble.agent { background: var(--sunken); }
+.bubble.latest { box-shadow: 0 0 0 2px var(--read); }
+.who { font-size: 11px; font-weight: 600; color: var(--muted); }
+.es { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+.es.long { max-height: 130px; overflow-y: auto; font-size: 12px; }
+.en { margin-top: 3px; padding-top: 3px; border-top: 1px dashed var(--line); color: var(--muted); font-size: 12px; }
+
+/* Prompt */
+.model { margin: 7px 10px 0; padding: 4px 8px; border-radius: 4px; background: var(--sunken); border: 1px solid var(--line); display: grid; }
+.model b { font-size: 12.5px; }
+.model span { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.toolbox { padding: 6px 10px 0; display: grid; gap: 3px; }
+.chips { display: flex; flex-wrap: wrap; gap: 3px; }
+.chip { font-family: var(--font-mono); font-size: 10.5px; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); opacity: .5; transition: opacity .25s, background .25s; }
+.chip.avail { opacity: 1; color: var(--ink); background: var(--read-soft); border-color: transparent; }
+.chip.called { opacity: 1; color: var(--ink); background: var(--write-soft); border-color: var(--write); }
+.blocks { display: grid; gap: 3px; padding: 6px 10px; }
+.block { width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 3px 7px 4px; display: grid; gap: 1px; min-width: 0; transition: background .25s, opacity .25s; }
+.block:hover { border-color: var(--muted); }
+.block .top { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; font-weight: 600; }
+.block .top em { font-style: normal; font-weight: 400; color: var(--muted); font-size: 11.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.block .from { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+.block .track { height: 3px; background: var(--sunken); border-radius: 2px; overflow: hidden; }
+.block .fill { display: block; height: 100%; background: var(--read); width: 0; transition: width .6s cubic-bezier(.3,0,.2,1); }
+.block .sum { font-family: var(--font-mono); font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.block .chg { font-size: 11.5px; font-weight: 600; color: var(--read); overflow-wrap: anywhere; }
+.block.off { opacity: .55; background: var(--sunken); border-style: dashed; padding: 1px 7px; }
+.block.off .track, .block.off .sum, .block.off .chg { display: none; }
+.block.changed { background: var(--read-soft); border-color: var(--read); }
+.blocks.idle .block:not(.off) { opacity: .62; }
+.chips.idle .chip { opacity: .35; }
+.exact { margin: 0 0 2px; padding: 7px; background: var(--sunken); border: 1px solid var(--line); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; max-height: 260px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.callbox { padding: 0 10px 8px; display: grid; gap: 3px; }
+.calls { display: grid; gap: 3px; }
+.call { border-left: 3px solid var(--write); background: var(--sunken); padding: 2px 7px; font-size: 11.5px; min-width: 0; }
+.call .n { font-family: var(--font-mono); font-weight: 500; font-size: 11px; }
+.call .a { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); overflow-wrap: anywhere; }
+.call .r { color: var(--muted); font-size: 11px; }
+
+/* Memory */
+.mem { padding: 6px 10px 8px; display: grid; gap: 5px; }
+.track-stage { display: flex; gap: 2px; flex-wrap: wrap; }
+.track-stage span { font-family: var(--font-mono); font-size: 10.5px; padding: 1px 5px; background: var(--sunken); color: var(--muted); border-radius: 3px; }
+.track-stage span.on { background: var(--ink); color: var(--surface); }
+.memrow { border-radius: 3px; min-width: 0; }
+.memrow.fresh { background: var(--write-soft); box-shadow: 0 0 0 3px var(--write-soft); }
+.slots { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0 8px; font-size: 11.5px; margin: 0; }
+.slots dt { color: var(--muted); font-family: var(--font-mono); font-size: 10.5px; }
+.slots dd { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.slots dd.none { color: var(--muted); }
+.slots dd.fresh { background: var(--write-soft); border-radius: 2px; }
+.line { font-size: 11.5px; overflow-wrap: anywhere; }
+.line.none { color: var(--muted); }
+.line code { font-size: 10.5px; }
+.line small { font-size: 10.5px; color: var(--muted); }
+.ledger { display: grid; gap: 1px 8px; font-size: 11px; grid-template-columns: max-content minmax(0, 1fr); align-items: center; }
+.ledger .g { color: var(--muted); }
+.ledger .ids { display: flex; flex-wrap: wrap; gap: 2px; min-height: 17px; }
+.ledger .ids i { font-style: normal; font-family: var(--font-mono); font-size: 10px; padding: 0 3px; background: var(--write-soft); border-radius: 2px; }
+.ledger .ids .empty { background: none; color: var(--muted); padding: 0; }
+.ledger .ids .l1src { background: var(--person-soft); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+.stat { background: var(--sunken); border-radius: 3px; padding: 2px 5px; min-width: 0; }
+.stat span { display: block; font-size: 10.5px; color: var(--muted); }
+.stat b { font-size: 11.5px; font-weight: 500; overflow-wrap: anywhere; }
+.savebar { padding: 4px 10px; font-size: 11.5px; color: var(--muted); border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.savebar b { color: var(--ink); font-weight: 500; }
+.log { list-style: none; margin: 0; padding: 4px 10px 6px; height: 132px; overflow-y: auto; display: grid; gap: 1px; align-content: start; font-size: 11px; }
+.log li { display: grid; grid-template-columns: 22px 104px minmax(0, 1fr); gap: 5px; align-items: baseline; padding: 0 3px; border-radius: 2px; border-left: 2px solid transparent; }
+.log .q { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.log .t { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+.log .d { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log li.new { background: var(--write-soft); }
+.log li.unsaved { border-left: 2px dashed var(--write); }
+.log .nolog { display: block; color: var(--muted); }
+.l1 { width: 100%; border-collapse: collapse; font-size: 11.5px; table-layout: fixed; }
+.l1 th { font-size: 10.5px; color: var(--muted); font-weight: 600; text-align: left; padding: 1px 3px; }
+.l1 td { padding: 2px 3px; border-top: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+.l1 td:first-child { font-family: var(--font-mono); font-size: 10px; color: var(--muted); width: 24%; }
+.l1 .nil { color: var(--muted); }
+.l1 .is-pending { background: var(--write-soft); }
+.l1 .is-reviewed { background: var(--person-soft); }
+.l1 small { display: block; font-size: 10.5px; color: var(--muted); }
+.l1 s { color: var(--muted); }
+.note { font-size: 11.5px; color: var(--muted); margin: 0; }
+.sources { font-size: 11.5px; background: var(--sunken); border: 1px dashed var(--line); border-radius: 4px; padding: 3px 7px; }
+
+.flash-read { animation: flashR .9s ease-out; }
+.flash-write { animation: flashW .9s ease-out; }
+.flash-person { animation: flashP .9s ease-out; }
+@keyframes flashR { 0% { box-shadow: 0 0 0 3px var(--read); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@keyframes flashW { 0% { box-shadow: 0 0 0 3px var(--write); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@keyframes flashP { 0% { box-shadow: 0 0 0 3px var(--person); } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+#flowlines { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+.flyer { position: fixed; left: 0; top: 0; z-index: 21; pointer-events: none; font-family: var(--font-mono); font-size: 11px; padding: 2px 7px; border-radius: 10px; white-space: nowrap; color: #fff; }
+.flyer.read { background: var(--read); }
+.flyer.write { background: var(--write); }
+.flyer.person { background: var(--person); }
+.flyer.model { background: var(--ink); color: var(--surface); }
+.flyer.blocked { background: var(--blocked); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .flyer:not(.model) { color: #0f1419; } }
+:root[data-theme="dark"] .flyer:not(.model) { color: #0f1419; }
+
+.below { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 8px; align-items: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.card h2 { font-family: var(--font-display); font-size: 17px; margin: 0 0 7px; }
+.notice { display: grid; gap: 5px; }
+.notice button { text-align: left; border: 1px solid var(--line); border-radius: 4px; background: var(--sunken); padding: 5px 9px; display: grid; }
+.notice button:hover { border-color: var(--read); }
+.notice b { font-size: 13px; font-weight: 600; }
+.notice span { font-size: 12.5px; color: var(--muted); }
+.tablewrap { overflow-x: auto; }
+table.runs { border-collapse: collapse; width: 100%; font-size: 12px; min-width: 520px; font-variant-numeric: tabular-nums; }
+table.runs th { text-align: left; font-size: 11px; color: var(--muted); padding: 2px 8px 2px 0; font-weight: 600; }
+table.runs td { padding: 2px 8px 2px 0; border-top: 1px solid var(--line); vertical-align: top; }
+table.runs .num { text-align: right; }
+table.runs tbody tr { cursor: pointer; }
+table.runs tbody tr:hover td { background: var(--sunken); }
+table.runs tr.on td { background: var(--read-soft); }
+table.runs code { font-size: 10.5px; overflow-wrap: anywhere; }
+footer { font-size: 12px; color: var(--muted); max-width: 110ch; }
+
+@media (max-width: 1120px) {
+  .panes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .col.first { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .below { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .panes, .col.first { grid-template-columns: minmax(0, 1fr); }
+  .now { grid-template-columns: minmax(0, 1fr); position: static; }
+  .controls { max-width: none; }
+  .tell p { font-size: 14.5px; }
+  .conv { height: 280px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .block .fill, .chip, .block { transition: none; }
+  .flash-read, .flash-write, .flash-person { animation: none; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Producer Exchange Memory Replay</h1>
+    <p class="lead">A real run. Every prompt shown is what Amazon Bedrock received. Producers are synthetic, and drafts are not verified.</p>
+    <div class="legend" aria-label="Flow colors">
+      <span><i style="border-color:var(--read)"></i>Read into the prompt</span>
+      <span><i style="border-color:var(--write)"></i>Written to memory</span>
+      <span><i style="border-color:var(--person)"></i>Person decides</span>
+    </div>
+  </header>
+
+  <div class="rail-box">
+    <div class="rail-scroll"><div class="rail" id="rail"></div></div>
+  </div>
+
+  <section class="now" id="now" aria-label="Replay controls">
+    <div class="controls">
+      <button id="play" type="button">Pause</button>
+      <button id="prev" type="button" aria-label="Previous scene">Back</button>
+      <button id="next" type="button" aria-label="Next scene">Next</button>
+      <label for="speed">Speed
+        <select id="speed"><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+      </label>
+      <span class="stepno" id="stepno"></span>
+    </div>
+    <div class="tell">
+      <div class="where" id="where"></div>
+      <p id="narration" aria-live="polite"></p>
+      <div class="deltas" id="deltas"></div>
+    </div>
+  </section>
+
+  <div class="panes">
+    <div class="col first">
+      <section class="pane">
+        <h2>Conversation <small>Spanish, with English below</small></h2>
+        <div class="conv" id="conv"></div>
+      </section>
+      <section class="pane">
+        <h2>L1 producer profile <small>across exchanges, reviewed by people</small></h2>
+        <div class="mem">
+          <table class="l1">
+            <thead><tr><th>Field</th><th id="l1-registered">Registered</th><th id="l1-pending">Pending review</th><th id="l1-reviewed">Reviewed</th></tr></thead>
+            <tbody id="l1Body"></tbody>
+          </table>
+          <p class="note" id="l1Note"></p>
+          <div class="sources" id="data-sources"><b>Read-only data, not memory.</b> Own record, regional facts, peer cases, standards.</div>
+        </div>
+      </section>
+    </div>
+
+    <section class="pane">
+      <h2><span id="promptTitle">Prompt sent to the model</span> <small id="promptTotal"></small></h2>
+      <div class="model" id="ctx-model"><b id="modelTitle"></b><span id="modelStatus"></span></div>
+      <div class="toolbox">
+        <div class="lbl">Tools the model can see</div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="blocks" id="blocks"></div>
+      <div class="callbox">
+        <div class="lbl" id="callsLabel" hidden>Tool calls in this run</div>
+        <div class="calls" id="calls"></div>
+      </div>
+    </section>
+
+    <div class="col">
+      <section class="pane">
+        <h2>L0 state <small>overwritten on each save</small></h2>
+        <div class="mem">
+          <div id="mem-stage" class="memrow"><div class="track-stage" id="stageTrack"></div></div>
+          <div id="mem-understanding" class="memrow"><div class="lbl" id="underLabel"></div><dl class="slots" id="slots"></dl></div>
+          <div id="mem-notes" class="memrow"><div class="lbl">Notes</div><div class="line" id="notes"></div></div>
+          <div id="mem-facts" class="memrow"><div class="lbl">Staged profile facts</div><div class="line" id="facts"></div></div>
+          <div id="mem-playback" class="memrow"><div class="lbl">Playback</div><div class="line" id="playback"></div></div>
+          <div id="mem-evidence" class="memrow"><div class="lbl" id="ledgerLabel">Evidence ledger</div><div class="ledger" id="ledger"></div></div>
+          <div class="stats">
+            <div class="stat" id="mem-draft"><span>Draft</span><b id="sDraft"></b></div>
+            <div class="stat" id="mem-pii"><span>PII flags</span><b id="sPii"></b></div>
+            <div class="stat"><span>Committed</span><b id="sCommit"></b></div>
+          </div>
+        </div>
+      </section>
+      <section class="pane">
+        <h2>L0 event log <small>append-only, one document per event</small></h2>
+        <div class="savebar" id="savebar"></div>
+        <ol class="log" id="log-box"></ol>
+      </section>
+    </div>
+  </div>
+
+  <div class="below">
+    <section class="card">
+      <h2>What to watch for</h2>
+      <div class="notice" id="notice"></div>
+    </section>
+    <section class="card">
+      <h2>Every model run</h2>
+      <div class="tablewrap"><table class="runs" id="runs"></table></div>
+    </section>
+  </div>
+
+  <footer id="foot"></footer>
+</div>
+<svg id="flowlines" aria-hidden="true"></svg>
+<div class="tip" id="tip" hidden></div>
+
+<script id="replay-data" type="application/json">__REPLAY_DATA__</script>
+<script>
+(function () {
+  "use strict";
+  var DATA = JSON.parse(document.getElementById("replay-data").textContent);
+  var BEATS = DATA.beats, CHAPTERS = DATA.chapters, RUNS = DATA.runs, CONTEXTS = DATA.contexts, MEMORIES = DATA.memories, L1S = DATA.l1s;
+  var ALL_TOOLS = ["record_understanding", "confirm_understanding", "get_producer_record", "get_regional_context", "search_peer_examples", "retrieve_standards", "submit_guidance"];
+  var STAGES = ["clarify", "playback", "retrieve", "draft", "drafted"];
+  var SECTION_INFO = {
+    policy: ["Base policy", "fixed text"],
+    stage: ["Stage instructions", "stage spec"],
+    profile: ["Producer profile", "L1 view"],
+    past: ["Past reviewed exchanges", "L1 reviewed"],
+    working: ["Working memory", "L0 state"],
+    evidence: ["Evidence", "L0 ledger"],
+    draft: ["Draft", "L0 state"],
+    transcript: ["Transcript", "L0 log, text only, newest 12"]
+  };
+  var SECTION_ORDER = ["policy", "stage", "profile", "past", "working", "evidence", "draft", "transcript"];
+  var SLOT_ORDER = ["challenge", "onset", "severity", "actions_tried", "tags", "location_checked", "entity_type_checked"];
+  var GROUPS = ["Own record", "Regional", "Peers", "Standards"];
+  var reduced = false;
+  try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (text) { return String(text).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var fmt = function (n) { return Number(n).toLocaleString("en-US"); };
+
+  var current = 0, playing = !reduced, speed = 1, timers = [], flyers = [], openBlock = null, shownContext = null, lastUserScroll = 0;
+
+  function later(fn, ms) { var t = setTimeout(fn, ms); timers.push(t); return t; }
+  function clearAll() {
+    timers.forEach(clearTimeout); timers = [];
+    flyers.forEach(function (node) { if (node.parentNode) node.parentNode.removeChild(node); }); flyers = [];
+  }
+  function flash(el, kind) {
+    if (!el || reduced) return;
+    var cls = "flash-" + (kind === "model" || kind === "blocked" ? "read" : kind);
+    el.classList.remove("flash-read", "flash-write", "flash-person");
+    void el.offsetWidth;
+    el.classList.add(cls);
+  }
+
+  /* Static parts */
+  function buildRail() {
+    var rail = $("rail");
+    [["first", "First visit", "from open question to draft"], ["return", "Return visit", "after review"]].forEach(function (group) {
+      var chapters = CHAPTERS.map(function (ch, i) { return { ch: ch, i: i }; }).filter(function (item) { return item.ch.group === group[0]; });
+      var weight = chapters.reduce(function (sum, item) { return sum + Math.max(item.ch.runs.length, 1) + 1; }, 0);
+      var box = document.createElement("div");
+      box.className = "group"; box.style.flex = weight + " 1 0";
+      box.innerHTML = '<div class="group-title">' + group[1] + " <span>" + group[2] + '</span></div><div class="chapters" style="grid-template-columns:' + chapters.map(function (item) { return (Math.max(item.ch.runs.length, 1) + 1) + "fr"; }).join(" ") + '"></div>';
+      var host = box.querySelector(".chapters");
+      chapters.forEach(function (item) {
+        var button = document.createElement("button");
+        button.type = "button"; button.className = "chapter"; button.dataset.chapter = item.i;
+        button.setAttribute("aria-label", "Jump to " + group[1] + ", " + item.ch.label);
+        var bars = item.ch.runs.length
+          ? item.ch.runs.map(function (n) {
+              var h = Math.max(3, Math.round(26 * RUNS[n - 1].input / DATA.maxInput));
+              return '<span class="bar" data-run="' + n + '" style="height:' + h + 'px"></span>';
+            }).join("")
+          : '<span class="nobar">no model</span>';
+        button.innerHTML = '<span class="bars">' + bars + '</span><span class="name">' + esc(item.ch.label) + "</span>";
+        button.addEventListener("click", function () { pause(); show(item.ch.first, false); });
+        host.appendChild(button);
+      });
+      rail.appendChild(box);
+    });
+    var tip = $("tip");
+    rail.addEventListener("mousemove", function (event) {
+      var bar = event.target.closest ? event.target.closest(".bar") : null;
+      if (!bar) { tip.hidden = true; return; }
+      var run = RUNS[Number(bar.dataset.run) - 1];
+      tip.textContent = "Run " + run.n + ", " + run.stage + ": " + fmt(run.input) + " input, " + fmt(run.output) + " output tokens";
+      tip.hidden = false;
+      tip.style.left = Math.min(event.clientX + 12, window.innerWidth - tip.offsetWidth - 8) + "px";
+      tip.style.top = event.clientY + 16 + "px";
+    });
+    rail.addEventListener("mouseleave", function () { tip.hidden = true; });
+  }
+
+  function buildBlocks() {
+    var host = $("blocks");
+    SECTION_ORDER.forEach(function (key) {
+      var info = SECTION_INFO[key];
+      var button = document.createElement("button");
+      button.type = "button"; button.className = "block"; button.id = "ctx-" + key;
+      button.setAttribute("aria-expanded", "false");
+      button.innerHTML = '<span class="top"><span>' + esc(info[0]) + '<span class="from">' + esc(info[1]) + '</span></span><em class="chars"></em></span><span class="track"><span class="fill"></span></span><span class="sum"></span><span class="chg"></span>';
+      button.addEventListener("click", function () { toggleExact(key); });
+      host.appendChild(button);
+      var pre = document.createElement("pre");
+      pre.className = "exact"; pre.id = "exact-" + key; pre.hidden = true; pre.tabIndex = 0;
+      host.appendChild(pre);
+    });
+  }
+
+  function toggleExact(key) {
+    var was = openBlock;
+    if (openBlock) { $("exact-" + openBlock).hidden = true; $("ctx-" + openBlock).setAttribute("aria-expanded", "false"); openBlock = null; }
+    if (was !== key) {
+      pause();
+      openBlock = key;
+      var section = shownContext && shownContext.sections[key];
+      var pre = $("exact-" + key);
+      pre.textContent = section && section.text ? section.text : "Not sent at this stage.";
+      pre.hidden = false;
+      $("ctx-" + key).setAttribute("aria-expanded", "true");
+    }
+  }
+
+  function chapterIndex(key) { for (var i = 0; i < CHAPTERS.length; i++) if (CHAPTERS[i].key === key) return i; return -1; }
+
+  function buildBelow() {
+    var items = [
+      ["A1", "Turn 1: the log and the state are separate", "The state is overwritten. The log only grows, and the whole turn saves at once."],
+      ["A3", "Turn 3: a note, and no wasted write", "A detail with no slot becomes a note. Saved quotes are visible, so nothing is saved twice."],
+      ["A5", "Turn 5: a correction reopens playback", "The new version no longer matches what the producer saw, so it must be restated."],
+      ["A6", "Turn 6: one message, three stages", "The prompt, tools and memory sections change at each stage."],
+      ["commit1", "Commit: pending stays invisible", "A new exchange cannot see unreviewed facts."],
+      ["A3r", "Return 3: an old conversation becomes evidence", "A reviewed episode enters the ledger and is cited in the new draft."],
+      ["review2", "Second review: 360 supersedes 350", "The older fact stays in the history, marked with what replaced it."]
+    ];
+    var host = $("notice");
+    items.forEach(function (item) {
+      var key = item[0] === "A3r" ? "C3" : item[0];
+      var ch = CHAPTERS[chapterIndex(key)];
+      if (!ch) return;
+      var button = document.createElement("button");
+      button.type = "button";
+      button.innerHTML = "<b>" + esc(item[1]) + "</b><span>" + esc(item[2]) + "</span>";
+      button.addEventListener("click", function () { current = ch.first; window.scrollTo(0, 0); play(); });
+      host.appendChild(button);
+    });
+    var rows = RUNS.map(function (run) {
+      return '<tr data-beat="' + run.beat + '" data-run="' + run.n + '" tabindex="0"><td>' + run.n + "</td><td>" + esc(run.label) + "</td><td><code>" + esc(run.stage) + "</code></td><td><code>" +
+        esc(run.tools.join(", ") || "text only") + '</code></td><td class="num">' + fmt(run.input) + '</td><td class="num">' + fmt(run.output) + '</td><td class="num">' + run.seconds.toFixed(1) + "</td></tr>";
+    }).join("");
+    $("runs").innerHTML = '<thead><tr><th>Run</th><th>Chapter</th><th>Stage</th><th>Tool calls</th><th class="num">Input tokens</th><th class="num">Output tokens</th><th class="num">Seconds</th></tr></thead><tbody>' + rows + "</tbody>";
+    var jump = function (event) {
+      var row = event.target.closest("tr[data-beat]");
+      if (!row) return;
+      if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault(); pause(); show(Number(row.dataset.beat), false); window.scrollTo(0, 0);
+    };
+    $("runs").addEventListener("click", jump);
+    $("runs").addEventListener("keydown", jump);
+    $("foot").innerHTML = "Recorded on 2026-11-03 with <code>scripts/smoke_test.py --trace</code>. Model <code>" + esc(DATA.model) + "</code>, real DynamoDB table, 29 of 29 checks passed. Total " + fmt(DATA.totals.input) + " input and " + fmt(DATA.totals.output) + " output tokens. Bars above show input tokens per model run. Regional figures and standards clauses are synthetic placeholders.";
+  }
+
+  /* Panes */
+  function renderConversation(state) {
+    var host = $("conv"), bubbles = (DATA.bubbles[state.conv] || []).slice(0, state.bubbles);
+    host.innerHTML = bubbles.map(function (bubble, index) {
+      var latest = index === bubbles.length - 1;
+      var who = bubble.label || (bubble.role === "producer" ? "Producer" : "Agent");
+      return '<div class="bubble ' + bubble.role + (latest ? " latest" : "") + '"' + (latest ? ' id="conv-latest"' : "") + '><div class="who">' + esc(who) + '</div><div class="es' + (bubble.long ? " long" : "") + '">' + esc(bubble.text) + '</div><div class="en">' + esc(bubble.gloss) + "</div></div>";
+    }).join("");
+    var latest = $("conv-latest");
+    if (latest) host.scrollTop = Math.max(0, latest.offsetTop - 6);
+  }
+
+  function renderPrompt(state, beat) {
+    var run = state.run !== null && state.run !== undefined ? RUNS[state.run] : null;
+    var settled = state.context === beat.final.context && state.run === beat.final.run;
+    var note = settled ? beat.final.status || "" : "";
+    var metrics = run ? fmt(run.input) + " tokens in, " + fmt(run.output) + " out, " + run.seconds.toFixed(1) + " s" : "";
+    $("modelTitle").textContent = run ? "Model run " + run.n + " of " + RUNS.length + ", stage " + run.stage : settled ? "No model call" : "Compiling the prompt";
+    $("modelStatus").textContent = (run ? [note, metrics].filter(Boolean).join(". ") : note.replace(/^No model call\.?\s*/, ""));
+    var context = state.context !== null && state.context !== undefined ? CONTEXTS[state.context] : null;
+    shownContext = context;
+    var preview = beat.kind === "preview" && state.context === beat.final.context;
+    var idle = !!context && !run && !preview;
+    $("promptTitle").textContent = preview ? "Prompt a new exchange would get" : idle ? "Last prompt sent" : "Prompt sent to the model";
+    $("blocks").classList.toggle("idle", idle);
+    $("chips").classList.toggle("idle", idle);
+    if (!context) {
+      $("promptTotal").textContent = "not sent yet";
+      SECTION_ORDER.forEach(function (key) { setBlock(key, { on: false, chars: 0 }, false); });
+      setChips([], []);
+      setCalls([]);
+      return;
+    }
+    $("promptTotal").textContent = fmt(context.total) + " characters";
+    var fresh = context !== (beat.start.context !== null && beat.start.context !== undefined ? CONTEXTS[beat.start.context] : null);
+    SECTION_ORDER.forEach(function (key) { setBlock(key, context.sections[key], fresh); });
+    if (openBlock) {
+      var section = context.sections[openBlock];
+      $("exact-" + openBlock).textContent = section && section.text ? section.text : "Not sent at this stage.";
+    }
+    var sameRun = state.callsRun === state.run;
+    setChips(context.tools, sameRun ? (state.calls || []).map(function (call) { return call.name; }) : []);
+    setCalls(state.calls || [], sameRun ? null : RUNS[state.callsRun]);
+  }
+
+  function setBlock(key, section, fresh) {
+    var node = $("ctx-" + key), change = fresh && section.change;
+    node.classList.toggle("off", !section.on);
+    node.classList.toggle("changed", !!(change && section.on));
+    node.querySelector(".chars").textContent = section.on ? fmt(section.chars) + " chars" : change === "removed" ? "just removed" : "not sent";
+    node.querySelector(".fill").style.width = section.on ? Math.max(1, 100 * section.chars / DATA.maxChars) + "%" : "0%";
+    node.querySelector(".sum").textContent = section.on ? section.summary || "" : "";
+    node.querySelector(".chg").textContent = change && section.on ? "Changed: " + change : "";
+  }
+
+  function setChips(available, called) {
+    $("chips").innerHTML = ALL_TOOLS.map(function (name) {
+      var cls = called.indexOf(name) >= 0 ? " called" : available.indexOf(name) >= 0 ? " avail" : "";
+      return '<span class="chip' + cls + '">' + esc(name) + "</span>";
+    }).join("");
+  }
+
+  function setCalls(calls, earlierRun) {
+    $("callsLabel").hidden = !calls.length;
+    $("callsLabel").textContent = earlierRun ? "Tool calls from run " + earlierRun.n + ", which caused this rebuild" : "Tool calls in this run";
+    $("calls").innerHTML = calls.map(function (call) {
+      return '<div class="call"><div class="n">' + esc(call.name) + (call.status !== "success" ? " (" + esc(call.status) + ")" : "") + '</div><div class="a">' + esc(call.args) + '</div><div class="r">Reason logged: ' + esc(call.reasoning) + "</div></div>";
+    }).join("");
+  }
+
+  function mark(id, on) { $(id).classList.toggle("fresh", !!on); }
+
+  function renderMemory(state, beat) {
+    var memory = MEMORIES[state.memory], before = MEMORIES[beat.start.memory];
+    if (before.exchange !== memory.exchange) before = memory;
+    $("stageTrack").innerHTML = STAGES.map(function (stage) { return '<span class="' + (stage === memory.phase ? "on" : "") + '">' + stage + "</span>"; }).join("");
+    $("underLabel").textContent = "Understanding v" + memory.version + ", " + memory.quotes.length + (memory.quotes.length === 1 ? " quote" : " quotes");
+    $("slots").innerHTML = SLOT_ORDER.map(function (slot) {
+      var value = memory.slots[slot], isNew = value && before.slots[slot] !== value;
+      return "<dt>" + slot + '</dt><dd class="' + (value ? (isNew ? "fresh" : "") : "none") + '" title="' + esc(value || "") + '">' + (value ? esc(value) : "empty") + "</dd>";
+    }).join("");
+    $("notes").className = "line" + (memory.notes.length ? "" : " none");
+    $("notes").textContent = memory.notes.length ? memory.notes.join("; ") : "None";
+    mark("mem-notes", memory.notes.length !== before.notes.length);
+    $("facts").className = "line" + (memory.facts.length ? "" : " none");
+    $("facts").innerHTML = memory.facts.length
+      ? memory.facts.map(function (fact) {
+          return "<code>" + esc(fact.field) + "</code> = <b>" + esc(fact.value) + "</b>" + (fact.since ? " <small>since " + esc(fact.since) + "</small>" : "") + " <small>" + (memory.factsApply ? "applies to this exchange" : "applies once confirmed") + "</small>";
+        }).join("<br>")
+      : "None";
+    mark("mem-facts", JSON.stringify(memory.facts) !== JSON.stringify(before.facts) || memory.factsApply !== before.factsApply);
+    var shown = memory.shown[0] !== null ? "v" + memory.shown[0] + " shown in turn " + memory.shown[1] : "Not shown yet";
+    $("playback").textContent = shown + (memory.confirmed !== null ? ". v" + memory.confirmed + " confirmed" : ". Not confirmed");
+    mark("mem-playback", String(memory.shown) !== String(before.shown) || memory.confirmed !== before.confirmed);
+    $("ledgerLabel").textContent = "Evidence ledger" + (memory.evidenceCount ? ", " + memory.evidenceCount + " items" : "");
+    $("ledger").innerHTML = GROUPS.map(function (group) {
+      var items = memory.evidence[group] || [];
+      var chips = items.length
+        ? items.map(function (item) { return '<i class="' + (/conversaci/i.test(item.label) ? "l1src" : "") + '" title="' + esc(item.label + ": " + item.fact) + '">' + esc(item.id) + "</i>"; }).join("")
+        : '<i class="empty">none</i>';
+      return '<span class="g">' + group + '</span><span class="ids">' + chips + "</span>";
+    }).join("");
+    mark("mem-evidence", memory.evidenceCount !== before.evidenceCount);
+    $("sDraft").textContent = memory.draft ? memory.draft.claims + " claims, " + memory.draft.gaps + " gaps" : "None";
+    $("sPii").textContent = memory.pii.length ? memory.pii.map(function (flag) { return flag.types.join(", ") + " (turn " + flag.turn + ")"; }).join("; ") : "None";
+    $("sCommit").textContent = memory.committed ? "Yes" : "No";
+    mark("mem-understanding", memory.version !== before.version || memory.quotes.length !== before.quotes.length);
+
+    var rows = DATA.logs[memory.exchange] || [], host = $("log-box");
+    var visible = rows.slice(0, memory.events);
+    var startCount = MEMORIES[beat.start.memory].exchange === memory.exchange ? MEMORIES[beat.start.memory].events : 0;
+    host.innerHTML = visible.length
+      ? visible.map(function (row, index) {
+          return '<li class="' + (index >= startCount ? "new " : "") + (index >= memory.saved ? "unsaved" : "") + '"><span class="q">' + row.seq + '</span><span class="t">' + esc(row.type) + '</span><span class="d" title="' + esc(row.detail) + '">' + esc(row.detail) + "</span></li>";
+        }).join("")
+      : '<li class="nolog"><span class="nolog">A new exchange starts with an empty log.</span></li>';
+    host.scrollTop = host.scrollHeight;
+    var waiting = memory.events - memory.saved;
+    $("savebar").innerHTML = visible.length
+      ? "State revision <b>" + memory.rev + "</b>. <b>" + memory.saved + "</b> events saved" + (waiting ? ", <b>" + waiting + "</b> waiting (dashed) for the atomic save at the end of the turn." : ".")
+      : "Nothing saved beyond the empty state.";
+  }
+
+  function renderL1(state) {
+    var l1 = L1S[state.l1];
+    var cell = function (value, cls, extra) { return value ? '<td class="' + cls + '">' + esc(value) + (extra || "") + "</td>" : '<td class="nil">None</td>'; };
+    var rows = ["entity_type", "member_count"].map(function (field) {
+      var row = l1.rows[field];
+      var extra = (row.since ? "<small>since " + esc(row.since) + "</small>" : "") + row.superseded.map(function (old) { return "<small>replaced <s>" + esc(old) + "</s></small>"; }).join("");
+      return "<tr><td>" + field + "</td><td>" + esc(row.registered) + "</td>" + cell(row.pending, "is-pending") + cell(row.reviewed, "is-reviewed", extra) + "</tr>";
+    });
+    var eps = function (list, cls) { return list.length ? '<td class="' + cls + '">' + list.length + (list.length === 1 ? " episode" : " episodes") + "<small>" + esc(list[list.length - 1]) + "</small></td>" : '<td class="nil">None</td>'; };
+    rows.push('<tr><td>episodes</td><td class="nil">None</td>' + eps(l1.episodes.pending, "is-pending") + eps(l1.episodes.reviewed, "is-reviewed") + "</tr>");
+    $("l1Body").innerHTML = rows.join("");
+    $("l1Note").textContent = l1.org + ", " + l1.location + ", " + l1.crops + ". Location and crop scope never change through conversation." + (l1.pii.length ? " PII flagged for the reviewer: " + l1.pii.join(", ") + "." : "");
+  }
+
+  function applyState(state, beat) {
+    renderConversation(state); renderPrompt(state, beat); renderMemory(state, beat); renderL1(state);
+  }
+
+  function renderChrome(beat, index) {
+    var chapter = CHAPTERS[beat.chapter];
+    $("where").textContent = (chapter.group === "return" && chapter.label.indexOf("Return") !== 0 ? "Return visit, " : "") + chapter.label + ". " + beat.where;
+    $("narration").textContent = beat.narration;
+    $("stepno").textContent = "Scene " + (index + 1) + " of " + BEATS.length;
+    $("play").textContent = playing ? "Pause" : index >= BEATS.length - 1 ? "Replay" : "Play";
+    var line = function (cls, label, items) {
+      return items.length ? '<div class="delta ' + cls + '"><b>' + label + "</b>" + items.map(function (item) { return "<span>" + esc(item) + "</span>"; }).join("") + "</div>" : "";
+    };
+    $("deltas").innerHTML = line("p", beat.kind === "preview" ? "In prompt" : "Prompt", beat.delta.prompt) + line("m", "L0", beat.delta.memory) + line("l", "L1", beat.delta.l1);
+    $("rail").querySelectorAll(".chapter").forEach(function (node) {
+      var i = Number(node.dataset.chapter);
+      node.classList.toggle("on", i === beat.chapter);
+      node.classList.toggle("past", i < beat.chapter);
+    });
+    var run = beat.final.run !== null && beat.final.run !== undefined ? RUNS[beat.final.run].n : null;
+    $("rail").querySelectorAll(".bar").forEach(function (bar) { bar.classList.toggle("on", Number(bar.dataset.run) === run); });
+    document.querySelectorAll("table.runs tbody tr").forEach(function (row) { row.classList.toggle("on", Number(row.dataset.run) === run); });
+  }
+
+  /* Flows: a line draws from source to target and a labelled token travels along it. */
+  function center(el) { var r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, vis: r.bottom > 0 && r.top < window.innerHeight && r.width > 0 }; }
+  function colorOf(kind) { return { read: "var(--read)", write: "var(--write)", person: "var(--person)", model: "var(--ink)", blocked: "var(--blocked)" }[kind]; }
+  var offsetPathOk = false;
+  try { offsetPathOk = !!(window.CSS && CSS.supports && CSS.supports("offset-path", 'path("M0 0L1 1")')); } catch (e) {}
+
+  function runFlows(flows) {
+    var svg = $("flowlines"), duration = 1000 / speed, gap = 200 / speed, spent = 0;
+    flows.forEach(function (flow, index) {
+      var fromEl = $(flow.from), toEl = $(flow.to);
+      if (!fromEl || !toEl) return;
+      var a = center(fromEl), b = center(toEl), delay = index * gap;
+      spent = delay + duration;
+      if (!a.vis || !b.vis) { later(function () { flash(toEl, flow.kind); }, delay + duration * .8); return; }
+      var dx = Math.max(60, Math.abs(b.x - a.x) * .45), sign = b.x >= a.x ? 1 : -1;
+      var d = "M" + a.x + " " + a.y + " C" + (a.x + sign * dx) + " " + a.y + " " + (b.x - sign * dx) + " " + b.y + " " + b.x + " " + b.y;
+      var pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      pathLine.setAttribute("d", d); pathLine.setAttribute("fill", "none"); pathLine.setAttribute("stroke", colorOf(flow.kind));
+      pathLine.setAttribute("stroke-width", "2.5"); pathLine.setAttribute("stroke-linecap", "round");
+      pathLine.setAttribute("pathLength", "1"); pathLine.setAttribute("stroke-dasharray", "1"); pathLine.setAttribute("stroke-dashoffset", "1");
+      svg.appendChild(pathLine); flyers.push(pathLine);
+      var stop = flow.stop || 1;
+      pathLine.animate([{ strokeDashoffset: 1, opacity: 1 }, { strokeDashoffset: 1 - stop, opacity: 1, offset: .75 }, { strokeDashoffset: 1 - stop, opacity: 0 }], { duration: duration * 1.25, delay: delay, easing: "ease-in-out", fill: "both" });
+      var token = document.createElement("div");
+      token.className = "flyer " + flow.kind; token.textContent = flow.label;
+      document.body.appendChild(token); flyers.push(token);
+      var w = token.offsetWidth, h = token.offsetHeight;
+      if (offsetPathOk) {
+        token.style.offsetPath = 'path("' + d + '")'; token.style.offsetRotate = "0deg";
+        token.animate([{ offsetDistance: "0%", opacity: 0 }, { opacity: 1, offset: .12 }, { opacity: 1, offset: .86 }, { offsetDistance: stop * 100 + "%", opacity: stop < 1 ? 0 : .95 }], { duration: duration, delay: delay, easing: "cubic-bezier(.45,0,.2,1)", fill: "both" });
+      } else {
+        token.animate([{ transform: "translate(" + (a.x - w / 2) + "px," + (a.y - h / 2) + "px)", opacity: 0 }, { opacity: 1, offset: .12 }, { transform: "translate(" + (a.x + (b.x - a.x) * stop - w / 2) + "px," + (a.y + (b.y - a.y) * stop - h / 2) + "px)", opacity: .9 }], { duration: duration, delay: delay, easing: "ease-in-out", fill: "both" });
+      }
+      later(function () {
+        if (token.parentNode) token.parentNode.removeChild(token);
+        if (stop >= 1) flash(toEl, flow.kind);
+      }, delay + duration);
+      later(function () { if (pathLine.parentNode) pathLine.parentNode.removeChild(pathLine); }, delay + duration * 1.3);
+    });
+    return spent;
+  }
+
+  function playMoves(beat, index, live) {
+    if (index >= beat.moves.length) {
+      applyState(beat.final, beat);
+      if (playing) later(advance, (2200 + beat.narration.length * 22) / speed);
+      return;
+    }
+    var move = beat.moves[index], set = move.set;
+    // A new bubble must exist before a flow can start from it.
+    if (set.bubbles !== undefined) { live.bubbles = set.bubbles; if (set.conv) live.conv = set.conv; renderConversation(live); }
+    keepInView(move.flows);
+    var spent = runFlows(move.flows);
+    later(function () {
+      Object.keys(set).forEach(function (key) { live[key] = set[key]; });
+      renderPrompt(live, beat); renderMemory(live, beat); renderL1(live);
+    }, spent * .82);
+    later(function () { playMoves(beat, index + 1, live); }, spent + 240 / speed);
+  }
+
+  function advance() {
+    if (current >= BEATS.length - 1) { playing = false; $("play").textContent = "Replay"; return; }
+    show(current + 1, true);
+  }
+
+  /* On short laptop screens, keep the part that is changing in view while playing, unless the viewer just scrolled. */
+  function keepInView(flows) {
+    if (!playing || reduced || window.innerWidth <= 1120 || Date.now() - lastUserScroll < 8000 || !flows.length) return;
+    var target = $(flows[flows.length - 1].to);
+    if (!target || target.id === "conv-latest") return;
+    var box = target.getBoundingClientRect(), limit = $("now").getBoundingClientRect().bottom + 8;
+    if (box.bottom > window.innerHeight - 8) window.scrollBy(0, Math.min(box.bottom - window.innerHeight + 16, box.top - limit));
+    else if (box.top < limit) window.scrollBy(0, box.top - limit);
+  }
+
+  function show(index, animate) {
+    clearAll();
+    current = Math.max(0, Math.min(BEATS.length - 1, index));
+    var beat = BEATS[current];
+    renderChrome(beat, current);
+    if (!animate || reduced) {
+      applyState(beat.final, beat);
+      if (animate && playing) later(advance, (2200 + beat.narration.length * 22) / speed);
+      return;
+    }
+    var live = {};
+    Object.keys(beat.start).forEach(function (key) { live[key] = beat.start[key]; });
+    applyState(live, beat);
+    playMoves(beat, 0, live);
+  }
+
+  function play() {
+    playing = true; $("play").textContent = "Pause";
+    if (openBlock) toggleExact(openBlock);
+    show(current >= BEATS.length - 1 ? 0 : current, true);
+  }
+  function pause() {
+    playing = false; clearAll();
+    applyState(BEATS[current].final, BEATS[current]);
+    $("play").textContent = current >= BEATS.length - 1 ? "Replay" : "Play";
+  }
+
+  $("play").addEventListener("click", function () {
+    if (playing) { pause(); return; }
+    if (current < BEATS.length - 1) { playing = true; $("play").textContent = "Pause"; show(current + 1, true); return; }
+    current = 0; play();
+  });
+  $("prev").addEventListener("click", function () { pause(); show(current - 1, false); });
+  $("next").addEventListener("click", function () { pause(); show(current + 1, true); });
+  $("speed").addEventListener("change", function () { speed = Number($("speed").value) || 1; });
+  document.addEventListener("keydown", function (event) {
+    if (event.target && /^(INPUT|SELECT|TEXTAREA)$/.test(event.target.tagName)) return;
+    if (event.key === "ArrowRight") { pause(); show(current + 1, true); }
+    else if (event.key === "ArrowLeft") { pause(); show(current - 1, false); }
+  });
+  ["wheel", "touchmove"].forEach(function (type) { window.addEventListener(type, function () { lastUserScroll = Date.now(); }, { passive: true }); });
+
+  buildRail(); buildBlocks(); buildBelow();
+  // The first frame is complete at rest. Animation starts shortly after it.
+  renderChrome(BEATS[0], 0);
+  applyState(BEATS[0].final, BEATS[0]);
+  if (playing) later(function () { show(0, true); }, 700);
+  window.__replay = { show: show, pause: pause, count: BEATS.length, keys: BEATS.map(function (b) { return b.key; }) };
+})();
+</script>
