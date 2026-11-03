@@ -20,13 +20,13 @@ Component jobs are skipped (reported as passing) when a pull request does not to
 `FtusaCiRoles-sandbox` (CDK, `infra/lib/ci-roles-stack.ts`) is deployed **once by an administrator** and creates the GitHub OIDC provider and two roles. It is separate on purpose: the pipeline cannot grant itself access.
 | Role | Trusted `sub` | Can do |
 |---|---|---|
-| `ftusa-gha-deploy-sandbox` | `repo:sudhirmishra-in/aws-breaking-barriers-2026:environment:sandbox` | assume the CDK bootstrap roles, read the stack and bootstrap version |
-| `ftusa-gha-smoke-sandbox` | `repo:sudhirmishra-in/aws-breaking-barriers-2026:ref:refs/heads/main` | read stack outputs, manage disposable Cognito users, put/delete items in the two tables, invoke the runtime |
+| `ftusa-gha-deploy-sandbox` | `<sub prefix>:environment:sandbox` | assume the CDK bootstrap roles, read the stack and bootstrap version |
+| `ftusa-gha-smoke-sandbox` | `<sub prefix>:ref:refs/heads/main` | read stack outputs, manage disposable Cognito users, put/delete items in the two tables, invoke the runtime |
 Pull-request jobs have **no** AWS role. Trust uses exact `StringEquals` on `aud` and `sub`.
 
 ## One-time prerequisites (manual)
 1. `npx cdk bootstrap` for the account/region (done in sandbox). The deploy job fails with a clear message if missing.
-2. `npx cdk deploy FtusaCiRoles-sandbox` as an administrator.
+2. `npx cdk deploy FtusaCiRoles-sandbox -c githubSubjectPrefix="$(gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub_claim_prefix)"` as an administrator. New GitHub repositories put immutable owner/repo ids in the OIDC `sub` claim (`repo:owner@id/repo@id`), so the plain `repo:owner/repo` form is rejected by AWS (this caused the first deploy failure).
 3. GitHub -> Settings -> Environments -> create `sandbox`: **required reviewers**, deployment branches limited to `main`.
 4. GitHub -> Settings -> Secrets and variables -> Actions -> **Variables** (repository level; none are secrets): `AWS_REGION` (`us-west-2`), `AWS_DEPLOY_ROLE_ARN`, `AWS_SMOKE_ROLE_ARN` (the stack outputs).
 5. Branch protection on `main`: require a pull request, require the six checks above, block force pushes.
