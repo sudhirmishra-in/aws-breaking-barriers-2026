@@ -7,6 +7,13 @@ export interface CiRolesProps extends cdk.StackProps {
   githubRepo: string; // owner/name
   deployBranch: string;
   createOidcProvider: boolean; // false if the account already has the GitHub provider
+  /**
+   * Prefix of the OIDC `sub` claim. GitHub repositories created recently use IMMUTABLE ids, e.g.
+   * `repo:owner@123/name@456`; older ones use `repo:owner/name`. Read the real value with:
+   *   gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub_claim_prefix
+   * Defaults to `repo:<githubRepo>`.
+   */
+  subjectPrefix?: string;
 }
 
 /**
@@ -25,12 +32,13 @@ export class CiRolesStack extends cdk.Stack {
     const trust = (sub: string) => new iam.FederatedPrincipal(providerArn, {
       StringEquals: { [`${host}:aud`]: "sts.amazonaws.com", [`${host}:sub`]: sub },
     }, "sts:AssumeRoleWithWebIdentity");
+    const prefix = p.subjectPrefix ?? `repo:${p.githubRepo}`;
     const stackName = `FtusaExchange-${p.envName}`;
     const a = this.account, r = this.region;
 
     const deploy = new iam.Role(this, "DeployRole", {
       roleName: `ftusa-gha-deploy-${p.envName}`, maxSessionDuration: cdk.Duration.hours(1),
-      assumedBy: trust(`repo:${p.githubRepo}:environment:${p.envName}`),
+      assumedBy: trust(`${prefix}:environment:${p.envName}`),
       description: "GitHub Actions: cdk deploy via CDK bootstrap roles",
     });
     deploy.addToPolicy(new iam.PolicyStatement({ actions: ["sts:AssumeRole"], resources: [`arn:${this.partition}:iam::${a}:role/cdk-hnb659fds-*-role-${a}-${r}`] }));
@@ -39,7 +47,7 @@ export class CiRolesStack extends cdk.Stack {
 
     const smoke = new iam.Role(this, "SmokeRole", {
       roleName: `ftusa-gha-smoke-${p.envName}`, maxSessionDuration: cdk.Duration.hours(1),
-      assumedBy: trust(`repo:${p.githubRepo}:ref:refs/heads/${p.deployBranch}`),
+      assumedBy: trust(`${prefix}:ref:refs/heads/${p.deployBranch}`),
       description: "GitHub Actions: post-deploy smoke tests (synthetic identities only)",
     });
     smoke.addToPolicy(new iam.PolicyStatement({ actions: ["cloudformation:DescribeStacks"], resources: [`arn:${this.partition}:cloudformation:${r}:${a}:stack/${stackName}/*`] }));
