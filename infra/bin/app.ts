@@ -23,5 +23,6 @@ new CiRolesStack(app, `FtusaCiRoles-${envName}`, {
   envName,
   githubRepo: app.node.tryGetContext("githubRepo") ?? "sudhirmishra-in/aws-breaking-barriers-2026",
   deployBranch: app.node.tryGetContext("deployBranch") ?? "main",
+  subjectPrefix: app.node.tryGetContext("githubSubjectPrefix"),
   createOidcProvider: String(app.node.tryGetContext("createOidcProvider") ?? "true") === "true",
 });

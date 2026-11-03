@@ -33,6 +33,13 @@ describe("stack", () => {
 });
 
 import { CiRolesStack } from "../lib/ci-roles-stack";
+describe("ci roles with an immutable subject prefix", () => {
+  it("uses the supplied prefix for both roles", () => {
+    const t2 = Template.fromStack(new CiRolesStack(new cdk.App(), "C2", { env: { account: "111111111111", region: "us-west-2" }, envName: "sandbox", githubRepo: "o/r", deployBranch: "main", createOidcProvider: true, subjectPrefix: "repo:o@1/r@2" }));
+    const s = JSON.stringify(t2.toJSON());
+    expect(s).toContain("repo:o@1/r@2:environment:sandbox"); expect(s).toContain("repo:o@1/r@2:ref:refs/heads/main"); expect(s).not.toContain("repo:o/r:");
+  });
+});
 describe("ci roles", () => {
   const ci = Template.fromStack(new CiRolesStack(new cdk.App(), "C", { env: { account: "111111111111", region: "us-west-2" }, envName: "sandbox", githubRepo: "o/r", deployBranch: "main", createOidcProvider: true }));
   it("trusts only the named repo, with exact sub conditions and the STS audience", () => {
