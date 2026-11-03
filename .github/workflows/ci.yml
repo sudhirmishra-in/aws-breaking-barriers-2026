@@ -1,0 +1,295 @@
+name: CI
+
+# Pull-request and main checks. Uses NO secrets and NO AWS credentials: `pull_request` (never `pull_request_target`),
+# read-only token, no id-token permission. Pull-request code therefore cannot reach AWS.
+# Every step must succeed: there is no continue-on-error and no `|| true`.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changed components
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      web: ${{ steps.f.outputs.web }}
+      backend: ${{ steps.f.outputs.backend }}
+      agent: ${{ steps.f.outputs.agent }}
+      infra: ${{ steps.f.outputs.infra }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: f
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" != "pull_request" ]; then
+            files="ALL"
+          else
+            files="$(git diff --name-only "$BASE_SHA" "$GITHUB_SHA")"
+          fi
+          has() { [ "$files" = "ALL" ] || printf '%s\n' "$files" | grep -Eq "$1"; }
+          shared='^(package\.json|package-lock\.json|\.nvmrc|\.github/|scripts/)'
+          web=false; backend=false; agent=false; infra=false
+          has "^web/|$shared" && web=true
+          has "^backend/|$shared" && backend=true
+          has "^agent/|$shared" && agent=true
+          # The stack bundles every component, so any component change re-validates the infrastructure.
+          { has "^infra/|$shared" || [ "$web" = true ] || [ "$backend" = true ] || [ "$agent" = true ]; } && infra=true
+          { echo "web=$web"; echo "backend=$backend"; echo "agent=$agent"; echo "infra=$infra"; } >> "$GITHUB_OUTPUT"
+          echo "changed components: web=$web backend=$backend agent=$agent infra=$infra"
+
+  web:
+    name: Web (lint, typecheck, test, build)
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint -w web
+      - run: npm run typecheck -w web
+      - run: npm test -w web
+      - run: npm run build -w web
+
+  backend:
+    name: Backend (typecheck, test, build)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck -w backend
+      - run: npm test -w backend
+      - run: npm run build -w backend
+
+  security-behaviour:
+    name: Authorization, consent and idempotency tests
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Named groups: ownership/roles/trusted scope, consent/decline/review, retries/concurrency.
+      # Each must run at least the stated number of passing tests, so a group cannot be silently emptied or renamed.
+      - name: Ownership, role and trusted-scope tests (>= 5)
+        run: |
+          npx vitest run test/service.test.ts -t "authorization" --reporter=json --outputFile="$RUNNER_TEMP/a.json"
+          node ../scripts/assert-tests.mjs "$RUNNER_TEMP/a.json" 5
+        working-directory: backend
+      - name: Consent, decline and review tests (>= 5)
+        run: |
+          npx vitest run test/service.test.ts -t "consent, decline, review" --reporter=json --outputFile="$RUNNER_TEMP/b.json"
+          node ../scripts/assert-tests.mjs "$RUNNER_TEMP/b.json" 5
+        working-directory: backend
+      - name: Retry and concurrency tests (>= 4)
+        run: |
+          npx vitest run test/service.test.ts -t "retries and concurrency" --reporter=json --outputFile="$RUNNER_TEMP/c.json"
+          node ../scripts/assert-tests.mjs "$RUNNER_TEMP/c.json" 4
+        working-directory: backend
+
+  agent: ${{ steps.f.outputs.agent }}
+      infra: ${{ steps.f.outputs.infra }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: f
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" != "pull_request" ]; then
+            files="ALL"
+          else
+            files="$(git diff --name-only "$BASE_SHA" "$GITHUB_SHA")"
+          fi
+          has() { [ "$files" = "ALL" ] || printf '%s\n' "$files" | grep -Eq "$1"; }
+          shared='^(package\.json|package-lock\.json|\.nvmrc|\.github/|scripts/)'
+          web=false; backend=false; agent=false; infra=false
+          has "^web/|$shared" && web=true
+          has "^backend/|$shared" && backend=true
+          has "^agent/|$shared" && agent=true
+          # The stack bundles every component, so any component change re-validates the infrastructure.
+          { has "^infra/|$shared" || [ "$web" = true ] || [ "$backend" = true ] || [ "$agent" = true ]; } && infra=true
+          { echo "web=$web"; echo "backend=$backend"; echo "agent=$agent"; echo "infra=$infra"; } >> "$GITHUB_OUTPUT"
+          echo "changed components: web=$web backend=$backend agent=$agent infra=$infra"
+
+  web:
+    name: Web (lint, typecheck, test, build)
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint -w web
+      - run: npm run typecheck -w web
+      - run: npm test -w web
+      - run: npm run build -w web
+
+  backend:
+    name: Backend (typecheck, test, build)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck -w backend
+      - run: npm test -w backend
+      - run: npm run build -w backend
+
+  security-behaviour:
+    name: Authorization, consent and idempotency tests
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Named groups: ownership, reviewer authorization, trusted scope, consent/decline, retries, concurrency.
+      # If a group matches no tests the run fails, so these cannot be silently removed.
+      - name: Ownership, role and trusted-scope tests
+        run: npx vitest run test/service.test.ts -t "authorization" --passWithNoTests=false
+        working-directory: backend
+      - name: Consent, decline and review tests
+        run: npx vitest run test/service.test.ts -t "consent, decline, review" --passWithNoTests=false
+        working-directory: backend
+      - name: Retry and concurrency tests
+        run: npx vitest run test/service.test.ts -t "retries and concurrency" --passWithNoTests=false
+        working-directory: backend
+
+  agent:
+    name: Agent (pytest)
+    needs: changes
+    if: needs.changes.outputs.agent == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: agent
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.13'
+      - name: Install (fails if uv.lock is out of date)
+        run: uv sync --locked
+      - name: Agent contract tests (stubbed model, no AWS)
+        run: uv run pytest -q
+
+  infra:
+    name: Infrastructure (typecheck, tests, cdk synth)
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - name: Build the agent package (arm64 wheels) and the web bundle that the stack embeds
+        run: |
+          set -euo pipefail
+          ./scripts/build_agent.sh
+          npm run build -w web
+      - run: npm run typecheck -w infra
+      - run: npm test -w infra
+      - name: Synthesize both stacks (strict; offline, placeholder account)
+        working-directory: infra
+        env:
+          CDK_DEFAULT_ACCOUNT: '111111111111'
+          CDK_DEFAULT_REGION: us-west-2
+        run: npx cdk synth --strict --quiet -c enableCiClient=true -c gitSha="$GITHUB_SHA"
+
+  hygiene:
+    name: Repository hygiene (no secrets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: No environment files, credentials or seed passwords are committed
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -E '(^|/)(\.env($|\.)|\.seed-credentials|cdk-outputs\.json)' | grep -vE '\.env\.example$'; then
+            echo "::error::A local environment, credential or output file is tracked."
+            exit 1
+          fi
+          if git grep -InE 'AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY|gh[pousr]_[A-Za-z0-9]{30,}' -- . ':!package-lock.json'; then
+            echo "::error::A possible credential is committed. Remove it and rotate it."
+            exit 1
+          fi
+          echo "ok: no tracked env files, no credential patterns"

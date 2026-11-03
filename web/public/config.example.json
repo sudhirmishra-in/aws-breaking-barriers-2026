@@ -1,0 +1,10 @@
+{
+  "region": "us-west-2",
+  "apiBaseUrl": "https://<api-id>.execute-api.us-west-2.amazonaws.com",
+  "clientId": "<user-pool-client-id>",
+  "issuer": "https://cognito-idp.us-west-2.amazonaws.com/<user-pool-id>",
+  "authority": "https://cognito-idp.us-west-2.amazonaws.com/<user-pool-id>",
+  "cognitoDomain": "https://<prefix>.auth.us-west-2.amazoncognito.com",
+  "redirectUri": "http://localhost:5173/auth/callback",
+  "logoutUri": "http://localhost:5173/"
+}
