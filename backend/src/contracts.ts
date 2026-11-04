@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const Language = z.enum(["en", "es"]);
+export const Language = z.enum(["en", "es", "fr"]);
 export type Language = z.infer<typeof Language>;
 
 export const RequestId = z.string().min(8).max(64).regex(/^[A-Za-z0-9_-]+$/);
@@ -26,17 +26,19 @@ export const ReviewUpdateReq = z
   .object({
     requestId: RequestId,
     decision: z.enum(["approve", "correct"]),
+    correctedSummaryOriginal: z.string().trim().min(1).max(2000).optional(),
     correctedSummaryEn: z.string().trim().min(1).max(2000).optional(),
-    correctedSummaryEs: z.string().trim().min(1).max(2000).optional(),
     piiHandled: z.boolean().optional(),
   })
   .strict()
-  .refine((v) => v.decision === "approve" || !!v.correctedSummaryEn || !!v.correctedSummaryEs, { message: "corrected summary required" });
+  .refine((v) => v.decision === "approve" || !!v.correctedSummaryEn || !!v.correctedSummaryOriginal, { message: "corrected summary required" });
 
 export type Workflow = "intake" | "playback_pending" | "guidance_pending" | "consent_pending" | "closed";
 export type Confirmation = "none" | "pending" | "confirmed";
 export type Consent = "unanswered" | "granted" | "declined";
 export type ConvStatus = "active" | "completed" | "declined";
+/** UI stage of a message (spec CHAT-07): intake, playback, response, consent, feedback. */
+export type Stage = "intake" | "playback" | "response" | "consent" | "feedback";
 
 export interface ProducerProfile {
   producerId: string;
@@ -56,11 +58,12 @@ export interface Conversation {
   confirmation: Confirmation;
   consent: Consent;
   status: ConvStatus;
+  title?: string; // short challenge title for the history list; removed on decline
   playbackSummary?: string;
   confirmedAccount?: string;
   producerAssertions?: { location?: string; entityType?: string }; // asserted, not trusted scope
+  summaryOriginal?: string; // in the conversation language
   summaryEn?: string;
-  summaryEs?: string;
   piiFlag: boolean;
   piiTypes: string[];
   messageCount: number;
@@ -70,10 +73,10 @@ export interface Conversation {
   lockExpires?: number;
   createdAt: string;
   updatedAt: string;
-  expiresAt: number; // epoch seconds (DynamoDB TTL)
+  expiresAt: number; // epoch seconds (DynamoDB TTL); 0 = kept until the producer deletes it (saved conversations)
 }
 
-export interface Message { seq: number; role: "user" | "assistant"; text: string; at: string }
+export interface Message { seq: number; role: "user" | "assistant"; text: string; at: string; stage?: Stage }
 
 export type OutcomeKind = "record" | "declined";
 export type ReviewStatus = "pending" | "approved" | "corrected";
@@ -88,8 +91,9 @@ export interface Outcome {
   // Narrative fields exist ONLY on kind === "record".
   source?: "agent conversation";
   entityType?: string;
+  summaryOriginal?: string; // producer's language (spec: summary_original)
   summaryEn?: string;
-  summaryEs?: string;
+  summaryEs?: string; // legacy records written before French support
   piiFlag?: boolean;
   piiTypes?: string[];
   evidenceStatus?: "unavailable";

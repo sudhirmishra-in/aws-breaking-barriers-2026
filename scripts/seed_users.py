@@ -50,8 +50,9 @@ def main():
     for r in DATA["reviewers"]:
         sub, pw = ensure_user(idp, out["UserPoolId"], r["seedUsername"], "reviewer")
         if pw: creds.append(f"{r['seedUsername']}\t{pw}")
-    if creds:
-        (ROOT / ".seed-credentials.local").write_text("\n".join(creds) + "\n")
+    if creds:  # append, so earlier temporary passwords are not lost
+        with (ROOT / ".seed-credentials.local").open("a") as f:
+            f.write("\n".join(creds) + "\n")
     print(f"Seeded {len(DATA['producers'])} producers and {len(DATA['reviewers'])} reviewer(s). New temporary passwords: {len(creds)} (see .seed-credentials.local).")
 
 

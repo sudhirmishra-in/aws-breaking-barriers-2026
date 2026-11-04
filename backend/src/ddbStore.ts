@@ -16,7 +16,7 @@ export class DdbStore implements Store {
     return r.Item?.profile as ProducerProfile | undefined;
   }
   async putConversation(c: Conversation) {
-    await this.d.send(new PutCommand({ TableName: this.convTable, Item: { pk: `CONV#${c.conversationId}`, sk: META, ownerSub: c.ownerSub, convStatus: c.status, ttl: c.expiresAt, data: c },
+    await this.d.send(new PutCommand({ TableName: this.convTable, Item: { pk: `CONV#${c.conversationId}`, sk: META, ownerSub: c.ownerSub, createdAt: c.createdAt, convStatus: c.status, ttl: c.expiresAt, data: c },
       ConditionExpression: "attribute_not_exists(pk)" }));
   }
   async getConversation(id: string) {
@@ -36,9 +36,11 @@ export class DdbStore implements Store {
     const next: Conversation = { ...cur, ...patch, version: v + 1 };
     try {
       await this.d.send(new UpdateCommand({ TableName: this.convTable, Key: { pk: `CONV#${id}`, sk: META },
-        UpdateExpression: "SET #data = :n, convStatus = :s, #ttl = :t", ConditionExpression: "#data.#v = :v",
+        // expiresAt 0 means "kept until the producer deletes it": the TTL attribute is removed.
+        UpdateExpression: next.expiresAt ? "SET #data = :n, convStatus = :s, #ttl = :t" : "SET #data = :n, convStatus = :s REMOVE #ttl",
+        ConditionExpression: "#data.#v = :v",
         ExpressionAttributeNames: { "#data": "data", "#v": "version", "#ttl": "ttl" },
-        ExpressionAttributeValues: { ":n": next, ":v": v, ":s": next.status, ":t": next.expiresAt } }));
+        ExpressionAttributeValues: { ":n": next, ":v": v, ":s": next.status, ...(next.expiresAt ? { ":t": next.expiresAt } : {}) } }));
       return next;
     } catch (e) { if (isCCF(e)) return undefined; throw e; }
   }
@@ -57,21 +59,36 @@ export class DdbStore implements Store {
         UpdateExpression: "REMOVE lockToken, lockExpires", ConditionExpression: "lockToken = :t", ExpressionAttributeValues: { ":t": token } }));
     } catch (e) { if (!isCCF(e)) throw e; }
   }
-  async claimActiveSlot(sub: string, conversationId: string, nowMs: number): Promise<string> {
-    try {
-      await this.d.send(new PutCommand({ TableName: this.convTable, Item: { pk: `ACTIVE#${sub}`, sk: META, conversationId, ttl: Math.floor(nowMs / 1000) + 8 * 86400 },
-        ConditionExpression: "attribute_not_exists(pk) OR #t < :now", ExpressionAttributeNames: { "#t": "ttl" }, ExpressionAttributeValues: { ":now": Math.floor(nowMs / 1000) } }));
-      return conversationId;
-    } catch (e) {
-      if (!isCCF(e)) throw e;
-      const r = await this.d.send(new GetCommand({ TableName: this.convTable, Key: { pk: `ACTIVE#${sub}`, sk: META }, ConsistentRead: true }));
-      return r.Item?.conversationId as string;
-    }
+  async listByOwner(sub: string) {
+    const r = await this.d.send(new QueryCommand({ TableName: this.convTable, IndexName: "owner-index",
+      KeyConditionExpression: "ownerSub = :o", ExpressionAttributeValues: { ":o": sub }, ScanIndexForward: false, Limit: 100 }));
+    return (r.Items ?? []).filter((i) => i.sk === META && i.data).map((i) => i.data as Conversation);
   }
-  async releaseActiveSlot(sub: string, conversationId: string) {
+  async setCurrent(sub: string, conversationId: string, nowMs: number) {
+    await this.d.send(new PutCommand({ TableName: this.convTable, Item: { pk: `ACTIVE#${sub}`, sk: META, conversationId, ttl: Math.floor(nowMs / 1000) + 8 * 86400 } }));
+  }
+  async clearCurrent(sub: string, conversationId: string) {
     try {
       await this.d.send(new DeleteCommand({ TableName: this.convTable, Key: { pk: `ACTIVE#${sub}`, sk: META }, ConditionExpression: "conversationId = :c", ExpressionAttributeValues: { ":c": conversationId } }));
     } catch (e) { if (!isCCF(e)) throw e; }
+  }
+  async retainMessages(id: string, ttl: number) {
+    const r = await this.d.send(new QueryCommand({ TableName: this.convTable, ConsistentRead: true, ProjectionExpression: "pk, sk",
+      KeyConditionExpression: "pk = :p AND begins_with(sk, :m)", ExpressionAttributeValues: { ":p": `CONV#${id}`, ":m": "MSG#" } }));
+    for (const k of r.Items ?? []) {
+      await this.d.send(new UpdateCommand({ TableName: this.convTable, Key: { pk: k.pk, sk: k.sk }, UpdateExpression: "SET #t = :t", ExpressionAttributeNames: { "#t": "ttl" }, ExpressionAttributeValues: { ":t": ttl } }));
+    }
+  }
+  async claimRequest(scope: string, requestId: string, ttl: number): Promise<"claimed" | "pending" | { response: unknown }> {
+    const Key = { pk: `CONV#${scope}`, sk: `REQ#${requestId}` };
+    try {
+      await this.d.send(new PutCommand({ TableName: this.convTable, Item: { ...Key, pending: true, ttl }, ConditionExpression: "attribute_not_exists(pk)" }));
+      return "claimed";
+    } catch (e) {
+      if (!isCCF(e)) throw e;
+      const r = await this.d.send(new GetCommand({ TableName: this.convTable, Key, ConsistentRead: true }));
+      return r.Item && "response" in r.Item ? { response: r.Item.response } : "pending";
+    }
   }
   async addMessages(id: string, msgs: Message[]) {
     for (const m of msgs) {
@@ -81,7 +98,7 @@ export class DdbStore implements Store {
   async listMessages(id: string) {
     const r = await this.d.send(new QueryCommand({ TableName: this.convTable, ConsistentRead: true,
       KeyConditionExpression: "pk = :p AND begins_with(sk, :m)", ExpressionAttributeValues: { ":p": `CONV#${id}`, ":m": "MSG#" } }));
-    return (r.Items ?? []).map((i) => ({ seq: i.seq, role: i.role, text: i.text, at: i.at }) as Message);
+    return (r.Items ?? []).map((i) => ({ seq: i.seq, role: i.role, text: i.text, at: i.at, stage: i.stage }) as Message);
   }
   async deleteMessages(id: string) {
     const r = await this.d.send(new QueryCommand({ TableName: this.convTable, ConsistentRead: true, ProjectionExpression: "pk, sk",
@@ -91,12 +108,27 @@ export class DdbStore implements Store {
       await this.d.send(new BatchWriteCommand({ RequestItems: { [this.convTable]: keys.slice(i, i + 25).map((k) => ({ DeleteRequest: { Key: { pk: k.pk, sk: k.sk } } })) } }));
     }
   }
+  async purgeConversation(id: string, opts: { keepMeta: boolean }) {
+    let start: Record<string, unknown> | undefined;
+    do {
+      const r = await this.d.send(new QueryCommand({ TableName: this.convTable, ConsistentRead: true, ProjectionExpression: "pk, sk", ExclusiveStartKey: start,
+        KeyConditionExpression: "pk = :p", ExpressionAttributeValues: { ":p": `CONV#${id}` } }));
+      const keys = (r.Items ?? []).filter((k) => opts.keepMeta ? k.sk !== META : true);
+      for (let i = 0; i < keys.length; i += 25) {
+        await this.d.send(new BatchWriteCommand({ RequestItems: { [this.convTable]: keys.slice(i, i + 25).map((k) => ({ DeleteRequest: { Key: { pk: k.pk, sk: k.sk } } })) } }));
+      }
+      start = r.LastEvaluatedKey;
+    } while (start);
+  }
   async getIdem(id: string, requestId: string) {
     const r = await this.d.send(new GetCommand({ TableName: this.convTable, Key: { pk: `CONV#${id}`, sk: `REQ#${requestId}` }, ConsistentRead: true }));
-    return r.Item?.response;
+    return r.Item && "response" in r.Item ? r.Item.response : undefined;
   }
   async putIdem(id: string, requestId: string, response: unknown, ttl: number) {
     await this.d.send(new PutCommand({ TableName: this.convTable, Item: { pk: `CONV#${id}`, sk: `REQ#${requestId}`, response, ttl } }));
+  }
+  async dropRequestClaim(scope: string, requestId: string) {
+    await this.d.send(new DeleteCommand({ TableName: this.convTable, Key: { pk: `CONV#${scope}`, sk: `REQ#${requestId}` }, ConditionExpression: "attribute_exists(pending)" })).catch((e) => { if (!isCCF(e)) throw e; });
   }
   async putOutcome(o: Outcome) {
     // Deterministic outcomeId per conversation => a retry cannot create a second final record.

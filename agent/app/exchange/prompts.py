@@ -1,6 +1,6 @@
 from .context import TrustedContext
 
-LANG_NAME = {"en": "English", "es": "Spanish"}
+LANG_NAME = {"en": "English", "es": "Spanish", "fr": "French"}
 
 
 def system_prompt(ctx: TrustedContext) -> str:
@@ -34,7 +34,8 @@ reviewed by the program team, and only if they agree. Nothing from this question
             base += (
                 "\nYou now have enough detail. Set phase=playback: briefly play back your understanding "
                 "(timing, severity, what was tried) in the reply, put the same account in playback_summary, "
-                "and ask the producer to confirm or correct it. Do not offer evidence or advice yet.\n"
+                "and ask the producer to confirm or correct it. Also set title: a neutral title of at most 8 words naming "
+                "the challenge, in the conversation language, with no personal names. Do not offer evidence or advice yet.\n"
             )
         else:
             base += (
@@ -47,7 +48,7 @@ reviewed by the program team, and only if they agree. Nothing from this question
 The producer confirmed this account: "{ctx.confirmedAccount}".
 Set phase=guidance. Consult the evidence tools for the topic. Because evidence is unavailable, tell the producer
 plainly what you could not look up, offer only questions to help them think, and do not give findings.
-Fill summary_en and summary_es with a short neutral summary of the confirmed account (both languages).
+Fill summary_original with a short neutral summary of the confirmed account in {lang}, and summary_en with the same summary in English.
 End by saying they will be asked separately whether a summary may be stored.
 """
     return base

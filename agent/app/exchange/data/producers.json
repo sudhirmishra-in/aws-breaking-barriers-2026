@@ -10,8 +10,14 @@
       "location": "Synthetic Highlands (fictional region)",
       "crop": "coffee",
       "history": [
-        {"period": "synthetic-year-1", "note": "Synthetic record: invested a Premium in a shared drying patio."},
-        {"period": "synthetic-year-2", "note": "Synthetic record: reported lower yield after a late rainy season."}
+        {
+          "period": "synthetic-year-1",
+          "note": "Synthetic record: invested a Premium in a shared drying patio."
+        },
+        {
+          "period": "synthetic-year-2",
+          "note": "Synthetic record: reported lower yield after a late rainy season."
+        }
       ]
     },
     {
@@ -23,11 +29,32 @@
       "location": "Valle Sintetico (region ficticia)",
       "crop": "cacao",
       "history": [
-        {"period": "synthetic-year-1", "note": "Synthetic record: Premium used for fermentation boxes."}
+        {
+          "period": "synthetic-year-1",
+          "note": "Synthetic record: Premium used for fermentation boxes."
+        }
+      ]
+    },
+    {
+      "producerId": "SYN-P-003",
+      "seedUsername": "producteur.demo3@example.com",
+      "preferredLanguage": "fr",
+      "displayName": "Coopérative Synthétique Trois",
+      "entityType": "cooperative",
+      "location": "Région Synthétique (région fictive)",
+      "crop": "cocoa",
+      "history": [
+        {
+          "period": "synthetic-year-1",
+          "note": "Synthetic record: Premium used for a shared cocoa drying area."
+        }
       ]
     }
   ],
   "reviewers": [
-    {"seedUsername": "reviewer.demo@example.com", "displayName": "Synthetic Reviewer"}
+    {
+      "seedUsername": "reviewer.demo@example.com",
+      "displayName": "Synthetic Reviewer"
+    }
   ]
 }

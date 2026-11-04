@@ -11,12 +11,22 @@ export interface Store {
   /** Atomic lock: succeeds only if no unexpired lock exists. */
   acquireLock(id: string, token: string, nowMs: number, ttlMs: number): Promise<boolean>;
   releaseLock(id: string, token: string): Promise<void>;
-  /** One active conversation per owner. Returns the id holding the slot (own id if claimed). */
-  claimActiveSlot(sub: string, conversationId: string, nowMs: number): Promise<string>;
-  releaseActiveSlot(sub: string, conversationId: string): Promise<void>;
+  /** Owner's conversations, newest first (eventually consistent index). */
+  listByOwner(sub: string): Promise<Conversation[]>;
+  /** Pointer to the owner's most recently started active conversation (strongly consistent). */
+  setCurrent(sub: string, conversationId: string, nowMs: number): Promise<void>;
+  clearCurrent(sub: string, conversationId: string): Promise<void>;
+  /** Extend the retention of a saved conversation's messages. */
+  retainMessages(id: string, ttl: number): Promise<void>;
+  /** Claims a request id for a scope. "claimed" means the caller should do the work and then putIdem. */
+  claimRequest(scope: string, requestId: string, ttl: number): Promise<"claimed" | "pending" | { response: unknown }>;
+  /** Releases an unfinished claim so a failed request can be retried. */
+  dropRequestClaim(scope: string, requestId: string): Promise<void>;
   addMessages(id: string, msgs: Message[]): Promise<void>;
   listMessages(id: string): Promise<Message[]>;
   deleteMessages(id: string): Promise<void>;
+  /** Deletes a conversation's messages and idempotency snapshots; with keepMeta false also the conversation item. */
+  purgeConversation(id: string, opts: { keepMeta: boolean }): Promise<void>;
   getIdem(id: string, requestId: string): Promise<unknown | undefined>;
   putIdem(id: string, requestId: string, response: unknown, ttl: number): Promise<void>;
   putOutcome(o: Outcome): Promise<void>;
@@ -36,7 +46,7 @@ export class MemoryStore implements Store {
   async putConversation(c: Conversation) { this.convs.set(c.conversationId, structuredClone(c)); }
   async getConversation(id: string) { const c = this.convs.get(id); return c && structuredClone(c); }
   async findActiveByOwner(sub: string) {
-    const id = this.slots.get(sub);
+    const id = this.current.get(sub);
     const c = id ? this.convs.get(id) : undefined;
     return c && c.status === "active" ? structuredClone(c) : undefined;
   }
@@ -57,12 +67,29 @@ export class MemoryStore implements Store {
     const c = this.convs.get(id);
     if (c && c.lockToken === token) { delete c.lockToken; delete c.lockExpires; }
   }
-  slots = new Map<string, string>();
-  async claimActiveSlot(sub: string, id: string) { const cur = this.slots.get(sub); if (cur) return cur; this.slots.set(sub, id); return id; }
-  async releaseActiveSlot(sub: string, id: string) { if (this.slots.get(sub) === id) this.slots.delete(sub); }
+  current = new Map<string, string>();
+  claims = new Set<string>();
+  async listByOwner(sub: string) {
+    return [...this.convs.values()].filter((c) => c.ownerSub === sub).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((c) => structuredClone(c));
+  }
+  async setCurrent(sub: string, id: string) { this.current.set(sub, id); }
+  async clearCurrent(sub: string, id: string) { if (this.current.get(sub) === id) this.current.delete(sub); }
+  async retainMessages() { /* in-memory: no expiry */ }
+  async claimRequest(scope: string, requestId: string) {
+    const k = `${scope}#${requestId}`;
+    if (this.idem.has(k)) return { response: this.idem.get(k) };
+    if (this.claims.has(k)) return "pending" as const;
+    this.claims.add(k); return "claimed" as const;
+  }
+  async dropRequestClaim(scope: string, requestId: string) { this.claims.delete(`${scope}#${requestId}`); }
   async addMessages(id: string, m: Message[]) { this.msgs.set(id, [...(this.msgs.get(id) ?? []), ...m]); }
   async listMessages(id: string) { return [...(this.msgs.get(id) ?? [])]; }
   async deleteMessages(id: string) { this.msgs.delete(id); }
+  async purgeConversation(id: string, opts: { keepMeta: boolean }) {
+    this.msgs.delete(id);
+    for (const k of [...this.idem.keys()]) if (k.startsWith(`${id}#`)) this.idem.delete(k);
+    if (!opts.keepMeta) this.convs.delete(id);
+  }
   async getIdem(id: string, r: string) { return this.idem.get(`${id}#${r}`); }
   async putIdem(id: string, r: string, resp: unknown) { this.idem.set(`${id}#${r}`, resp); }
   async putOutcome(o: Outcome) { this.outcomes.set(o.outcomeId, structuredClone(o)); }

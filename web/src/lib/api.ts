@@ -1,6 +1,6 @@
 import { accessToken } from "./auth";
 import { loadConfig } from "./config";
-import { ApiFailure, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me, type ReviewItem } from "../types";
+import { ApiFailure, type ConversationSummary, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me, type ReviewItem } from "../types";
 
 export const newRequestId = () => crypto.randomUUID();
 
@@ -30,7 +30,10 @@ export const api = {
   overview: () => call<Overview>("GET", "/overview"),
   ask: (requestId: string, text: string, language: Lang) => call<AskResponse>("POST", "/ask", { requestId, text, language }),
   current: () => call<CurrentView>("GET", "/conversations/current"),
-  create: (language: Lang) => call<ConversationView>("POST", "/conversations", { requestId: newRequestId(), language }),
+  list: () => call<{ items: ConversationSummary[] }>("GET", "/conversations"),
+  remove: (id: string) => call<{ deleted: true }>("DELETE", `/conversations/${encodeURIComponent(id)}`),
+  get: (id: string) => call<ConversationView>("GET", `/conversations/${encodeURIComponent(id)}`),
+  create: (language: Lang, requestId: string = newRequestId()) => call<ConversationView>("POST", "/conversations", { requestId, language }),
   message: (id: string, requestId: string, text: string) => call<ConversationView>("POST", `/conversations/${id}/messages`, { requestId, text }),
   playback: (id: string, requestId: string, body: { decision: "confirm" | "correct"; correction?: string; profileCorrection?: { field: "location" | "entityType"; value: string } }) =>
     call<ConversationView>("POST", `/conversations/${id}/playback`, { requestId, ...body }),
@@ -38,6 +41,6 @@ export const api = {
   end: (id: string, requestId: string) => call<ConversationView>("POST", `/conversations/${id}/end`, { requestId }),
   reviews: () => call<{ items: ReviewItem[] }>("GET", "/reviews"),
   review: (id: string) => call<ReviewItem>("GET", `/reviews/${id}`),
-  updateReview: (id: string, body: { decision: "approve" | "correct"; correctedSummaryEn?: string; correctedSummaryEs?: string; piiHandled?: boolean }) =>
+  updateReview: (id: string, body: { decision: "approve" | "correct"; correctedSummaryOriginal?: string; correctedSummaryEn?: string; piiHandled?: boolean }) =>
     call<ReviewItem>("PUT", `/reviews/${id}`, { requestId: newRequestId(), ...body }),
 };

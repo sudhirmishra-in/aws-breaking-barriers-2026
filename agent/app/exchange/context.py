@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-Language = Literal["en", "es"]
+Language = Literal["en", "es", "fr"]
 Mode = Literal["intake", "guidance", "ask"]
 
 
@@ -49,16 +49,23 @@ class TurnOutput(BaseModel):
     playback_summary: str | None = Field(
         default=None, description="Short account of what the producer said, only when phase is playback."
     )
-    summary_en: str | None = Field(default=None, description="English summary proposal (guidance only).")
-    summary_es: str | None = Field(default=None, description="Spanish summary proposal (guidance only).")
+    title: str | None = Field(
+        default=None,
+        description="Only when phase is playback: a neutral title of at most 8 words naming the challenge, in the conversation language.",
+    )
+    summary_original: str | None = Field(
+        default=None, description="Summary proposal in the conversation language (guidance only)."
+    )
+    summary_en: str | None = Field(default=None, description="The same summary in English (guidance only).")
 
 
 class TurnResponse(BaseModel):
     reply: str
     phase: Literal["intake", "playback", "guidance", "answer"]
     playbackSummary: str | None = None
+    title: str | None = None
+    summaryOriginal: str | None = None
     summaryEn: str | None = None
-    summaryEs: str | None = None
     piiFlag: bool = False
     piiTypes: list[str] = []
     evidence: Evidence = Evidence()

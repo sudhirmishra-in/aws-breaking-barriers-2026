@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { AgentClient, AgentTurnResponse } from "./agent";
 import { runtimeSessionIdFor } from "./agent";
-import type { Conversation, Language, Message, Outcome, ProducerProfile } from "./contracts";
+import type { Conversation, Language, Message, Outcome, ProducerProfile, Stage, Workflow } from "./contracts";
 import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, forbidden, notFound } from "./errors";
 import type { Store } from "./store";
@@ -24,12 +24,23 @@ export const ENTITY_TYPES = ["smallholder", "cooperative", "processor", "exporte
 const LOCK_MS = 120_000;
 const ACTIVE_TTL_S = 7 * 86400; // sandbox retention: active conversations expire 7 days after last activity
 const CLOSED_META_TTL_S = 30 * 86400; // closed: narrative-free metadata kept 30 days
+const SAVED_TRANSCRIPT_TTL_S = 30 * 86400; // saved conversations stay readable in the producer's history for 30 days (sandbox)
 const IDEM_TTL_S = 86400;
 
 const OPENER: Record<Language, string> = {
   en: "What has been difficult recently?",
   es: "¿Qué ha sido difícil últimamente?",
+  fr: "Qu'est-ce qui a été difficile ces derniers temps ?",
 };
+
+const STAGE_OF: Record<Workflow, Stage> = { intake: "intake", playback_pending: "playback", guidance_pending: "response", consent_pending: "consent", closed: "consent" };
+/** Short, single-line history title. The model proposes it; it is display text only and never used as scope. */
+export function cleanTitle(title: string | null | undefined, fallback?: string): string | undefined {
+  const t = (title ?? "").replace(/\s+/g, " ").trim();
+  if (t) return t.slice(0, 80);
+  const f = (fallback ?? "").replace(/\s+/g, " ").trim();
+  return f ? (f.length > 60 ? f.slice(0, 57).trimEnd() + "…" : f) : undefined;
+}
 
 export const requireProducer = (p: Principal) => { if (!p.groups.includes("producer")) throw forbidden("Producer access required."); };
 export const requireReviewer = (p: Principal) => { if (!p.groups.includes("reviewer")) throw forbidden("Reviewer access required."); };
@@ -59,19 +70,21 @@ export class Service {
 
   // ---- views ----------------------------------------------------------
   private async view(c: Conversation) {
-    const messages = c.status === "active" ? await this.d.store.listMessages(c.conversationId) : [];
+    // Active and saved conversations show their transcript; declined ones have none (deleted on decline).
+    const messages = c.status === "declined" ? [] : await this.d.store.listMessages(c.conversationId);
     return {
       conversation: {
         conversationId: c.conversationId, language: c.language, workflow: c.workflow, confirmation: c.confirmation,
-        consent: c.consent, status: c.status, playbackSummary: c.playbackSummary, piiFlag: c.piiFlag,
-        summaryEn: c.workflow === "consent_pending" ? c.summaryEn : undefined,
-        summaryEs: c.workflow === "consent_pending" ? c.summaryEs : undefined,
-        createdAt: c.createdAt, updatedAt: c.updatedAt, expiresAt: new Date(c.expiresAt * 1000).toISOString(),
+        // No PII flag here: the producer side never shows it (spec CHAT-19).
+        consent: c.consent, status: c.status, title: c.title ?? null, playbackSummary: c.playbackSummary,
+        summaryOriginal: c.workflow === "consent_pending" || c.status === "completed" ? c.summaryOriginal : undefined,
+        summaryEn: c.workflow === "consent_pending" || c.status === "completed" ? c.summaryEn : undefined,
+        createdAt: c.createdAt, updatedAt: c.updatedAt, expiresAt: c.expiresAt ? new Date(c.expiresAt * 1000).toISOString() : null,
       },
-      messages: messages.map((m) => ({ seq: m.seq, role: m.role, text: m.text, at: m.at })),
+      messages: messages.map((m) => ({ seq: m.seq, role: m.role, text: m.text, at: m.at, stage: m.stage ?? null })),
       retention: {
-        activeDays: 7,
-        text: "Your messages are kept temporarily so you can continue, for up to 7 days. They are deleted when you finish. A summary is stored for review only if you say yes.",
+        activeDays: 7, savedDays: 30,
+        text: "Messages are kept so you can continue, for up to 7 days without activity. If you save the conversation, its summary stays in your history until you delete it, and the full conversation is kept for 30 days in this sandbox. If you don't save it, its messages are deleted when it ends.",
       },
       syntheticDemo: true,
     };
@@ -85,6 +98,22 @@ export class Service {
   }
 
   async getConversation(p: Principal, id: string) { return this.view(await this.owned(p, id)); }
+
+  /** History (spec CONV-01): the caller's own conversations, newest first. Declined ones are never listed. */
+  async listConversations(p: Principal) {
+    requireProducer(p);
+    const items = (await this.d.store.listByOwner(p.sub))
+      .filter((c) => c.ownerSub === p.sub && c.status !== "declined")
+      .map((c) => ({ conversationId: c.conversationId, title: c.title ?? null, language: c.language, createdAt: c.createdAt, updatedAt: c.updatedAt,
+        status: c.status === "active" ? "in_progress" as const : "saved" as const, summary: this.producerSummary(c) }));
+    return { items };
+  }
+
+  /** The summary the producer saw, in their language: the saved summary, else the latest playback. */
+  private producerSummary(c: Conversation): string | null {
+    const saved = c.summaryOriginal ?? (c.language === "en" ? c.summaryEn : undefined);
+    return saved ?? c.confirmedAccount ?? c.playbackSummary ?? null;
+  }
 
   async getCurrent(p: Principal) {
     requireProducer(p);
@@ -132,46 +161,53 @@ export class Service {
   private async save(c: Conversation, patch: Partial<Conversation>): Promise<Conversation> {
     const n = await this.d.store.updateConversation(c.conversationId, c.version, {
       ...patch, updatedAt: this.iso(),
-      expiresAt: patch.status && patch.status !== "active" ? Math.floor(this.now() / 1000) + CLOSED_META_TTL_S : Math.floor(this.now() / 1000) + ACTIVE_TTL_S,
+      expiresAt: patch.expiresAt ?? (patch.status && patch.status !== "active" ? Math.floor(this.now() / 1000) + CLOSED_META_TTL_S : Math.floor(this.now() / 1000) + ACTIVE_TTL_S),
     });
     if (!n) throw conflict("stale_state", "The conversation changed. Please reload and try again.", true);
     return n;
   }
 
-  private async append(c: Conversation, entries: { role: "user" | "assistant"; text: string }[]): Promise<number> {
-    const msgs: Message[] = entries.map((e, i) => ({ seq: c.messageCount + i + 1, role: e.role, text: e.text, at: this.iso() }));
+  private async append(c: Conversation, entries: { role: "user" | "assistant"; text: string; stage?: Stage }[]): Promise<number> {
+    const msgs: Message[] = entries.map((e, i) => ({ seq: c.messageCount + i + 1, role: e.role, text: e.text, at: this.iso(), stage: e.stage ?? STAGE_OF[c.workflow] }));
     await this.d.store.addMessages(c.conversationId, msgs);
     return c.messageCount + msgs.length;
   }
 
   // ---- operations -------------------------------------------------------
-  async create(p: Principal, language: Language) {
+  /** Starts a new conversation. Retrying with the same requestId returns the same conversation (no duplicates). */
+  async create(p: Principal, language: Language, requestId: string) {
     requireProducer(p);
     const profile = await this.profileFor(p);
-    const existing = await this.d.store.findActiveByOwner(p.sub);
-    if (existing) return this.view(existing);
-
-    const id = randomUUID();
-    const nowIso = this.iso();
-    const holder = await this.d.store.claimActiveSlot(p.sub, id, this.now());
-    if (holder !== id) { const c = await this.d.store.getConversation(holder); if (c) return this.view(c); }
-    const conv: Conversation = {
-      conversationId: id, ownerSub: p.sub, producerId: profile.producerId, language, workflow: "intake",
-      confirmation: "none", consent: "unanswered", status: "active", piiFlag: false, piiTypes: [],
-      messageCount: 0, userTurns: 0, version: 1, createdAt: nowIso, updatedAt: nowIso,
-      expiresAt: Math.floor(this.now() / 1000) + ACTIVE_TTL_S,
-    };
-    await this.d.store.putConversation(conv);
-    // Real agent opener; deterministic fallback so a model outage cannot block starting.
-    let opener = OPENER[language];
+    const scope = `owner-${p.sub}`;
+    const claim = await this.d.store.claimRequest(scope, requestId, Math.floor(this.now() / 1000) + IDEM_TTL_S);
+    if (claim === "pending") throw conflict("request_in_progress", "This conversation is still being started. Please wait a moment.", true);
+    if (claim !== "claimed") return claim.response as Awaited<ReturnType<Service["view"]>>;
     try {
-      const r = await this.runAgent(conv, profile, "intake", [], "(The producer has just joined. Open the conversation with one open question.)", false, p);
-      opener = r.reply;
-    } catch { this.log({ event: "opener_fallback", conversationId: id }); }
-    const count = await this.append(conv, [{ role: "assistant", text: opener }]);
-    const saved = await this.save(conv, { messageCount: count });
-    this.log({ event: "conversation_created", conversationId: id });
-    return this.view(saved);
+      const id = randomUUID();
+      const nowIso = this.iso();
+      const conv: Conversation = {
+        conversationId: id, ownerSub: p.sub, producerId: profile.producerId, language, workflow: "intake",
+        confirmation: "none", consent: "unanswered", status: "active", piiFlag: false, piiTypes: [],
+        messageCount: 0, userTurns: 0, version: 1, createdAt: nowIso, updatedAt: nowIso,
+        expiresAt: Math.floor(this.now() / 1000) + ACTIVE_TTL_S,
+      };
+      await this.d.store.putConversation(conv);
+      await this.d.store.setCurrent(p.sub, id, this.now());
+      // Real agent opener; deterministic fallback so a model outage cannot block starting.
+      let opener = OPENER[language];
+      try {
+        const r = await this.runAgent(conv, profile, "intake", [], "(The producer has just joined. Open the conversation with one open question.)", false, p);
+        opener = r.reply;
+      } catch { this.log({ event: "opener_fallback", conversationId: id }); }
+      const count = await this.append(conv, [{ role: "assistant", text: opener }]);
+      const result = await this.view(await this.save(conv, { messageCount: count }));
+      await this.d.store.putIdem(scope, requestId, result, Math.floor(this.now() / 1000) + IDEM_TTL_S);
+      this.log({ event: "conversation_created", conversationId: id });
+      return result;
+    } catch (e) {
+      await this.d.store.dropRequestClaim(scope, requestId);
+      throw e;
+    }
   }
 
   async message(p: Principal, id: string, requestId: string, text: string) {
@@ -184,11 +220,11 @@ export class Service {
       const allow = c.userTurns + 1 >= MIN_USER_TURNS_BEFORE_PLAYBACK;
       const r = await this.runAgent(c, profile, "intake", history, text, allow, p);
       const toPlayback = allow && r.phase === "playback" && !!r.playbackSummary; // app-side check, independent of the agent
-      const count = await this.append(c, [{ role: "user", text }, { role: "assistant", text: r.reply }]);
+      const count = await this.append(c, [{ role: "user", text, stage: "intake" }, { role: "assistant", text: r.reply, stage: toPlayback ? "playback" : "intake" }]);
       const saved = await this.save(c, {
         messageCount: count, userTurns: c.userTurns + 1,
         piiFlag: c.piiFlag || r.piiFlag, piiTypes: [...new Set([...c.piiTypes, ...r.piiTypes])],
-        ...(toPlayback ? { workflow: "playback_pending", confirmation: "pending", playbackSummary: r.playbackSummary! } : {}),
+        ...(toPlayback ? { workflow: "playback_pending", confirmation: "pending", playbackSummary: r.playbackSummary!, title: cleanTitle(r.title, r.playbackSummary!) } : {}),
       });
       return this.view(saved);
     });
@@ -202,15 +238,15 @@ export class Service {
         if (c.workflow !== "playback_pending" && c.workflow !== "guidance_pending") throw conflict("wrong_state", "Nothing to confirm right now.");
         let cur = c;
         if (c.workflow === "playback_pending") {
-          const count = await this.append(c, [{ role: "user", text: "(confirmed)" }]);
+          const count = await this.append(c, [{ role: "user", text: "(confirmed)", stage: "playback" }]);
           cur = await this.save(c, { workflow: "guidance_pending", confirmation: "confirmed", confirmedAccount: c.playbackSummary, messageCount: count });
         }
         const history = await this.d.store.listMessages(id);
         const r = await this.runAgent(cur, profile, "guidance", history.slice(0, -1), "The producer confirmed the account. Please continue.", false, p);
-        const count2 = await this.append(cur, [{ role: "assistant", text: r.reply }]);
+        const count2 = await this.append(cur, [{ role: "assistant", text: r.reply, stage: r.summaryEn && r.summaryOriginal ? "consent" : "response" }]);
         const saved = await this.save(cur, {
-          messageCount: count2, summaryEn: r.summaryEn ?? undefined, summaryEs: r.summaryEs ?? undefined,
-          workflow: r.summaryEn && r.summaryEs ? "consent_pending" : "guidance_pending",
+          messageCount: count2, summaryOriginal: r.summaryOriginal ?? undefined, summaryEn: r.summaryEn ?? undefined,
+          workflow: r.summaryEn && r.summaryOriginal ? "consent_pending" : "guidance_pending",
           piiFlag: cur.piiFlag || r.piiFlag, piiTypes: [...new Set([...cur.piiTypes, ...r.piiTypes])],
         });
         return this.view(saved);
@@ -228,11 +264,11 @@ export class Service {
       const history = await this.d.store.listMessages(id);
       const r = await this.runAgent(c, profile, "intake", history, text, true, p);
       const again = r.phase === "playback" && !!r.playbackSummary;
-      const count = await this.append(c, [{ role: "user", text }, { role: "assistant", text: r.reply }]);
+      const count = await this.append(c, [{ role: "user", text, stage: "playback" }, { role: "assistant", text: r.reply, stage: again ? "playback" : "intake" }]);
       const saved = await this.save(c, {
         messageCount: count, userTurns: c.userTurns + 1, producerAssertions: assertions,
         piiFlag: c.piiFlag || r.piiFlag, piiTypes: [...new Set([...c.piiTypes, ...r.piiTypes])],
-        ...(again ? { playbackSummary: r.playbackSummary!, confirmation: "pending" as const } : { workflow: "intake" as const, confirmation: "none" as const }),
+        ...(again ? { playbackSummary: r.playbackSummary!, confirmation: "pending" as const, title: cleanTitle(r.title, r.playbackSummary!) ?? c.title } : { workflow: "intake" as const, confirmation: "none" as const }),
       });
       return this.view(saved);
     });
@@ -242,7 +278,7 @@ export class Service {
     return this.guarded(p, id, requestId, async (c) => {
       this.assertActive(c);
       if (c.workflow !== "consent_pending") throw conflict("wrong_state", "Storage permission is not requested yet.");
-      if (storeSummary && !(c.summaryEn && c.summaryEs)) throw conflict("no_summary", "There is no summary to store.");
+      if (storeSummary && !(c.summaryEn && c.summaryOriginal)) throw conflict("no_summary", "There is no summary to store.");
       return this.close(c, storeSummary ? "granted" : "declined", "declined_storage");
     });
   }
@@ -259,22 +295,41 @@ export class Service {
     if (consent === "granted") {
       const o: Outcome = {
         ...base, outcomeId: `rec-${c.conversationId}`, kind: "record", source: "agent conversation",
-        entityType: (await this.d.store.getProfileBySub(c.ownerSub))?.entityType, summaryEn: c.summaryEn, summaryEs: c.summaryEs,
+        entityType: (await this.d.store.getProfileBySub(c.ownerSub))?.entityType, summaryOriginal: c.summaryOriginal, summaryEn: c.summaryEn,
         piiFlag: c.piiFlag, piiTypes: c.piiTypes, evidenceStatus: "unavailable", reviewStatus: "pending",
       };
       await this.d.store.putOutcome(o);
     } else {
       await this.d.store.putOutcome({ ...base, outcomeId: `dec-${c.conversationId}`, kind: "declined", declineReason: reason });
     }
-    // Transient narrative is removed in both cases.
-    await this.d.store.deleteMessages(c.conversationId);
+    if (consent === "granted") {
+      // Saved: the transcript stays readable in the producer's own history (CONV-02) for the sandbox retention period.
+      await this.d.store.retainMessages(c.conversationId, Math.floor(this.now() / 1000) + SAVED_TRANSCRIPT_TTL_S);
+    } else {
+      // Declined: transcript, idempotency snapshots and challenge-derived title are removed; it leaves the history (CONV-04).
+      await this.d.store.purgeConversation(c.conversationId, { keepMeta: true });
+    }
     const saved = await this.save(c, {
       workflow: "closed", consent, status: consent === "granted" ? "completed" : "declined",
-      playbackSummary: undefined, confirmedAccount: undefined, summaryEn: undefined, summaryEs: undefined, producerAssertions: undefined,
+      playbackSummary: undefined, confirmedAccount: undefined, producerAssertions: undefined,
+      // Saved: the confirmed summary stays with the transcript for the producer's history. Declined: nothing narrative is kept.
+      // Saved: the summary and title stay until the producer deletes them (no expiry). Declined: nothing narrative is kept.
+      ...(consent === "granted" ? { expiresAt: 0 } : { title: undefined, summaryOriginal: undefined, summaryEn: undefined }),
     });
-    await this.d.store.releaseActiveSlot(c.ownerSub, c.conversationId);
+    await this.d.store.clearCurrent(c.ownerSub, c.conversationId);
     this.log({ event: "conversation_closed", conversationId: c.conversationId, consent });
     return this.view(saved);
+  }
+
+  /** Removes a saved conversation from the producer's own history: summary, title, transcript and snapshots.
+   *  The record already shared with Fair Trade USA for review is a separate, consented record and is not changed here. */
+  async deleteConversation(p: Principal, id: string) {
+    const c = await this.owned(p, id);
+    if (c.status === "active") throw conflict("wrong_state", "End this conversation before deleting it.");
+    await this.d.store.purgeConversation(id, { keepMeta: false });
+    await this.d.store.clearCurrent(p.sub, id);
+    this.log({ event: "conversation_deleted", conversationId: id });
+    return { deleted: true, conversationId: id };
   }
 
   private assertActive(c: Conversation) { if (c.status !== "active") throw conflict("conversation_closed", "This conversation has ended."); }
@@ -335,7 +390,7 @@ export class Service {
   // ---- reviewer ---------------------------------------------------------
   private reviewView(o: Outcome) {
     return { outcomeId: o.outcomeId, source: o.source, producerId: o.producerId, entityType: o.entityType, language: o.language,
-      summaryEn: o.summaryEn, summaryEs: o.summaryEs, piiFlag: o.piiFlag, piiTypes: o.piiTypes, evidenceStatus: o.evidenceStatus,
+      summaryOriginal: o.summaryOriginal ?? o.summaryEs, summaryEn: o.summaryEn, piiFlag: o.piiFlag, piiTypes: o.piiTypes, evidenceStatus: o.evidenceStatus,
       reviewStatus: o.reviewStatus, reviewedAt: o.reviewedAt, createdAt: o.createdAt, syntheticDemo: true };
   }
   async listReviews(p: Principal) {
@@ -348,7 +403,7 @@ export class Service {
     if (!o || o.kind !== "record") throw notFound(); // declined outcomes have no reviewable narrative
     return this.reviewView(o);
   }
-  async updateReview(p: Principal, id: string, req: { decision: "approve" | "correct"; correctedSummaryEn?: string; correctedSummaryEs?: string; piiHandled?: boolean }) {
+  async updateReview(p: Principal, id: string, req: { decision: "approve" | "correct"; correctedSummaryOriginal?: string; correctedSummaryEn?: string; piiHandled?: boolean }) {
     requireReviewer(p);
     const o = await this.d.store.getOutcome(id);
     if (!o || o.kind !== "record") throw notFound();
@@ -360,7 +415,7 @@ export class Service {
     const patch: Partial<Outcome> = { reviewStatus: status, reviewedBy: p.sub, reviewedAt: this.iso() };
     if (req.decision === "correct") {
       if (req.correctedSummaryEn) patch.summaryEn = req.correctedSummaryEn;
-      if (req.correctedSummaryEs) patch.summaryEs = req.correctedSummaryEs;
+      if (req.correctedSummaryOriginal) patch.summaryOriginal = req.correctedSummaryOriginal;
     }
     if (req.piiHandled) patch.piiFlag = false;
     const n = await this.d.store.reviewOutcome(id, patch);
