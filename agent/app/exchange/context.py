@@ -78,3 +78,38 @@ class TurnResponse(BaseModel):
     piiTypes: list[str] = []
     evidence: Evidence = Evidence()
     language: Language
+
+
+# ---- Case matching (separate structured step; the application chooses and projects the candidates, the model only ranks them) ----
+class Candidate(BaseModel):
+    caseId: str = Field(max_length=120)
+    challenge: str = Field(max_length=1200)
+    action: str | None = Field(default=None, max_length=700)
+    result: str | None = Field(default=None, max_length=700)
+    tags: list[str] = Field(default_factory=list, max_length=6)
+    sameOrganization: bool = False
+    sameCountry: bool = False
+
+
+class MatchRequest(BaseModel):
+    task: Literal["match"]
+    language: Language
+    producer: ProducerRef
+    account: str = Field(max_length=2000, description="The producer's confirmed account of their problem.")
+    tags: list[str] = Field(default_factory=list, max_length=6)
+    candidates: list[Candidate] = Field(max_length=25)
+
+
+class Match(BaseModel):
+    caseId: str
+    fit: Literal["strong", "partial"]
+    reason: str = Field(max_length=260, description="One sentence, in the producer's language, saying what makes this case similar to their problem.")
+
+
+class MatchOutput(BaseModel):
+    matches: list[Match] = Field(default_factory=list, max_length=8)
+
+
+class MatchResponse(BaseModel):
+    matches: list[Match]
+    considered: int

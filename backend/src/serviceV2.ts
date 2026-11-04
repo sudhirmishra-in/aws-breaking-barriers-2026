@@ -310,15 +310,31 @@ export class ServiceV2 extends Service {
     const pool = new Map<string, Outcome>();
     if (v.organizationId) for (const o of await this.d.store.listRecordsByOrganization(v.organizationId)) pool.set(o.outcomeId, o);
     for (const o of await this.d.store.listPublishedRecords()) pool.set(o.outcomeId, o);
-    const scored = [...pool.values()].filter((o) => o.outcomeId !== own.outcomeId && isEligible(o, v)).flatMap((o) => {
-      const shared = (o.challengeTags ?? []).filter((t) => tags.includes(t));
-      if (!crop || (o.crop ?? "").toLowerCase() !== crop || !shared.length) return []; // different farming or a different challenge: not comparable
-      const same = o.organizationId === v.organizationId, sameCountry = !!country && (o.location ?? "").toLowerCase().includes(country);
-      const c = projectCase(o, v);
-      const relevance = [`Same crop: ${crop}`, `Same challenge: ${shared.join(", ")}`, ...(same ? ["Your organization"] : []), ...(sameCountry ? [`Same country: ${org!.info.countryName}`] : [])];
-      return [{ ...c, relevance, score: (same ? 3 : 0) + (sameCountry ? 2 : 0) + shared.length * 2 + (c.resultReported ? 1 : 0) }];
-    }).sort((a, b) => b.score - a.score).slice(0, 5);
-    return { items: scored.map(({ score: _s, ...c }) => c), crop, tags, limitation: scored.length ? null : `No comparable cases yet for ${crop || "this crop"} and this challenge.` };
+    // 1. Application code decides what the model may see: authorized, projected cases of the same crop. Tag overlap only ranks; meaning is judged by the agent.
+    const cands = [...pool.values()].filter((o) => o.outcomeId !== own.outcomeId && isEligible(o, v) && !!crop && (o.crop ?? "").toLowerCase() === crop).map((o) => {
+      const c = projectCase(o, v); const shared = c.tags.filter((t) => tags.includes(t));
+      const sameCountry = !!country && (o.location ?? "").toLowerCase().includes(country);
+      return { c, shared, sameCountry, score: (c.sameOrganization ? 3 : 0) + (sameCountry ? 2 : 0) + shared.length * 2 + (c.resultReported ? 1 : 0) };
+    }).sort((a, b) => b.score - a.score).slice(0, 25);
+    const why = (x: (typeof cands)[number]) => [`Same crop: ${crop}`, ...(x.shared.length ? [`Same challenge: ${x.shared.join(", ")}`] : []), ...(x.c.sameOrganization ? ["Your organization"] : []), ...(x.sameCountry ? [`Same country: ${org!.info.countryName}`] : [])];
+    let picked: { c: (typeof cands)[number]["c"]; relevance: string[]; fit?: "strong" | "partial"; reason?: string }[] = [];
+    let matchedBy: "agent" | "rules" = "agent";
+    if (cands.length && this.d.agent.match) {
+      try {
+        const r = await this.d.agent.match({ task: "match", language: own.language, producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop },
+          account: (own.summaryEn ?? "").slice(0, 2000), tags,
+          candidates: cands.map((x) => ({ caseId: x.c.caseId, challenge: x.c.challenge, action: x.c.action, result: x.c.resultReported ? x.c.result : null, tags: x.c.tags, sameOrganization: x.c.sameOrganization, sameCountry: x.sameCountry })) },
+          `ftusa-match-${conversationId}`, p.sub);
+        // 2. The model only ranks: unknown or duplicate ids are dropped, so it can never introduce a case.
+        const byId = new Map(cands.map((x) => [x.c.caseId, x]));
+        const seen = new Set<string>();
+        for (const m of r.matches ?? []) { const x = byId.get(m.caseId); if (x && !seen.has(m.caseId)) { seen.add(m.caseId); picked.push({ c: x.c, relevance: why(x), fit: m.fit, reason: m.reason }); } }
+        picked = picked.slice(0, 3);
+      } catch { this.log({ event: "match_failure" }); matchedBy = "rules"; picked = []; }
+    } else matchedBy = "rules";
+    if (matchedBy === "rules") picked = cands.filter((x) => x.shared.length).slice(0, 3).map((x) => ({ c: x.c, relevance: why(x) })); // deterministic fallback
+    return { items: picked.map((x) => ({ ...x.c, relevance: x.relevance, fit: x.fit ?? null, reason: x.reason ?? null })), crop, tags, matchedBy, considered: cands.length,
+      limitation: picked.length ? null : `No close match yet for ${crop || "this crop"} and this problem.` };
   }
 
   async peerCase(p: Principal, caseId: string) {

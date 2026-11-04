@@ -284,6 +284,47 @@ describe("related cases", () => {
   });
 });
 
+describe("agent matching", () => {
+  async function world(matchImpl: (req: import("../src/agent").MatchRequest) => Promise<import("../src/agent").MatchResponse>) {
+    const store = new MemoryStore(); const calls: import("../src/agent").MatchRequest[] = [];
+    store.orgs.set("ORG-A", org("ORG-A", "Andean")); store.orgs.set("ORG-H", org("ORG-H", "Copan"));
+    store.profiles.set("s-ana", prof("PRD-ANA", "ORG-A", "en", "Ana")); store.profiles.set("s-lucia", prof("PRD-LUCIA", "ORG-H", "en", "Lucia"));
+    store.profiles.set("s-coco", { ...prof("PRD-COCO", "ORG-H", "en", "Coco"), crop: "cocoa" });
+    const stub = new Stub(); (stub as unknown as { match: unknown }).match = async (req: import("../src/agent").MatchRequest) => { calls.push(req); return matchImpl(req); };
+    const svc = new ServiceV2({ store, agent: stub });
+    const mine = await finalized(svc, ana, "share_summary");
+    const a = await finalized(svc, lucia, "share_summary"); await approve(svc, a, { case_card: { action: "Tanks", result: "Fewer dry days" } });
+    const b = await finalized(svc, lucia, "share_summary"); await approve(svc, b);
+    const c = await finalized(svc, P("s-coco"), "share_summary"); await approve(svc, c);
+    return { svc, calls, mine, a, b, c };
+  }
+  it("sends the agent only authorized, same-crop candidates and returns only what it picked, with its reason and fit", async () => {
+    const w = await world(async (req) => ({ matches: [{ caseId: req.candidates[0].caseId, fit: "strong", reason: "Same dry-spell problem" }], considered: req.candidates.length }));
+    const r = await w.svc.relatedCases(ana, w.mine);
+    expect(w.calls[0].candidates).toHaveLength(2); // two coffee cases; the cocoa case never reaches the model
+    expect(JSON.stringify(w.calls[0].candidates)).not.toContain("PRD-"); expect(JSON.stringify(w.calls[0])).not.toContain("rain was late"); // no ids, no transcripts
+    expect(r.matchedBy).toBe("agent"); expect(r.items).toHaveLength(1);
+    expect(r.items[0]).toMatchObject({ fit: "strong", reason: "Same dry-spell problem" });
+  });
+  it("drops case ids the model invents or repeats and may return no match at all", async () => {
+    const w = await world(async (req) => ({ matches: [{ caseId: "rec-invented-0001@1", fit: "strong", reason: "x" }, { caseId: req.candidates[1].caseId, fit: "partial", reason: "y" }, { caseId: req.candidates[1].caseId, fit: "strong", reason: "dup" }], considered: 2 }));
+    expect((await w.svc.relatedCases(ana, w.mine)).items.map((i) => i.reason)).toEqual(["y"]);
+    const none = await world(async () => ({ matches: [], considered: 2 }));
+    const r = await none.svc.relatedCases(ana, none.mine);
+    expect(r.items).toHaveLength(0); expect(r.limitation).toContain("No close match");
+  });
+  it("falls back to rule-based ranking when the agent fails, and says so", async () => {
+    const w = await world(async () => { throw new Error("down"); });
+    const r = await w.svc.relatedCases(ana, w.mine);
+    expect(r.matchedBy).toBe("rules"); expect(r.items.length).toBeGreaterThan(0); expect(r.items.every((i) => i.reason === null)).toBe(true);
+  });
+  it("does not call the agent when there is nothing comparable", async () => {
+    const w = await world(async () => ({ matches: [], considered: 0 }));
+    const lone = await w.svc.relatedCases(P("s-coco"), `${w.c}`); // cocoa grower: no cocoa peers
+    expect(lone.items).toHaveLength(0); expect(w.calls.filter((c) => c.producer.crop === "cocoa")).toHaveLength(0);
+  });
+});
+
 describe("feedback", () => {
   it("owner records helpfulness (replaceable); reviewers see it; others cannot", async () => {
     const { svc } = setup(); const id = await finalized(svc, ana, "ftusa_only");

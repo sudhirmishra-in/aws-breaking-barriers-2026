@@ -184,3 +184,40 @@ def test_seed_producers_join_to_team_synthetic_data():
     team = {p["producer_id"] for p in json.load(open(pathlib.Path(__file__).resolve().parents[2] / "data/team-synthetic/producers.json"))}
     ours = load_producers()
     assert {p["producerId"] for p in ours} <= team and all(p["entityType"] in {"smallholder", "cooperative", "estate", "processing_operation"} for p in ours)
+
+
+# ---- case matching ----
+from exchange.context import Match, MatchOutput
+from exchange.runtime import handle_match
+
+
+def match_payload(n=3):
+    return {"task": "match", "language": "en", "producer": PRODUCER, "account": "drought cut my coffee harvest", "tags": ["climate_weather"],
+            "candidates": [{"caseId": f"rec-case-{i:04d}@1", "challenge": "dry spell", "tags": ["climate_weather"]} for i in range(n)]}
+
+
+def test_match_keeps_only_supplied_unique_case_ids_and_at_most_three():
+    out = MatchOutput(matches=[Match(caseId="rec-case-0001@1", fit="strong", reason="r"), Match(caseId="rec-invented-9999@1", fit="strong", reason="r"),
+                               Match(caseId="rec-case-0001@1", fit="partial", reason="dup"), Match(caseId="rec-case-0000@1", fit="partial", reason="r")])
+    res = handle_match(match_payload(), lambda req: (lambda prompt: out))
+    assert [m["caseId"] for m in res["matches"]] == ["rec-case-0001@1", "rec-case-0000@1"] and res["considered"] == 3
+
+
+def test_match_may_return_nothing_and_skips_the_model_without_candidates():
+    assert handle_match(match_payload(), lambda req: (lambda prompt: MatchOutput(matches=[])))["matches"] == []
+    def boom(req): raise AssertionError("model must not run")
+    assert handle_match(match_payload(0), boom) == {"matches": [], "considered": 0}
+
+
+def test_match_prompt_carries_candidates_and_forbids_padding():
+    seen = {}
+    handle_match(match_payload(2), lambda req: (lambda prompt: seen.setdefault("p", prompt) and MatchOutput(matches=[])))
+    assert "rec-case-0001@1" in seen["p"] and "drought cut my coffee harvest" in seen["p"]
+    from exchange.runtime import MATCH_PROMPT
+    assert "fewer or none" in MATCH_PROMPT and "Never invent" in MATCH_PROMPT
+
+
+def test_handle_turn_routes_match_tasks(monkeypatch):
+    import exchange.runtime as rt
+    monkeypatch.setattr(rt, "handle_match", lambda payload: {"routed": True})
+    assert handle_turn(match_payload()) == {"routed": True}

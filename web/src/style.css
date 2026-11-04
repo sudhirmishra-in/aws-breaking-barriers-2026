@@ -301,3 +301,4 @@ html.dark .hist-dot { background:var(--warn); }
 .grp h3 { font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:.75rem 0 .25rem; }
 @media (max-width:420px) { .kv { grid-template-columns:1fr; } .kv dd { margin-bottom:.4rem; } }
 .ev { display:grid; gap:.5rem; margin:.5rem 0; }
+.match-why { margin:.25rem 0; font-size:.9rem; }

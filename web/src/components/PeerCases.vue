@@ -30,6 +30,7 @@ onMounted(load);
           <span class="pill" :class="c.sameOrganization ? 'ok' : ''">{{ c.sameOrganization ? "Your organization" : "Another organization" }}</span>
           <span v-if="c.visibility === 'organization_only'" class="pill" title="Only people in your organization can see this summary">Organization only</span>
           <span v-if="c.illustrative" class="pill warn">Illustrative</span></div>
+        <p v-if="c.reason" class="match-why"><span class="pill" :class="c.fit === 'strong' ? 'ok' : 'warn'">{{ c.fit === "strong" ? "Close match" : "Partial match" }}</span> {{ c.reason }}</p>
         <div v-if="c.relevance?.length" class="chips"><span v-for="r in c.relevance" :key="r" class="pill">{{ r }}</span></div>
         <dl class="kv"><dt>Challenge they faced</dt><dd>{{ c.challenge }}<span v-if="c.summaryOriginal && c.language !== 'en'" class="hint" :lang="c.language" style="display:block">{{ c.summaryOriginal }}</span></dd><dt>What they did</dt><dd>{{ c.action ?? "Not reported" }}</dd>
           <dt>Result</dt><dd :class="{ hint: !c.resultReported }">{{ c.result }}</dd></dl>
