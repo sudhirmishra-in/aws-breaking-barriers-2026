@@ -225,3 +225,22 @@ One module per dataset. Each: **fetch → aggregate to region → write to cache
 - **OPEN-12 (implementation) → "current" = year-to-date, compared to the same window.** The current rainfall figure is **2026 YTD** (Jan 1 through the last safely-available day, using a 7-day buffer past the ~5-day ERA5 delay). The baseline is *not* the full-year 1981–2010 mean — it is the **same calendar window** (Jan 1 → the same day) averaged over 1981–2010, so the comparison is fair: a partial year would otherwise always look artificially dry against a full-year total. The indicator is `ytd_rainfall_mm` (the earlier `annual_rainfall_mm` was cleared on re-ingest), unit is `mm`, and the period is labeled e.g. *"2026 YTD (01-01 to 10-28)."*
 
 **Still open:** none.
+
+---
+
+## 14. Deployment (integrated with the product stack)
+
+Component 5 ships inside the existing `FtusaExchange-<env>` CloudFormation stack (CDK, `infra/lib/exchange-stack.ts`) — no separate deploy. Four integration points, all in this branch:
+
+- **Packaging (step 1).** The agent zip (`scripts/build_agent.sh`) now copies `external_data/` into the package (`cp -R ../external_data build/pkg/`), so `get_environmental_context` and its gazetteer (including `data/countries.geojson`) are in the deployed AgentCore runtime. `shapely` is added to `agent/pyproject.toml` because the gazetteer imports it at module load. The arm64 zip is built in CI (Linux); it needs a C compiler for the numpy sdist, so it doesn't build on a stock Windows box.
+- **Table (step 3).** The stack creates the facts table as `ftusa-environmental-facts-<env>` (PK `region_key`, SK `fact_key`, on-demand, KMS-encrypted, PITR off, removal policy matching the other tables) and exposes its name as the `EnvironmentalFactsTable` stack output.
+- **IAM (step 2).** The AgentCore `RuntimeRole` is granted read-only DynamoDB access to that table (`grantReadData`), so the tool's partition query is authorized. The API Lambda and the runtime never get write access — the table is read-only at runtime by design.
+- **Manual ingest (step 4).** The table name is read from `ENVIRONMENTAL_FACTS_TABLE` (default `environmental_facts` for local dev; the stack sets it to the CDK table name on the runtime). Nothing in the deploy runs the ingest — it is an **offline, manual** step an operator runs to populate the table:
+
+  ```bash
+  # from the repo root, with credentials that can write to the CDK table in us-west-2
+  ENVIRONMENTAL_FACTS_TABLE=ftusa-environmental-facts-sandbox \
+    AWS_PROFILE=<profile> <python> -m external_data.ingest.open_meteo
+  ```
+
+  It's idempotent (re-running overwrites the same region/dataset/indicator/horizon keys). Until it's run against a freshly deployed environment, the table is empty and the tool returns an empty list (the agent says "no external data," not a wrong figure).

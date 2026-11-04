@@ -12,6 +12,7 @@ environment (the demo runs under the ``breaking-barriers-ny`` profile,
 from __future__ import annotations
 
 import datetime as dt
+import os
 from decimal import Decimal
 
 import boto3
@@ -22,7 +23,9 @@ def _num(x):
     """DynamoDB stores numbers as Decimal, never float. None passes through."""
     return None if x is None else Decimal(str(x))
 
-TABLE_NAME = "environmental_facts"
+# Default is the local/dev table; the deployed AgentCore runtime sets
+# ENVIRONMENTAL_FACTS_TABLE to the CDK-managed table name in its environment.
+TABLE_NAME = os.environ.get("ENVIRONMENTAL_FACTS_TABLE", "environmental_facts")
 PK = "region_key"          # <country>#COUNTRY  (OPEN-7: country-level)
 SK = "fact_key"            # <dataset>#<indicator>#<horizon>
 
