@@ -19,9 +19,21 @@ logger = logging.getLogger("external_data.tool")
 # theme has a cached dataset in the demo (Open-Meteo rainfall); the other themes
 # are reserved for the datasets that will be added later.
 TAG_TO_THEME: dict[str, set[str]] = {
+    # Climate: the demo's only cached theme (Open-Meteo rainfall). The model talks
+    # in natural language, so the map accepts the full range of weather tags it
+    # will plausibly emit — not just the controlled "climate and weather" key.
     "climate and weather": {"climate"},
+    "climate": {"climate"},
+    "weather": {"climate"},
+    "rainfall": {"climate"},
+    "rains": {"climate"},
+    "rain": {"climate"},
+    "precipitation": {"climate"},
     "drought": {"climate"},
+    "dry": {"climate"},
+    "wet": {"climate"},
     "floods": {"climate", "water"},
+    "flood": {"climate", "water"},
     "water": {"water"},
     "water scarcity": {"water"},
     "soil and land": {"soil_land"},
