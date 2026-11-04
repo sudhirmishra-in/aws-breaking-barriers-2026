@@ -6,6 +6,7 @@ import { useRoute, useRouter } from "vue-router";
 import { setUi, signOut, state } from "./session";
 import { dark, toggleTheme } from "./lib/theme";
 import { t } from "./lib/i18n";
+import { LANGS, type Lang } from "./types";
 const s = computed(() => t(state.ui));
 const router = useRouter();
 const route = useRoute();
@@ -30,8 +31,8 @@ function goLogin() { state.expired = false; state.authError = false; router.push
       <span class="pill warn" role="note">{{ s.demo }}</span>
       <label class="icon-btn" style="cursor:pointer">
         <Globe :size="16" aria-hidden="true" /><span class="sr">{{ s.language }}</span>
-        <select class="sel" :value="state.ui" @change="setUi(($event.target as HTMLSelectElement).value as 'en' | 'es')">
-          <option value="en">English</option><option value="es">Español</option>
+        <select class="sel" :value="state.ui" @change="setUi(($event.target as HTMLSelectElement).value as Lang)">
+          <option v-for="l in LANGS" :key="l.code" :value="l.code">{{ l.name }}</option>
         </select>
       </label>
       <button class="icon-btn" :aria-label="s.theme" :title="s.theme" @click="toggleTheme">

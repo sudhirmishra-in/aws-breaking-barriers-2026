@@ -4,7 +4,7 @@ import { _setUserForTests } from "./lib/auth";
 export function installDevMock(role: "producer" | "reviewer") {
   _setUserForTests({ access_token: "mock", expired: false, state: { returnTo: "/" } } as never);
   const profile = { displayName: "Synthetic Producer One", entityType: "cooperative", location: "Synthetic Highlands (fictional region)", crop: "coffee", preferredLanguage: "en" };
-  const item = (id: string, st: string, pii = false) => ({ outcomeId: id, source: "agent conversation", producerId: "SYN-P-001", language: "en", summaryEn: "Late rains reduced yield.", summaryEs: "Las lluvias tardías redujeron la producción.", piiFlag: pii, piiTypes: pii ? ["PHONE"] : [], reviewStatus: st, createdAt: "2026-11-03T14:00:00Z" });
+  const item = (id: string, st: string, pii = false) => ({ outcomeId: id, source: "agent conversation", producerId: "SYN-P-001", language: "es", summaryEn: "Late rains reduced yield.", summaryOriginal: "Las lluvias tardías redujeron la producción.", piiFlag: pii, piiTypes: pii ? ["PHONE"] : [], reviewStatus: st, createdAt: "2026-11-03T14:00:00Z" });
   const iso = (daysAgo: number) => new Date(Date.now() - daysAgo * 86_400_000).toISOString();
   const sample = {
     conversation: { conversationId: "c-1", language: "es", workflow: "playback_pending", confirmation: "pending", consent: "unanswered", status: "active", title: "Lluvias irregulares y menor cosecha",

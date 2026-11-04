@@ -142,6 +142,12 @@ def main() -> int:
         st, tr = http("POST", api + "/transcribe", ta, {"requestId": uuid.uuid4().hex, "language": "en", "audio": clip})
         spoken = tr.get("text", "").lower() if st == 200 else ""
         check("dictation turns synthetic speech into text", st == 200 and "rain" in spoken and "harvest" in spoken, f"status={st} chars={len(spoken)}")
+        clip_fr = base64.b64encode((Path(__file__).resolve().parent.parent / "fixtures" / "smoke-speech-fr.pcm").read_bytes()).decode()
+        st, tr = http("POST", api + "/transcribe", ta, {"requestId": uuid.uuid4().hex, "language": "fr", "audio": clip_fr})
+        said = tr.get("text", "").lower() if st == 200 else ""
+        check("French dictation turns synthetic speech into text", st == 200 and "pluie" in said and "colte" in said, f"status={st} chars={len(said)}")
+        st, ask_fr = http("POST", api + "/ask", ta, {"requestId": uuid.uuid4().hex, "text": "Existe-t-il des données climatiques pour ma région ?", "language": "fr"})
+        check("French question gets a model answer", st == 200 and len(ask_fr.get("answer", "")) > 20, f"status={st}")
         st, _ = http("POST", api + "/transcribe", ta, {"requestId": uuid.uuid4().hex, "language": "en", "audio": "AAAA"})
         check("too-short recording is rejected", st == 400, f"status={st}")
         st, _ = http("POST", api + "/transcribe", ta, {"requestId": uuid.uuid4().hex, "language": "en", "audio": clip, "producerId": "SYN-CI-B"})

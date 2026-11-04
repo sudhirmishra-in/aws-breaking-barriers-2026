@@ -4,7 +4,8 @@ import type { Language } from "./contracts";
 /** Speech to text port. Audio is held in memory for the request only: nothing is written anywhere. */
 export interface Transcriber { transcribe(pcm: Uint8Array, language: Language): Promise<string> }
 
-const LANGUAGE_CODE: Record<Language, "en-US" | "es-US"> = { en: "en-US", es: "es-US" };
+// Côte d'Ivoire French is closest to fr-FR among Transcribe streaming languages (verify accuracy with real speakers).
+const LANGUAGE_CODE: Record<Language, "en-US" | "es-US" | "fr-FR"> = { en: "en-US", es: "es-US", fr: "fr-FR" };
 const CHUNK_BYTES = 16000 * 2 * 0.2; // 200 ms of 16 kHz 16-bit mono PCM
 
 export class TranscribeStreamingTranscriber implements Transcriber {

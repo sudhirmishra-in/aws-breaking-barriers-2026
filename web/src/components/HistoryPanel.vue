@@ -58,7 +58,7 @@ const groups = computed(() => {
   }
   return [{ key: "today", label: s.value.today, list: today }, { key: "prev7", label: s.value.prev7, list: week }, { key: "older", label: s.value.older, list: older }].filter((g) => g.list.length);
 });
-const fmt = (iso: string) => new Date(iso).toLocaleDateString(state.ui === "es" ? "es" : "en", { month: "short", day: "numeric", year: "numeric" });
+const fmt = (iso: string) => new Date(iso).toLocaleDateString(state.ui, { month: "short", day: "numeric", year: "numeric" });
 </script>
 
 <template>

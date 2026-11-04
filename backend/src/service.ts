@@ -30,6 +30,7 @@ const IDEM_TTL_S = 86400;
 const OPENER: Record<Language, string> = {
   en: "What has been difficult recently?",
   es: "¿Qué ha sido difícil últimamente?",
+  fr: "Qu'est-ce qui a été difficile ces derniers temps ?",
 };
 
 const STAGE_OF: Record<Workflow, Stage> = { intake: "intake", playback_pending: "playback", guidance_pending: "response", consent_pending: "consent", closed: "consent" };
@@ -76,8 +77,8 @@ export class Service {
         conversationId: c.conversationId, language: c.language, workflow: c.workflow, confirmation: c.confirmation,
         // No PII flag here: the producer side never shows it (spec CHAT-19).
         consent: c.consent, status: c.status, title: c.title ?? null, playbackSummary: c.playbackSummary,
+        summaryOriginal: c.workflow === "consent_pending" || c.status === "completed" ? c.summaryOriginal : undefined,
         summaryEn: c.workflow === "consent_pending" || c.status === "completed" ? c.summaryEn : undefined,
-        summaryEs: c.workflow === "consent_pending" || c.status === "completed" ? c.summaryEs : undefined,
         createdAt: c.createdAt, updatedAt: c.updatedAt, expiresAt: c.expiresAt ? new Date(c.expiresAt * 1000).toISOString() : null,
       },
       messages: messages.map((m) => ({ seq: m.seq, role: m.role, text: m.text, at: m.at, stage: m.stage ?? null })),
@@ -110,7 +111,7 @@ export class Service {
 
   /** The summary the producer saw, in their language: the saved summary, else the latest playback. */
   private producerSummary(c: Conversation): string | null {
-    const saved = c.language === "es" ? c.summaryEs : c.summaryEn;
+    const saved = c.summaryOriginal ?? (c.language === "en" ? c.summaryEn : undefined);
     return saved ?? c.confirmedAccount ?? c.playbackSummary ?? null;
   }
 
@@ -242,10 +243,10 @@ export class Service {
         }
         const history = await this.d.store.listMessages(id);
         const r = await this.runAgent(cur, profile, "guidance", history.slice(0, -1), "The producer confirmed the account. Please continue.", false, p);
-        const count2 = await this.append(cur, [{ role: "assistant", text: r.reply, stage: r.summaryEn && r.summaryEs ? "consent" : "response" }]);
+        const count2 = await this.append(cur, [{ role: "assistant", text: r.reply, stage: r.summaryEn && r.summaryOriginal ? "consent" : "response" }]);
         const saved = await this.save(cur, {
-          messageCount: count2, summaryEn: r.summaryEn ?? undefined, summaryEs: r.summaryEs ?? undefined,
-          workflow: r.summaryEn && r.summaryEs ? "consent_pending" : "guidance_pending",
+          messageCount: count2, summaryOriginal: r.summaryOriginal ?? undefined, summaryEn: r.summaryEn ?? undefined,
+          workflow: r.summaryEn && r.summaryOriginal ? "consent_pending" : "guidance_pending",
           piiFlag: cur.piiFlag || r.piiFlag, piiTypes: [...new Set([...cur.piiTypes, ...r.piiTypes])],
         });
         return this.view(saved);
@@ -277,7 +278,7 @@ export class Service {
     return this.guarded(p, id, requestId, async (c) => {
       this.assertActive(c);
       if (c.workflow !== "consent_pending") throw conflict("wrong_state", "Storage permission is not requested yet.");
-      if (storeSummary && !(c.summaryEn && c.summaryEs)) throw conflict("no_summary", "There is no summary to store.");
+      if (storeSummary && !(c.summaryEn && c.summaryOriginal)) throw conflict("no_summary", "There is no summary to store.");
       return this.close(c, storeSummary ? "granted" : "declined", "declined_storage");
     });
   }
@@ -294,7 +295,7 @@ export class Service {
     if (consent === "granted") {
       const o: Outcome = {
         ...base, outcomeId: `rec-${c.conversationId}`, kind: "record", source: "agent conversation",
-        entityType: (await this.d.store.getProfileBySub(c.ownerSub))?.entityType, summaryEn: c.summaryEn, summaryEs: c.summaryEs,
+        entityType: (await this.d.store.getProfileBySub(c.ownerSub))?.entityType, summaryOriginal: c.summaryOriginal, summaryEn: c.summaryEn,
         piiFlag: c.piiFlag, piiTypes: c.piiTypes, evidenceStatus: "unavailable", reviewStatus: "pending",
       };
       await this.d.store.putOutcome(o);
@@ -313,7 +314,7 @@ export class Service {
       playbackSummary: undefined, confirmedAccount: undefined, producerAssertions: undefined,
       // Saved: the confirmed summary stays with the transcript for the producer's history. Declined: nothing narrative is kept.
       // Saved: the summary and title stay until the producer deletes them (no expiry). Declined: nothing narrative is kept.
-      ...(consent === "granted" ? { expiresAt: 0 } : { title: undefined, summaryEn: undefined, summaryEs: undefined }),
+      ...(consent === "granted" ? { expiresAt: 0 } : { title: undefined, summaryOriginal: undefined, summaryEn: undefined }),
     });
     await this.d.store.clearCurrent(c.ownerSub, c.conversationId);
     this.log({ event: "conversation_closed", conversationId: c.conversationId, consent });
@@ -389,7 +390,7 @@ export class Service {
   // ---- reviewer ---------------------------------------------------------
   private reviewView(o: Outcome) {
     return { outcomeId: o.outcomeId, source: o.source, producerId: o.producerId, entityType: o.entityType, language: o.language,
-      summaryEn: o.summaryEn, summaryEs: o.summaryEs, piiFlag: o.piiFlag, piiTypes: o.piiTypes, evidenceStatus: o.evidenceStatus,
+      summaryOriginal: o.summaryOriginal ?? o.summaryEs, summaryEn: o.summaryEn, piiFlag: o.piiFlag, piiTypes: o.piiTypes, evidenceStatus: o.evidenceStatus,
       reviewStatus: o.reviewStatus, reviewedAt: o.reviewedAt, createdAt: o.createdAt, syntheticDemo: true };
   }
   async listReviews(p: Principal) {
@@ -402,7 +403,7 @@ export class Service {
     if (!o || o.kind !== "record") throw notFound(); // declined outcomes have no reviewable narrative
     return this.reviewView(o);
   }
-  async updateReview(p: Principal, id: string, req: { decision: "approve" | "correct"; correctedSummaryEn?: string; correctedSummaryEs?: string; piiHandled?: boolean }) {
+  async updateReview(p: Principal, id: string, req: { decision: "approve" | "correct"; correctedSummaryOriginal?: string; correctedSummaryEn?: string; piiHandled?: boolean }) {
     requireReviewer(p);
     const o = await this.d.store.getOutcome(id);
     if (!o || o.kind !== "record") throw notFound();
@@ -414,7 +415,7 @@ export class Service {
     const patch: Partial<Outcome> = { reviewStatus: status, reviewedBy: p.sub, reviewedAt: this.iso() };
     if (req.decision === "correct") {
       if (req.correctedSummaryEn) patch.summaryEn = req.correctedSummaryEn;
-      if (req.correctedSummaryEs) patch.summaryEs = req.correctedSummaryEs;
+      if (req.correctedSummaryOriginal) patch.summaryOriginal = req.correctedSummaryOriginal;
     }
     if (req.piiHandled) patch.piiFlag = false;
     const n = await this.d.store.reviewOutcome(id, patch);

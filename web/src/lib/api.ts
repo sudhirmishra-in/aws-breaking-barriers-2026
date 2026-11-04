@@ -41,6 +41,6 @@ export const api = {
   end: (id: string, requestId: string) => call<ConversationView>("POST", `/conversations/${id}/end`, { requestId }),
   reviews: () => call<{ items: ReviewItem[] }>("GET", "/reviews"),
   review: (id: string) => call<ReviewItem>("GET", `/reviews/${id}`),
-  updateReview: (id: string, body: { decision: "approve" | "correct"; correctedSummaryEn?: string; correctedSummaryEs?: string; piiHandled?: boolean }) =>
+  updateReview: (id: string, body: { decision: "approve" | "correct"; correctedSummaryOriginal?: string; correctedSummaryEn?: string; piiHandled?: boolean }) =>
     call<ReviewItem>("PUT", `/reviews/${id}`, { requestId: newRequestId(), ...body }),
 };

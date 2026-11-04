@@ -9,7 +9,7 @@ import { api, newRequestId } from "../lib/api";
 import { renderMarkdown } from "../lib/markdown";
 import { markExpired, state } from "../session";
 import { t } from "../lib/i18n";
-import { ApiFailure, type ConversationDto, type ConversationView, type Lang, type Message, type Stage } from "../types";
+import { ApiFailure, LANGS, type ConversationDto, type ConversationView, type Lang, type Message, type Stage } from "../types";
 
 const s = computed(() => t(state.ui));
 const route = useRoute();
@@ -140,8 +140,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
             <span class="bar" aria-hidden="true" />
             <p>{{ s.about }}</p>
             <div class="seg" role="group" :aria-label="s.language">
-              <button :aria-pressed="startLang === 'en'" @click="startLang = 'en'">English</button>
-              <button :aria-pressed="startLang === 'es'" @click="startLang = 'es'">Español</button>
+              <button v-for="l in LANGS" :key="l.code" :aria-pressed="startLang === l.code" :lang="l.code" @click="startLang = l.code">{{ l.name }}</button>
             </div>
             <div><button class="btn primary" :disabled="busy" @click="start"><MessageCircle :size="16" aria-hidden="true" />{{ busy ? s.sending : s.start }}</button></div>
             <div v-if="error" class="banner error" role="alert">{{ error.text }} <button v-if="error.retry" class="btn sm" @click="error.retry()">{{ s.retry }}</button></div>
@@ -200,7 +199,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
             <p class="banner info" style="margin:0">{{ s.noEvidence }}</p>
             <h2>{{ s.consentTitle }}</h2>
             <p style="margin:0;font-size:.875rem;color:var(--muted)">{{ s.consentText }}</p>
-            <blockquote class="quote">{{ lang === "es" ? conv.summaryEs : conv.summaryEn }}</blockquote>
+            <blockquote class="quote" :lang="lang">{{ conv.summaryOriginal ?? conv.summaryEn }}</blockquote>
             <div class="row">
               <button class="btn primary" :disabled="busy" @click="decide(true)"><ShieldCheck :size="16" aria-hidden="true" />{{ s.storeYes }}</button>
               <button class="btn" :disabled="busy" @click="decide(false)">{{ s.storeNo }}</button>

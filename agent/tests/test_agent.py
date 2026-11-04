@@ -36,10 +36,10 @@ def test_playback_allowed_requires_summary():
 
 
 def test_guidance_mode_forces_guidance_and_reports_evidence_unavailable():
-    out = TurnOutput(reply="r", phase="intake", summary_en="a", summary_es="b")
+    out = TurnOutput(reply="r", phase="intake", summary_en="a", summary_original="b")
     res = handle_turn(payload(mode="guidance"), runner(out), lambda t: [])
     assert res["phase"] == "guidance" and res["evidence"]["status"] == "unavailable"
-    assert res["summaryEn"] == "a" and res["summaryEs"] == "b"
+    assert res["summaryEn"] == "a" and res["summaryOriginal"] == "b"
 
 
 def test_pii_flag_without_redaction():
@@ -100,3 +100,19 @@ def test_title_only_returned_with_playback():
     assert res["title"] == "Lluvias irregulares y menor cosecha"
     out = TurnOutput(reply="r", phase="intake", title="ignored")
     assert handle_turn(payload(allow=False), runner(out), lambda t: [])["title"] is None
+
+
+def test_french_prompt_and_summary_fields():
+    from exchange.context import TrustedContext
+    ctx = TrustedContext.model_validate(payload(lang="fr", mode="guidance")["context"])
+    p = system_prompt(ctx)
+    assert "Always reply in French" in p and "summary_original" in p and "in French" in p
+    out = TurnOutput(reply="r", phase="guidance", summary_original="Pluies irrégulières", summary_en="Irregular rain")
+    res = handle_turn(payload(lang="fr", mode="guidance"), runner(out), lambda t: [])
+    assert res["language"] == "fr" and res["summaryOriginal"] == "Pluies irrégulières" and res["summaryEn"] == "Irregular rain"
+
+
+def test_english_summary_original_falls_back_to_english():
+    out = TurnOutput(reply="r", phase="guidance", summary_en="Late rain")
+    res = handle_turn(payload(mode="guidance"), runner(out), lambda t: [])
+    assert res["summaryOriginal"] == "Late rain"

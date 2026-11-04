@@ -6,11 +6,15 @@ import { ApiFailure } from "../src/types";
 
 describe("i18n", () => {
   it("English and Spanish define the same keys", () => {
-    expect(Object.keys(t("es")).sort()).toEqual(Object.keys(t("en")).sort());
+    for (const l of ["es", "fr"] as const) {
+      expect(Object.keys(t(l)).sort()).toEqual(Object.keys(t("en")).sort());
+      for (const k of ["entity", "stageNames", "stageDesc"] as const) expect(Object.keys(t(l)[k]).sort()).toEqual(Object.keys(t("en")[k]).sort());
+      expect(t(l).chips.length).toBe(t("en").chips.length);
+    }
     expect(Object.keys(t("es").entity).sort()).toEqual(Object.keys(t("en").entity).sort());
   });
   it("producer screens avoid internal AWS terms", () => {
-    const all = JSON.stringify([t("en"), t("es")]).toLowerCase();
+    const all = JSON.stringify([t("en"), t("es"), t("fr")]).toLowerCase();
     for (const w of ["bedrock", "agentcore", "cognito", "lambda", "dynamodb", "guardrail"]) expect(all).not.toContain(w);
   });
 });

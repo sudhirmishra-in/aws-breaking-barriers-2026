@@ -24,7 +24,7 @@ class StubAgent implements AgentClient {
       reply: req.context.language === "es" ? "respuesta" : "reply", language: req.context.language,
       phase: req.context.mode === "guidance" ? "guidance" : playback ? "playback" : "intake",
       playbackSummary: playback ? "late rain hurt yield" : null, title: playback ? "Late rain and lower yield" : null,
-      summaryEn: req.context.mode === "guidance" ? "EN summary" : null, summaryEs: req.context.mode === "guidance" ? "ES resumen" : null,
+      summaryEn: req.context.mode === "guidance" ? "EN summary" : null, summaryOriginal: req.context.mode === "guidance" ? (req.context.language === "en" ? "EN summary" : req.context.language === "fr" ? "FR résumé" : "ES resumen") : null,
       piiFlag: req.messages.at(-1)!.text.includes("555"), piiTypes: req.messages.at(-1)!.text.includes("555") ? ["PHONE"] : [],
       evidence: { status: "unavailable" },
     };
@@ -157,7 +157,7 @@ describe("consent, decline, review", () => {
     const { svc, store } = setup(); const id = await toConsent(svc);
     const v = await svc.consent(alice, id, rid(), true);
     const o = [...store.outcomes.values()][0];
-    expect(v.conversation.status).toBe("completed"); expect(o).toMatchObject({ kind: "record", source: "agent conversation", reviewStatus: "pending", summaryEn: "EN summary", summaryEs: "ES resumen" });
+    expect(v.conversation.status).toBe("completed"); expect(o).toMatchObject({ kind: "record", source: "agent conversation", reviewStatus: "pending", summaryEn: "EN summary", summaryOriginal: "EN summary" });
     expect((await store.listMessages(id)).length).toBeGreaterThan(0); // saved: transcript stays in the producer's history
     expect((await store.getConversation(id))!.summaryEn).toBe("EN summary"); // kept for the producer's own history
   });
@@ -243,7 +243,7 @@ describe("dictation", () => {
   it("route rejects unknown fields and bad language", async () => {
     const { svc } = setup();
     await expect(route(svc, alice, "POST", "/transcribe", { requestId: rid(), language: "en", audio: pcm(1), producerId: "x" })).rejects.toThrow();
-    await expect(route(svc, alice, "POST", "/transcribe", { requestId: rid(), language: "fr", audio: pcm(1) })).rejects.toThrow();
+    await expect(route(svc, alice, "POST", "/transcribe", { requestId: rid(), language: "de", audio: pcm(1) })).rejects.toThrow();
   });
 });
 
@@ -302,7 +302,7 @@ describe("decline keeps no summary", () => {
   it("a declined conversation keeps no title or summary", async () => {
     const { svc, store } = setup(); const id = await toConsent(svc); await svc.consent(alice, id, rid(), false);
     const c = (await store.getConversation(id))!;
-    expect([c.title, c.summaryEn, c.summaryEs, c.playbackSummary]).toEqual([undefined, undefined, undefined, undefined]);
+    expect([c.title, c.summaryEn, c.summaryOriginal, c.playbackSummary]).toEqual([undefined, undefined, undefined, undefined]);
   });
 });
 
@@ -334,5 +334,32 @@ describe("saved summaries are kept until deleted", () => {
     await svc.message(alice, id, rid(), "my story"); await svc.end(alice, id, rid());
     const snaps = [...store.idem.entries()].filter(([k]) => k.startsWith(id)).map(([, v]) => JSON.stringify(v));
     expect(snaps.some((x) => x.includes("my story"))).toBe(false);
+  });
+});
+
+describe("French", () => {
+  async function toConsentFr(svc: Service) {
+    const id = (await svc.create(alice, "fr", rid())).conversation.conversationId;
+    await svc.message(alice, id, rid(), "Les pluies sont arrivées tard"); await svc.message(alice, id, rid(), "La récolte a baissé");
+    await svc.playback(alice, id, { requestId: rid(), decision: "confirm" }); return id;
+  }
+  it("passes French to the agent and uses the French opener when the agent is down", async () => {
+    const { svc, agent } = setup(); await svc.create(alice, "fr", rid());
+    expect(agent.calls[0].context.language).toBe("fr");
+    agent.fail = true;
+    expect((await svc.create(alice, "fr", rid())).messages[0].text).toBe("Qu'est-ce qui a été difficile ces derniers temps ?");
+  });
+  it("stores the French original and the English summary on the record and in history", async () => {
+    const { svc, store } = setup(); const id = await toConsentFr(svc); await svc.consent(alice, id, rid(), true);
+    expect(store.outcomes.get(`rec-${id}`)).toMatchObject({ language: "fr", summaryOriginal: "FR résumé", summaryEn: "EN summary" });
+    expect((await svc.listConversations(alice)).items[0].summary).toBe("FR résumé");
+  });
+  it("reviewer can correct the original-language summary", async () => {
+    const { svc } = setup(); const id = await toConsentFr(svc); await svc.consent(alice, id, rid(), true);
+    expect(await svc.updateReview(rev, `rec-${id}`, { decision: "correct", correctedSummaryOriginal: "Pluies tardives" })).toMatchObject({ summaryOriginal: "Pluies tardives", reviewStatus: "corrected" });
+  });
+  it("rejects unsupported languages", async () => {
+    const { svc } = setup();
+    await expect(route(svc, alice, "POST", "/conversations", { requestId: rid(), language: "de" })).rejects.toThrow();
   });
 });

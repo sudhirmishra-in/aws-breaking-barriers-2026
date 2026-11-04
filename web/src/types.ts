@@ -1,19 +1,20 @@
 // Mirrors backend/src/contracts.ts response shapes.
-export type Lang = "en" | "es";
+export type Lang = "en" | "es" | "fr";
+export const LANGS: { code: Lang; name: string }[] = [{ code: "en", name: "English" }, { code: "es", name: "Español" }, { code: "fr", name: "Français" }];
 export type Stage = "intake" | "playback" | "response" | "consent" | "feedback";
 export interface Message { seq: number; role: "user" | "assistant"; text: string; at: string; stage?: Stage | null }
 export interface ConversationDto {
   conversationId: string; language: Lang;
   workflow: "intake" | "playback_pending" | "guidance_pending" | "consent_pending" | "closed";
   confirmation: string; consent: "unanswered" | "granted" | "declined"; status: "active" | "completed" | "declined";
-  title?: string | null; playbackSummary?: string; summaryEn?: string; summaryEs?: string; expiresAt: string | null;
+  title?: string | null; playbackSummary?: string; summaryOriginal?: string; summaryEn?: string; expiresAt: string | null;
 }
 export interface ConversationView { conversation: ConversationDto; messages: Message[]; retention: { activeDays: number; savedDays?: number; text: string }; syntheticDemo: true }
 export interface ConversationSummary { conversationId: string; title: string | null; language: Lang; createdAt: string; updatedAt: string; status: "in_progress" | "saved"; summary: string | null }
 export interface CurrentView { conversation: ConversationDto | null; messages?: Message[]; retention?: ConversationView["retention"] }
 export interface Me { roles: ("producer" | "reviewer")[]; profile?: { displayName: string; entityType: string; location: string; crop: string; preferredLanguage: Lang }; syntheticDemo: true }
 export interface ReviewItem {
-  outcomeId: string; source: string; producerId: string; entityType?: string; language: Lang; summaryEn?: string; summaryEs?: string;
+  outcomeId: string; source: string; producerId: string; entityType?: string; language: Lang; summaryOriginal?: string; summaryEn?: string;
   piiFlag?: boolean; piiTypes?: string[]; evidenceStatus?: string; reviewStatus: "pending" | "approved" | "corrected"; reviewedAt?: string; createdAt: string;
 }
 export class ApiFailure extends Error {
