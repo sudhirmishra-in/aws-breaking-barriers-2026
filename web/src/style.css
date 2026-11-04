@@ -153,3 +153,23 @@ details.card summary { cursor:pointer; font-weight:600; font-size:.9rem; } detai
   .end-label { display:none; }
   .chat-main { height:calc(100vh - 9.5rem); }
 }
+
+/* ---- Buttons, per the requested reference: pill shape, lime primary that turns dark green on hover,
+        white secondary with a lime outline. Colors sampled from the reference screenshots. ---- */
+:root { --btn-lime:#a2d556; --btn-ink:#39373a; --btn-dark:#203a16; }
+.btn { border-radius:999px; min-height:2.75rem; padding:.55rem 1.6rem; font-weight:500; font-size:.9rem; letter-spacing:.02em; text-transform:uppercase;
+  background:#fff; color:var(--btn-ink); border:3px solid var(--btn-lime); box-shadow:0 6px 16px rgb(0 0 0 / .10);
+  transition:background-color .15s, color .15s, border-color .15s, box-shadow .15s; }
+.btn:hover:not(:disabled) { background:#fff; color:var(--btn-dark); border-color:var(--btn-dark); }
+.btn.primary { background:var(--btn-lime); color:var(--btn-ink); border:3px solid var(--btn-lime); }
+.btn.primary:hover:not(:disabled) { background:var(--btn-dark); border-color:var(--btn-dark); color:#fff; filter:none; }
+.btn.sm { min-height:2.25rem; padding:.3rem 1rem; font-size:.75rem; border-width:2px; box-shadow:0 3px 8px rgb(0 0 0 / .08); }
+.btn:disabled { opacity:.5; box-shadow:none; }
+.btn:focus-visible { outline:3px solid var(--btn-dark); outline-offset:3px; }
+.dark .btn { background:var(--surface); color:var(--fg); }
+.dark .btn:hover:not(:disabled) { background:var(--surface); color:#fff; border-color:#fff; }
+.dark .btn.primary { background:var(--btn-lime); color:var(--btn-ink); border-color:var(--btn-lime); }
+.dark .btn.primary:hover:not(:disabled) { background:var(--btn-dark); color:#fff; border-color:var(--btn-lime); }
+.dark .btn:focus-visible { outline-color:var(--btn-lime); }
+.send { border-radius:50%; background:var(--btn-lime); color:var(--btn-ink); transition:background-color .15s, color .15s; }
+.send:hover:not(:disabled) { background:var(--btn-dark); color:#fff; }
