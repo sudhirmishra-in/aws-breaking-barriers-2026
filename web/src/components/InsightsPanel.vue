@@ -6,15 +6,16 @@ import { onMounted } from "vue";
 import EvidenceCard from "./EvidenceCard.vue";
 import PeerCases from "./PeerCases.vue";
 import { api } from "../lib/api";
-import { PUBLICATION_STATUS } from "../lib/labels";
+import { useL } from "../lib/labels";
 import type { ApiFailure, ConversationView, EvidenceItem, RecordStateDto } from "../types";
 
 const props = defineProps<{ view: ConversationView }>();
+const l = useL();
 const emit = defineEmits<{ changed: []; ask: [caseId: string] }>();
 const rec = computed<RecordStateDto | null>(() => props.view.record ?? null);
 const evidence = ref<EvidenceItem[]>([]); const projects = ref<EvidenceItem[]>([]); const limitation = ref("");
 const curated = computed(() => evidence.value.filter((e) => e.curationStatus === "ftusa_curated"));
-onMounted(async () => { try { const r = await api.evidence(props.view.conversation.conversationId); evidence.value = r.items; projects.value = r.projects ?? []; limitation.value = r.limitation ?? ""; } catch { limitation.value = "Evidence could not be loaded just now."; } });
+onMounted(async () => { try { const r = await api.evidence(props.view.conversation.conversationId); evidence.value = r.items; projects.value = r.projects ?? []; limitation.value = r.limitation ? l.value.ins.noEvidence : ""; } catch { limitation.value = l.value.ins.loadFail; } });
 const msg = ref(""); const busy = ref(false); const confirmDelete = ref(false);
 async function act(fn: () => Promise<unknown>) { busy.value = true; msg.value = ""; try { await fn(); emit("changed"); } catch (e) { msg.value = (e as ApiFailure).message; } finally { busy.value = false; } }
 const fbBusy = ref(false);
@@ -27,35 +28,35 @@ const deletion = () => act(async () => { const r = await api.requestDeletion(pro
 
 <template>
   <section class="insights" aria-label="Summary and insights">
-    <h2>Summary and insights</h2>
-    <div class="card"><h3>Your confirmed summary</h3>
+    <h2>{{ l.ins.title }}</h2>
+    <div class="card"><h3>{{ l.ins.confirmed }}</h3>
       <blockquote class="quote" :lang="view.conversation.language">{{ view.conversation.summaryOriginal ?? view.conversation.summaryEn }}</blockquote>
-      <p class="hint">This is only your own confirmed account. Anything below that comes from outside is kept separate.</p></div>
-    <div v-if="rec" class="card"><h3>Sharing and review</h3>
-      <dl class="kv"><dt>Fair Trade USA review</dt><dd>{{ { pending: "Waiting for review", approved: "Approved", corrected: "Reviewed with edits" }[rec.reviewStatus] }}</dd>
-        <dt>Sharing</dt><dd>{{ PUBLICATION_STATUS[rec.publicationStatus] }}</dd><dt>Name shown</dt><dd>{{ rec.identityPermitted ? "Yes" : "No" }}</dd></dl>
-      <div v-if="rec.reconfirmation" class="banner info" role="group" aria-label="Reviewer edit"><p>A reviewer suggests this wording. It is shared only if you agree.</p>
+      <p class="hint">{{ l.ins.only }}</p></div>
+    <div v-if="rec" class="card"><h3>{{ l.ins.sharingReview }}</h3>
+      <dl class="kv"><dt>{{ l.ins.review }}</dt><dd>{{ l.ins.reviewSt[rec.reviewStatus] }}</dd>
+        <dt>{{ l.ins.sharingL }}</dt><dd>{{ l.pub[rec.publicationStatus] }}</dd><dt>{{ l.ins.nameShown }}</dt><dd>{{ rec.identityPermitted ? l.ins.yes : l.ins.no }}</dd></dl>
+      <div v-if="rec.reconfirmation" class="banner info" role="group" aria-label="Reviewer edit"><p>{{ l.ins.reviewerEdit }}</p>
         <blockquote class="quote">{{ rec.reconfirmation.summaryOriginal }}</blockquote>
-        <div class="row"><button class="btn primary sm" :disabled="busy" @click="reconfirm(true)">Use the edited wording</button><button class="btn sm" :disabled="busy" @click="reconfirm(false)">Keep my original</button></div></div>
+        <div class="row"><button class="btn primary sm" :disabled="busy" @click="reconfirm(true)">{{ l.ins.useEdited }}</button><button class="btn sm" :disabled="busy" @click="reconfirm(false)">{{ l.ins.keepOrig }}</button></div></div>
       <div v-if="!rec.deletionRequested" class="row">
-        <button v-if="rec.sharingChoice !== 'ftusa_only'" class="btn sm" :disabled="busy" @click="stopSharing">Stop sharing with other producers</button>
-        <button v-if="rec.identityPermitted" class="btn sm" :disabled="busy" @click="hideName">Hide my name</button>
-        <button v-if="!confirmDelete" class="btn sm" :disabled="busy" @click="confirmDelete = true">Request deletion</button>
-        <span v-else role="alertdialog" class="row">Ask Fair Trade USA to delete this record? <button class="btn sm danger" :disabled="busy" @click="deletion">Yes, request deletion</button><button class="btn sm" @click="confirmDelete = false">Cancel</button></span>
+        <button v-if="rec.sharingChoice !== 'ftusa_only'" class="btn sm" :disabled="busy" @click="stopSharing">{{ l.ins.stop }}</button>
+        <button v-if="rec.identityPermitted" class="btn sm" :disabled="busy" @click="hideName">{{ l.ins.hide }}</button>
+        <button v-if="!confirmDelete" class="btn sm" :disabled="busy" @click="confirmDelete = true">{{ l.ins.reqDel }}</button>
+        <span v-else role="alertdialog" class="row">{{ l.ins.askDel }} <button class="btn sm danger" :disabled="busy" @click="deletion">{{ l.ins.yesDel }}</button><button class="btn sm" @click="confirmDelete = false">{{ l.info.cancel }}</button></span>
       </div>
-      <p v-else class="hint">Deletion requested. This case is no longer shared.</p>
+      <p v-else class="hint">{{ l.ins.delDone }}</p>
       <p v-if="msg" class="hint" role="status">{{ msg }}</p></div>
-    <div class="card"><h3>What the data shows</h3>
+    <div class="card"><h3>{{ l.ins.data }}</h3>
       <EvidenceCard v-for="e in evidence" :key="e.evidenceId" :item="e" />
-      <h4 v-if="projects.length" class="ev-sub">Similar project records from public source data</h4>
+      <h4 v-if="projects.length" class="ev-sub">{{ l.ins.projects }}</h4>
       <EvidenceCard v-for="e in projects" :key="e.evidenceId" :item="e" />
-      <p v-if="!evidence.length && !projects.length" class="hint">{{ limitation || "Loading…" }}</p></div>
-    <div class="card"><h3>Information curated by Fair Trade USA</h3>
+      <p v-if="!evidence.length && !projects.length" class="hint">{{ limitation || l.loading }}</p></div>
+    <div class="card"><h3>{{ l.ins.curated }}</h3>
       <EvidenceCard v-for="e in curated" :key="e.evidenceId" :item="e" />
-      <p v-if="!curated.length" class="hint">Nothing curated by Fair Trade USA is available for this case yet.</p></div>
-    <PeerCases scope="all" title="What others have done" :related-to="view.conversation.conversationId" @ask="(id) => emit('ask', id)" />
-    <div v-if="rec" class="card" role="group" aria-label="Feedback"><h3>Was this helpful?</h3>
-      <p v-if="rec.feedback" class="hint" role="status">Thank you. You answered: {{ { yes: "Yes", partly: "Partly", no: "No" }[rec.feedback.helpful] }}. You can change your answer.</p>
-      <div class="row"><button v-for="o in [['yes', 'Yes'], ['partly', 'Partly'], ['no', 'No']] as const" :key="o[0]" class="btn sm" :class="{ primary: rec.feedback?.helpful === o[0] }" :aria-pressed="rec.feedback?.helpful === o[0]" :disabled="fbBusy" @click="sendFeedback(o[0])">{{ o[1] }}</button></div></div>
+      <p v-if="!curated.length" class="hint">{{ l.ins.noCurated }}</p></div>
+    <PeerCases scope="all" :title="l.ins.others" :related-to="view.conversation.conversationId" @ask="(id) => emit('ask', id)" />
+    <div v-if="rec" class="card" role="group" aria-label="Feedback"><h3>{{ l.ins.helpful }}</h3>
+      <p v-if="rec.feedback" class="hint" role="status">{{ l.ins.thanksFb.replace("{a}", { yes: l.ins.yes, partly: l.ins.partly, no: l.ins.no }[rec.feedback.helpful]) }}</p>
+      <div class="row"><button v-for="o in [['yes', l.ins.yes], ['partly', l.ins.partly], ['no', l.ins.no]] as const" :key="o[0]" class="btn sm" :class="{ primary: rec.feedback?.helpful === o[0] }" :aria-pressed="rec.feedback?.helpful === o[0]" :disabled="fbBusy" @click="sendFeedback(o[0])">{{ o[1] }}</button></div></div>
   </section>
 </template>

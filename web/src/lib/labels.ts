@@ -1,27 +1,155 @@
-// V2 interface labels. The spec keeps interface labels in English; conversation content follows the producer's language.
+// V2 interface labels in English, Spanish and French. Conversation content follows the conversation language; these follow the interface language dropdown.
+import { computed } from "vue";
+import { state } from "../session";
 import type { CorrectionStatus, InfoKey, PublicationStatus, SharingChoice } from "../types";
 
-export const INFO_LABEL: Record<InfoKey, string> = {
-  account_sk: "Account reference", account_category_name: "Account category", product_category_name: "Products", account_type_name: "Account type",
-  certification_scope_name: "Certification scope", certification_status_name: "Certification status", country_name: "Country",
-  raw_supply_chain_role_txt: "Supply chain roles", structure_txt: "Organization structure",
+type Lang = "en" | "es" | "fr";
+const en = {
+  skip: "Skip to content", home: "Home", askAi: "Ask AI", corrections: "Corrections", logout: "Logout", themeLight: "Switch to light theme", themeDark: "Switch to dark theme",
+  profile: "Your producer information", close: "Close", banner: "Sandbox demo. All producer data is synthetic.",
+  welcome: "Welcome", intro: "Ask a question, look something up, or tell us about a challenge. The AI Agent can help with all three.", askAgent: "Ask the AI Agent",
+  recent: "Recent conversations", none: "No conversations yet.", untitled: "Untitled conversation", today: "Today", prev7: "Previous 7 days", older: "Older",
+  inProgress: "In progress", completed: "Completed", stopped: "Stopped", peersTitle: "Conversations from my peers", noShared: "No shared cases yet.",
+  loading: "Loading…", tryAgain: "Try again",
+  info: {
+    title: "Your producer information", loading: "Loading your producer information…", cfgProducer: "This account is not linked to a producer.", cfgOrg: "This account is not linked to an organization.",
+    support: "Please contact Fair Trade USA support; no producer information can be shown.", aboutYou: "About you", name: "Name", prefLang: "Preferred language",
+    yourOrg: "Your organization", shared: "Shared by everyone in your organization. This is the information on record, not something you set up here.", noOrg: "No organization information is on record for this account.",
+    accountDetails: "Account details", corrReqs: "Correction requests", corrHint: "These are suggestions waiting for Fair Trade USA. They are not verified facts and do not change the information above yet.",
+    byColleague: "Requested by a colleague", thanks: "Thank you. Your correction request was sent to Fair Trade USA for review. The information above has not changed.",
+    suggest: "Suggest a correction", step1: "1. Which information needs correcting?", step2: "2. Recorded value and your proposed value", recorded: "recorded", proposed: "Proposed value", proposedFor: "Proposed",
+    step3: "3. Anything else we should know? (optional)", submit: "Submit correction", sending: "Sending…", cancel: "Cancel", cannot: "Account references, organization membership and permissions cannot be changed here.",
+    chooseOne: "Choose at least one field and enter the proposed value for each.", langs: { en: "English", es: "Spanish", fr: "French" } as Record<Lang, string>,
+  },
+  infoLabel: { account_sk: "Account reference", account_category_name: "Account category", product_category_name: "Products", account_type_name: "Account type", certification_scope_name: "Certification scope",
+    certification_status_name: "Certification status", country_name: "Country", raw_supply_chain_role_txt: "Supply chain roles", structure_txt: "Organization structure" } as Record<InfoKey, string>,
+  notProvided: "Not provided",
+  corrStatus: { pending: "Pending review", accepted_awaiting_source_update: "Accepted, awaiting source update", applied: "Applied to the source record", rejected: "Not accepted" } as Record<CorrectionStatus, string>,
+  pub: { not_shared: "Not shared with other producers", awaiting_review: "Waiting for FTUSA review before it can be shared", awaiting_reconfirmation: "Waiting for your confirmation of a reviewer edit",
+    pending_publication: "Approved, publishing", published: "Published to producers you chose", failed: "Publishing failed, FTUSA will retry", withdrawn: "Withdrawn from other producers" } as Record<PublicationStatus, string>,
+  sharing: [
+    { value: "share_conversation", title: "Share the conversation and the producer information I allow", exposes: "After FTUSA review, other producers can see this case's challenge, what was done and the result. Your name appears only if you tick the box below. FTUSA keeps the full conversation." },
+    { value: "share_summary", title: "Share the summary only", exposes: "After FTUSA review, other producers can see the reviewed summary without your name. The conversation itself is not shown to them. FTUSA keeps the full conversation." },
+    { value: "ftusa_only", title: "Do not share with other producers", exposes: "Other producers outside your organization cannot see this case. People in your organization can still see the summary, never the conversation. FTUSA keeps and reviews the full conversation." },
+  ] as { value: SharingChoice; title: string; exposes: string }[],
+  share: { title: "Is this summary right?", retention: "Fair Trade USA can keep and review your conversation. In this sandbox, conversations are kept for 90 days and finalized records for 180 days, then expire. Stopping a conversation does not delete it; you can ask for deletion at any time.",
+    english: "English translation", who: "Who may see this case?", name: "Show my name on the shared case", confirm: "Confirm summary and finish", footer: "Confirming sends this account to Fair Trade USA for review. Nothing is shared with other producers until FTUSA approves it." },
+  peer: { yourOrg: "Your organization", otherOrg: "Another organization", orgOnly: "Organization only", orgOnlyTip: "Only people in your organization can see this summary", illustrative: "Illustrative", close: "Close match", partial: "Partial match",
+    challenge: "Challenge they faced", did: "What they did", result: "Result", notReported: "Not reported", outcomeNot: "Outcome not yet reported", ask: "Ask about this",
+    visibility: "You see the summaries of colleagues in your organization, whatever they chose to share, but never their conversations. Producers in other organizations appear only if they chose to share and FTUSA approved. Names appear only when the producer allowed it.",
+    anonOrg: "A producer in your organization", anonOther: "A producer in another organization",
+    sameCrop: "Same crop", sameChallenge: "Same challenge", sameCountry: "Same country", yourOrgChip: "Your organization", askingAbout: "Asking about a colleague's case" },
+  ins: { title: "Summary and insights", confirmed: "Your confirmed summary", only: "This is only your own confirmed account. Anything below that comes from outside is kept separate.", sharingReview: "Sharing and review",
+    review: "Fair Trade USA review", reviewSt: { pending: "Waiting for review", approved: "Approved", corrected: "Reviewed with edits" } as Record<string, string>, sharingL: "Sharing", nameShown: "Name shown", yes: "Yes", no: "No",
+    reviewerEdit: "A reviewer suggests this wording. It is shared only if you agree.", useEdited: "Use the edited wording", keepOrig: "Keep my original", stop: "Stop sharing with other producers", hide: "Hide my name",
+    reqDel: "Request deletion", askDel: "Ask Fair Trade USA to delete this record?", yesDel: "Yes, request deletion", delDone: "Deletion requested. This case is no longer shared.",
+    data: "What the data shows", projects: "Similar project records from public source data", curated: "Information curated by Fair Trade USA", noCurated: "Nothing curated by Fair Trade USA is available for this case yet.",
+    others: "What others have done", helpful: "Was this helpful?", partly: "Partly", thanksFb: "Thank you. You answered: {a}. You can change your answer.", noEvidence: "No prepared evidence matches this topic and location.",
+    noClose: "No close match yet for this problem.", loadFail: "Evidence could not be loaded just now.", thanksDone: "Thank you. Your confirmed summary was sent to Fair Trade USA for review.",
+    stoppedDone: "This conversation was stopped. It is kept for now and you can still read it or ask for deletion." },
+  ev: { external: "EXTERNAL", ftusa: "FAIR TRADE USA", certified: "FAIR TRADE CERTIFIED DATA", illustrative: "Illustrative data", illTip: "This value is a placeholder for testing. It is not real data.", older: "Older data",
+    status: "Recorded status", result: "Result", topic: "Topic", outcomeNot: "Outcome not reported" },
 };
-export const NOT_PROVIDED = "Not provided";
-export const show = (v: string | string[] | null | undefined): string => (Array.isArray(v) ? (v.length ? v.join(", ") : NOT_PROVIDED) : v || NOT_PROVIDED);
-export const CORRECTION_STATUS: Record<CorrectionStatus, string> = {
-  pending: "Pending review", accepted_awaiting_source_update: "Accepted, awaiting source update", applied: "Applied to the source record", rejected: "Not accepted",
+type Dict = typeof en;
+const es: Dict = {
+  skip: "Saltar al contenido", home: "Inicio", askAi: "Preguntar a la IA", corrections: "Correcciones", logout: "Cerrar sesión", themeLight: "Cambiar a tema claro", themeDark: "Cambiar a tema oscuro",
+  profile: "Su información de productor", close: "Cerrar", banner: "Demostración en entorno de pruebas. Todos los datos de productores son sintéticos.",
+  welcome: "Bienvenido", intro: "Haga una pregunta, busque algo o cuéntenos un desafío. El agente de IA puede ayudar con las tres cosas.", askAgent: "Preguntar al agente de IA",
+  recent: "Conversaciones recientes", none: "Aún no hay conversaciones.", untitled: "Conversación sin título", today: "Hoy", prev7: "Últimos 7 días", older: "Anteriores",
+  inProgress: "En curso", completed: "Completada", stopped: "Detenida", peersTitle: "Conversaciones de mis colegas", noShared: "Aún no hay casos compartidos.",
+  loading: "Cargando…", tryAgain: "Intentar de nuevo",
+  info: {
+    title: "Su información de productor", loading: "Cargando su información de productor…", cfgProducer: "Esta cuenta no está vinculada a un productor.", cfgOrg: "Esta cuenta no está vinculada a una organización.",
+    support: "Comuníquese con el soporte de Fair Trade USA; no se puede mostrar información de productor.", aboutYou: "Sobre usted", name: "Nombre", prefLang: "Idioma preferido",
+    yourOrg: "Su organización", shared: "Compartida por todas las personas de su organización. Es la información registrada, no algo que se configure aquí.", noOrg: "No hay información de organización registrada para esta cuenta.",
+    accountDetails: "Detalles de la cuenta", corrReqs: "Solicitudes de corrección", corrHint: "Son sugerencias pendientes de Fair Trade USA. No son hechos verificados y todavía no cambian la información anterior.",
+    byColleague: "Solicitada por un colega", thanks: "Gracias. Su solicitud de corrección se envió a Fair Trade USA para revisión. La información anterior no ha cambiado.",
+    suggest: "Sugerir una corrección", step1: "1. ¿Qué información hay que corregir?", step2: "2. Valor registrado y su valor propuesto", recorded: "registrado", proposed: "Valor propuesto", proposedFor: "Propuesto",
+    step3: "3. ¿Algo más que debamos saber? (opcional)", submit: "Enviar corrección", sending: "Enviando…", cancel: "Cancelar", cannot: "Las referencias de cuenta, la pertenencia a la organización y los permisos no se pueden cambiar aquí.",
+    chooseOne: "Elija al menos un campo e indique el valor propuesto para cada uno.", langs: { en: "Inglés", es: "Español", fr: "Francés" },
+  },
+  infoLabel: { account_sk: "Referencia de cuenta", account_category_name: "Categoría de cuenta", product_category_name: "Productos", account_type_name: "Tipo de cuenta", certification_scope_name: "Alcance de la certificación",
+    certification_status_name: "Estado de la certificación", country_name: "País", raw_supply_chain_role_txt: "Funciones en la cadena de suministro", structure_txt: "Estructura de la organización" },
+  notProvided: "No indicado",
+  corrStatus: { pending: "Pendiente de revisión", accepted_awaiting_source_update: "Aceptada, a la espera de actualizar la fuente", applied: "Aplicada al registro de origen", rejected: "No aceptada" },
+  pub: { not_shared: "No compartido con otros productores", awaiting_review: "A la espera de la revisión de FTUSA antes de compartirse", awaiting_reconfirmation: "A la espera de su confirmación de una edición del revisor",
+    pending_publication: "Aprobado, publicándose", published: "Publicado para los productores que eligió", failed: "Falló la publicación; FTUSA lo reintentará", withdrawn: "Retirado de otros productores" },
+  sharing: [
+    { value: "share_conversation", title: "Compartir la conversación y la información de productor que permito", exposes: "Tras la revisión de FTUSA, otros productores verán el desafío de este caso, lo que se hizo y el resultado. Su nombre aparece solo si marca la casilla de abajo. FTUSA conserva la conversación completa." },
+    { value: "share_summary", title: "Compartir solo el resumen", exposes: "Tras la revisión de FTUSA, otros productores verán el resumen revisado sin su nombre. No verán la conversación. FTUSA conserva la conversación completa." },
+    { value: "ftusa_only", title: "No compartir con otros productores", exposes: "Los productores ajenos a su organización no pueden ver este caso. Las personas de su organización pueden ver el resumen, nunca la conversación. FTUSA conserva y revisa la conversación completa." },
+  ],
+  share: { title: "¿Es correcto este resumen?", retention: "Fair Trade USA puede conservar y revisar su conversación. En este entorno de pruebas, las conversaciones se conservan 90 días y los registros finalizados 180 días, y luego caducan. Detener una conversación no la elimina; puede pedir su eliminación en cualquier momento.",
+    english: "Traducción al inglés", who: "¿Quién puede ver este caso?", name: "Mostrar mi nombre en el caso compartido", confirm: "Confirmar resumen y terminar", footer: "Al confirmar, esta cuenta se envía a Fair Trade USA para revisión. No se comparte nada con otros productores hasta que FTUSA lo apruebe." },
+  peer: { yourOrg: "Su organización", otherOrg: "Otra organización", orgOnly: "Solo la organización", orgOnlyTip: "Solo las personas de su organización pueden ver este resumen", illustrative: "Ilustrativo", close: "Coincidencia cercana", partial: "Coincidencia parcial",
+    challenge: "Desafío que enfrentó", did: "Qué hizo", result: "Resultado", notReported: "No indicado", outcomeNot: "Resultado aún no informado", ask: "Preguntar sobre esto",
+    visibility: "Usted ve los resúmenes de sus colegas de la organización, sin importar lo que decidieron compartir, pero nunca sus conversaciones. Los productores de otras organizaciones aparecen solo si decidieron compartir y FTUSA lo aprobó. Los nombres aparecen solo si el productor lo permitió.",
+    anonOrg: "Un productor de su organización", anonOther: "Un productor de otra organización",
+    sameCrop: "Mismo cultivo", sameChallenge: "Mismo desafío", sameCountry: "Mismo país", yourOrgChip: "Su organización", askingAbout: "Preguntando sobre el caso de un colega" },
+  ins: { title: "Resumen y perspectivas", confirmed: "Su resumen confirmado", only: "Este es solo su propio relato confirmado. Lo que viene de fuera, más abajo, se mantiene separado.", sharingReview: "Uso compartido y revisión",
+    review: "Revisión de Fair Trade USA", reviewSt: { pending: "A la espera de revisión", approved: "Aprobado", corrected: "Revisado con ediciones" }, sharingL: "Uso compartido", nameShown: "Nombre visible", yes: "Sí", no: "No",
+    reviewerEdit: "Un revisor sugiere esta redacción. Solo se comparte si usted está de acuerdo.", useEdited: "Usar la redacción editada", keepOrig: "Mantener mi versión", stop: "Dejar de compartir con otros productores", hide: "Ocultar mi nombre",
+    reqDel: "Solicitar eliminación", askDel: "¿Pedir a Fair Trade USA que elimine este registro?", yesDel: "Sí, solicitar eliminación", delDone: "Eliminación solicitada. Este caso ya no se comparte.",
+    data: "Lo que muestran los datos", projects: "Proyectos similares de datos públicos de origen", curated: "Información curada por Fair Trade USA", noCurated: "Todavía no hay información curada por Fair Trade USA para este caso.",
+    others: "Lo que otros han hecho", helpful: "¿Le fue útil?", partly: "En parte", thanksFb: "Gracias. Respondió: {a}. Puede cambiar su respuesta.", noEvidence: "No hay evidencia preparada que coincida con este tema y ubicación.",
+    noClose: "Todavía no hay una coincidencia cercana para este problema.", loadFail: "No se pudo cargar la evidencia en este momento.", thanksDone: "Gracias. Su resumen confirmado se envió a Fair Trade USA para revisión.",
+    stoppedDone: "Esta conversación se detuvo. Se conserva por ahora y puede leerla o pedir su eliminación." },
+  ev: { external: "EXTERNO", ftusa: "FAIR TRADE USA", certified: "DATOS CERTIFICADOS FAIR TRADE", illustrative: "Datos ilustrativos", illTip: "Este valor es un marcador de prueba. No son datos reales.", older: "Datos antiguos",
+    status: "Estado registrado", result: "Resultado", topic: "Tema", outcomeNot: "Resultado no informado" },
 };
-export const PUBLICATION_STATUS: Record<PublicationStatus, string> = {
-  not_shared: "Not shared with other producers", awaiting_review: "Waiting for FTUSA review before it can be shared", awaiting_reconfirmation: "Waiting for your confirmation of a reviewer edit",
-  pending_publication: "Approved, publishing", published: "Published to producers you chose", failed: "Publishing failed, FTUSA will retry", withdrawn: "Withdrawn from other producers",
+const fr: Dict = {
+  skip: "Aller au contenu", home: "Accueil", askAi: "Demander à l'IA", corrections: "Corrections", logout: "Se déconnecter", themeLight: "Passer au thème clair", themeDark: "Passer au thème sombre",
+  profile: "Vos informations de producteur", close: "Fermer", banner: "Démonstration en environnement de test. Toutes les données de producteurs sont synthétiques.",
+  welcome: "Bienvenue", intro: "Posez une question, cherchez une information ou parlez-nous d'une difficulté. L'agent IA peut aider pour les trois.", askAgent: "Demander à l'agent IA",
+  recent: "Conversations récentes", none: "Aucune conversation pour l'instant.", untitled: "Conversation sans titre", today: "Aujourd'hui", prev7: "7 derniers jours", older: "Plus anciennes",
+  inProgress: "En cours", completed: "Terminée", stopped: "Arrêtée", peersTitle: "Conversations de mes collègues", noShared: "Aucun cas partagé pour l'instant.",
+  loading: "Chargement…", tryAgain: "Réessayer",
+  info: {
+    title: "Vos informations de producteur", loading: "Chargement de vos informations de producteur…", cfgProducer: "Ce compte n'est pas lié à un producteur.", cfgOrg: "Ce compte n'est pas lié à une organisation.",
+    support: "Veuillez contacter l'assistance de Fair Trade USA ; aucune information de producteur ne peut être affichée.", aboutYou: "À propos de vous", name: "Nom", prefLang: "Langue préférée",
+    yourOrg: "Votre organisation", shared: "Partagées par toutes les personnes de votre organisation. Ce sont les informations enregistrées, pas quelque chose à configurer ici.", noOrg: "Aucune information d'organisation n'est enregistrée pour ce compte.",
+    accountDetails: "Détails du compte", corrReqs: "Demandes de correction", corrHint: "Ce sont des suggestions en attente de Fair Trade USA. Elles ne sont pas des faits vérifiés et ne modifient pas encore les informations ci-dessus.",
+    byColleague: "Demandée par un collègue", thanks: "Merci. Votre demande de correction a été envoyée à Fair Trade USA pour examen. Les informations ci-dessus n'ont pas changé.",
+    suggest: "Suggérer une correction", step1: "1. Quelles informations faut-il corriger ?", step2: "2. Valeur enregistrée et valeur proposée", recorded: "enregistré", proposed: "Valeur proposée", proposedFor: "Proposé",
+    step3: "3. Autre chose à nous dire ? (facultatif)", submit: "Envoyer la correction", sending: "Envoi…", cancel: "Annuler", cannot: "Les références de compte, l'appartenance à l'organisation et les autorisations ne peuvent pas être modifiées ici.",
+    chooseOne: "Choisissez au moins un champ et indiquez la valeur proposée pour chacun.", langs: { en: "Anglais", es: "Espagnol", fr: "Français" },
+  },
+  infoLabel: { account_sk: "Référence du compte", account_category_name: "Catégorie du compte", product_category_name: "Produits", account_type_name: "Type de compte", certification_scope_name: "Portée de la certification",
+    certification_status_name: "Statut de la certification", country_name: "Pays", raw_supply_chain_role_txt: "Rôles dans la chaîne d'approvisionnement", structure_txt: "Structure de l'organisation" },
+  notProvided: "Non renseigné",
+  corrStatus: { pending: "En attente d'examen", accepted_awaiting_source_update: "Acceptée, en attente de mise à jour de la source", applied: "Appliquée à l'enregistrement source", rejected: "Non acceptée" },
+  pub: { not_shared: "Non partagé avec les autres producteurs", awaiting_review: "En attente de l'examen de FTUSA avant partage", awaiting_reconfirmation: "En attente de votre confirmation d'une modification du réviseur",
+    pending_publication: "Approuvé, publication en cours", published: "Publié pour les producteurs que vous avez choisis", failed: "Échec de la publication ; FTUSA réessaiera", withdrawn: "Retiré pour les autres producteurs" },
+  sharing: [
+    { value: "share_conversation", title: "Partager la conversation et les informations de producteur que j'autorise", exposes: "Après l'examen de FTUSA, les autres producteurs voient la difficulté de ce cas, ce qui a été fait et le résultat. Votre nom n'apparaît que si vous cochez la case ci-dessous. FTUSA conserve la conversation complète." },
+    { value: "share_summary", title: "Partager uniquement le résumé", exposes: "Après l'examen de FTUSA, les autres producteurs voient le résumé révisé sans votre nom. Ils ne voient pas la conversation. FTUSA conserve la conversation complète." },
+    { value: "ftusa_only", title: "Ne pas partager avec les autres producteurs", exposes: "Les producteurs extérieurs à votre organisation ne peuvent pas voir ce cas. Les personnes de votre organisation voient le résumé, jamais la conversation. FTUSA conserve et examine la conversation complète." },
+  ],
+  share: { title: "Ce résumé est-il correct ?", retention: "Fair Trade USA peut conserver et examiner votre conversation. Dans cet environnement de test, les conversations sont conservées 90 jours et les enregistrements finalisés 180 jours, puis expirent. Arrêter une conversation ne la supprime pas ; vous pouvez demander sa suppression à tout moment.",
+    english: "Traduction en anglais", who: "Qui peut voir ce cas ?", name: "Afficher mon nom sur le cas partagé", confirm: "Confirmer le résumé et terminer", footer: "En confirmant, ce compte est envoyé à Fair Trade USA pour examen. Rien n'est partagé avec les autres producteurs tant que FTUSA ne l'a pas approuvé." },
+  peer: { yourOrg: "Votre organisation", otherOrg: "Autre organisation", orgOnly: "Organisation uniquement", orgOnlyTip: "Seules les personnes de votre organisation peuvent voir ce résumé", illustrative: "Illustratif", close: "Correspondance proche", partial: "Correspondance partielle",
+    challenge: "Difficulté rencontrée", did: "Ce qu'ils ont fait", result: "Résultat", notReported: "Non renseigné", outcomeNot: "Résultat pas encore communiqué", ask: "Poser une question à ce sujet",
+    visibility: "Vous voyez les résumés de vos collègues de l'organisation, quel que soit leur choix de partage, mais jamais leurs conversations. Les producteurs d'autres organisations n'apparaissent que s'ils ont choisi de partager et que FTUSA l'a approuvé. Les noms n'apparaissent que si le producteur l'a permis.",
+    anonOrg: "Un producteur de votre organisation", anonOther: "Un producteur d'une autre organisation",
+    sameCrop: "Même culture", sameChallenge: "Même difficulté", sameCountry: "Même pays", yourOrgChip: "Votre organisation", askingAbout: "Question sur le cas d'un collègue" },
+  ins: { title: "Résumé et enseignements", confirmed: "Votre résumé confirmé", only: "Ceci est uniquement votre propre récit confirmé. Ce qui vient de l'extérieur, plus bas, reste séparé.", sharingReview: "Partage et examen",
+    review: "Examen de Fair Trade USA", reviewSt: { pending: "En attente d'examen", approved: "Approuvé", corrected: "Examiné avec modifications" }, sharingL: "Partage", nameShown: "Nom affiché", yes: "Oui", no: "Non",
+    reviewerEdit: "Un réviseur suggère cette formulation. Elle n'est partagée que si vous êtes d'accord.", useEdited: "Utiliser la formulation modifiée", keepOrig: "Garder ma version", stop: "Ne plus partager avec les autres producteurs", hide: "Masquer mon nom",
+    reqDel: "Demander la suppression", askDel: "Demander à Fair Trade USA de supprimer cet enregistrement ?", yesDel: "Oui, demander la suppression", delDone: "Suppression demandée. Ce cas n'est plus partagé.",
+    data: "Ce que montrent les données", projects: "Projets similaires issus de données publiques", curated: "Informations sélectionnées par Fair Trade USA", noCurated: "Aucune information sélectionnée par Fair Trade USA n'est disponible pour ce cas.",
+    others: "Ce que d'autres ont fait", helpful: "Cela vous a-t-il aidé ?", partly: "En partie", thanksFb: "Merci. Vous avez répondu : {a}. Vous pouvez modifier votre réponse.", noEvidence: "Aucune donnée préparée ne correspond à ce sujet et à ce lieu.",
+    noClose: "Pas encore de correspondance proche pour ce problème.", loadFail: "Les données n'ont pas pu être chargées pour le moment.", thanksDone: "Merci. Votre résumé confirmé a été envoyé à Fair Trade USA pour examen.",
+    stoppedDone: "Cette conversation a été arrêtée. Elle est conservée pour l'instant ; vous pouvez la relire ou demander sa suppression." },
+  ev: { external: "EXTERNE", ftusa: "FAIR TRADE USA", certified: "DONNÉES CERTIFIÉES FAIR TRADE", illustrative: "Données illustratives", illTip: "Cette valeur est un espace réservé pour les tests. Ce ne sont pas des données réelles.", older: "Données anciennes",
+    status: "Statut enregistré", result: "Résultat", topic: "Sujet", outcomeNot: "Résultat non communiqué" },
 };
-export const SHARING: { value: SharingChoice; title: string; exposes: string }[] = [
-  { value: "share_conversation", title: "Share the conversation and the producer information I allow",
-    exposes: "After FTUSA review, other producers can see this case's challenge, what was done and the result. Your name appears only if you tick the box below. FTUSA keeps the full conversation." },
-  { value: "share_summary", title: "Share the summary only",
-    exposes: "After FTUSA review, other producers can see the reviewed summary without your name. The conversation itself is not shown to them. FTUSA keeps the full conversation." },
-  { value: "ftusa_only", title: "Do not share with other producers",
-    exposes: "Other producers, including people in your organization, cannot see this case. FTUSA keeps and reviews the full conversation." },
-];
-export const RETENTION_TEXT = "Fair Trade USA can keep and review your conversation. In this sandbox, conversations are kept for 90 days and finalized records for 180 days, then expire. Stopping a conversation does not delete it; you can ask for deletion at any time.";
-export const SANDBOX_BANNER = "Sandbox demo. All producer data is synthetic.";
+const DICT: Record<Lang, Dict> = { en, es, fr };
+export const L = (l: Lang | undefined): Dict => DICT[l ?? "en"] ?? en;
+/** Reactive labels for the current interface language. */
+export const useL = () => computed(() => L(state.ui as Lang | undefined));
+
+// English defaults kept for non-component code and tests.
+export const INFO_LABEL = en.infoLabel; export const NOT_PROVIDED = en.notProvided; export const CORRECTION_STATUS = en.corrStatus; export const PUBLICATION_STATUS = en.pub;
+export const SHARING = en.sharing; export const SANDBOX_BANNER = en.banner;
+export const RETENTION_TEXT = en.share.retention;
+export const show = (v: string | string[] | null | undefined, l: Dict = en): string => (Array.isArray(v) ? (v.length ? v.join(", ") : l.notProvided) : v || l.notProvided);

@@ -360,6 +360,25 @@ describe("guidance turn without summary fields", () => {
   });
 });
 
+describe("conversation language", () => {
+  it("switching language mid-conversation changes later agent replies for that conversation only, never the profile; closed conversations refuse", async () => {
+    const store = new MemoryStore(); store.orgs.set("ORG-A", org("ORG-A", "A")); store.profiles.set("s-ana", prof("PRD-ANA", "ORG-A", "es", "Ana"));
+    const langs: string[] = []; const agent = new Stub(); const orig = agent.turn.bind(agent);
+    agent.turn = async (req) => { langs.push(req.context.language); return orig(req); };
+    const svc = new ServiceV2({ store, agent });
+    const id = (await svc.create(ana, undefined, rid())).conversation.conversationId;
+    await svc.message(ana, id, rid(), "hola");
+    const r = rid(); const v = await svc.setConversationLanguage(ana, id, r, "fr");
+    expect(v.conversation.language).toBe("fr"); expect((await svc.setConversationLanguage(ana, id, r, "fr")).conversation.language).toBe("fr"); // retry safe
+    await svc.message(ana, id, rid(), "bonjour");
+    expect(langs.slice(0, 2)).toEqual(["es", "es"]); expect(langs.at(-1)).toBe("fr");
+    expect((await store.getProfileBySub("s-ana"))!.preferredLanguage).toBe("es");
+    expect(await code(svc.setConversationLanguage(mateo, id, rid(), "en"))).toBe("not_found");
+    await svc.end(ana, id, rid()); expect(await code(svc.setConversationLanguage(ana, id, rid(), "en"))).toBe("conversation_closed");
+    await expect(route(svc, ana, "POST", `/conversations/${id}/language`, { requestId: rid(), language: "de" })).rejects.toThrow();
+  });
+});
+
 describe("playback is forced after enough turns", () => {
   it("the agent is told to play back from the 4th producer message, never earlier", async () => {
     const store = new MemoryStore(); store.orgs.set("ORG-A", org("ORG-A", "A")); store.profiles.set("s-ana", prof("PRD-ANA", "ORG-A", "en", "Ana"));

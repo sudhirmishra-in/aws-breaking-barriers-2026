@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { CorrectionRecord, CorrectableField, Organization, Outcome, ProducerProfile, Publication, SharingChoice, SummaryVersion } from "./contracts";
+import type { Language, CorrectionRecord, CorrectableField, Organization, Outcome, ProducerProfile, Publication, SharingChoice, SummaryVersion } from "./contracts";
 import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, notFound } from "./errors";
 import { evidenceFor } from "./evidence";
@@ -282,6 +282,15 @@ export class ServiceV2 extends Service {
       countryIso2: isoOf(org?.info.countryName), crop: (o.crop ?? profile.crop) || null, limit: 3 }).catch(() => []);
     const projects = hits.map((h) => projectEvidence(h.project));
     return { items, projects, limitation: items.length || projects.length ? null : "No prepared evidence matches this topic and location.", syntheticDemo: true };
+  }
+
+  /** The producer switched the interface language during an open conversation: later agent replies use it. Only this conversation changes; the profile preference never does. */
+  async setConversationLanguage(p: Principal, id: string, requestId: string, language: Language) {
+    return this.guarded(p, id, requestId, async (c) => {
+      this.assertActive(c);
+      if (c.language === language) return this.view(c);
+      return this.view(await this.save(c, { language }));
+    });
   }
 
   // ---- peers ------------------------------------------------------------------------------------------------------------------

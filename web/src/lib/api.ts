@@ -38,6 +38,7 @@ export const api = {
   evidence: (id: string) => call<{ items: EvidenceItem[]; projects: EvidenceItem[]; limitation: string | null }>("GET", `/evidence/${encodeURIComponent(id)}`),
   feedback: (id: string, helpful: "yes" | "partly" | "no") => call<{ helpful: string }>("POST", `/conversations/${id}/feedback`, { requestId: newRequestId(), helpful }),
   comparable: (id: string) => call<{ items: PeerCase[]; limitation: string | null }>("GET", `/related/${encodeURIComponent(id)}`),
+  setLanguage: (id: string, requestId: string, language: Lang) => call<ConversationView>("POST", `/conversations/${id}/language`, { requestId, language }),
   producerInfo: () => call<ProducerInfo>("GET", "/producer-info"),
   submitCorrection: (requestId: string, changes: { field: InfoKey; proposed: string }[], explanation?: string) => call<CorrectionDto>("POST", "/corrections", { requestId, changes, ...(explanation ? { explanation } : {}) }),
   peers: (scope: "organization" | "other" | "all") => call<{ items: PeerCase[]; visibility: string }>("GET", `/peers/summaries?scope=${scope}`),

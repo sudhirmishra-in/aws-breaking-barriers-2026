@@ -80,6 +80,7 @@ export const FinalizeReq = z.object({ requestId: RequestId, summaryHash: z.strin
 export const SharingUpdateReq = z.object({ requestId: RequestId, sharing: SharingChoice, identityPermitted: z.boolean().default(false) }).strict()
   .refine((v) => !v.identityPermitted || v.sharing === "share_conversation", { message: "identity can only be shared with the conversation choice" });
 export const FeedbackReq = z.object({ requestId: RequestId, helpful: z.enum(["yes", "partly", "no"]), comment: z.string().trim().max(500).optional() }).strict();
+export const SetLanguageReq = z.object({ requestId: RequestId, language: Language }).strict();
 export const ReconfirmReq = z.object({ requestId: RequestId, summaryHash: z.string().length(64), accept: z.boolean() }).strict();
 export const PeerQuery = z.object({ scope: z.enum(["organization", "other", "all"]).optional() }).strict();
 

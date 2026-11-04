@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import SharingStep from "../src/components/SharingStep.vue";
 import ProducerInfo from "../src/components/ProducerInfo.vue";
 import PeerCases from "../src/components/PeerCases.vue";
-import { INFO_LABEL, NOT_PROVIDED, SHARING, show } from "../src/lib/labels";
+import { INFO_LABEL, L, NOT_PROVIDED, SHARING, show } from "../src/lib/labels";
+import { state } from "../src/session";
 
 const info = {
   individual: { producerId: "PRD-ANA", displayName: "Ana", preferredLanguage: "es" },
@@ -22,7 +23,7 @@ vi.mock("../src/lib/api", () => ({
     { caseId: "rec-seed-cv-04@1", version: 1, sameOrganization: true, origin: "your_organization", producer: null, anonymousLabel: "A producer in your organization", challenge: "Water", action: null, result: "Outcome not yet reported", resultReported: false, tags: ["water"], standards: [], citations: [{ label: "Source A" }], publishedAt: null, illustrative: true },
     { caseId: "rec-seed-cv-05@1", version: 1, sameOrganization: false, origin: "other_organization", producer: { name: "Lucía" }, anonymousLabel: "x", challenge: "Heat", action: "Shade", result: "Better", resultReported: true, tags: ["climate_weather"], standards: [], citations: [], publishedAt: null, illustrative: true }] })) },
 }));
-vi.mock("../src/session", () => ({ state: { me: { configurationError: null } } }));
+vi.mock("../src/session", () => ({ state: { me: { configurationError: null }, ui: "en" } }));
 
 beforeEach(() => submitCorrection.mockClear());
 
@@ -104,5 +105,25 @@ describe("peer cases", () => {
   it("can filter by tag", async () => {
     const w = mount(PeerCases, { props: { scope: "all", title: "Others", only: ["climate_weather"] } }); await flushPromises();
     expect(w.findAll("article")).toHaveLength(1);
+  });
+});
+
+
+describe("interface languages", () => {
+  const keys = (o: unknown, p = ""): string[] => Array.isArray(o) ? [p + "[" + o.length + "]"] : o && typeof o === "object" ? Object.entries(o).flatMap(([k, v]) => keys(v, p + "." + k)) : [p];
+  it("Spanish and French have exactly the same labels as English, none left empty or identical-by-accident for the headline strings", () => {
+    expect(keys(L("es"))).toEqual(keys(L("en"))); expect(keys(L("fr"))).toEqual(keys(L("en")));
+    for (const lang of ["es", "fr"] as const) { expect(L(lang).askAi).not.toBe(L("en").askAi); expect(L(lang).share.confirm).not.toBe(L("en").share.confirm); expect(L(lang).sharing).toHaveLength(3); }
+  });
+  it("the producer information, sharing step and peer cards render in the selected language", async () => {
+    (state as { ui: string }).ui = "es";
+    const a = mount(ProducerInfo, { props: { open: true } }); await flushPromises();
+    expect(a.text()).toContain("Su información de productor"); expect(a.text()).toContain("Productos"); expect(a.text()).toContain("No indicado"); expect(a.text()).toContain("Sugerir una corrección");
+    (state as { ui: string }).ui = "fr";
+    const b = mount(SharingStep, { props: { confirmation: { summaryHash: "h".repeat(64), summaryOriginal: "x", summaryEn: "y", tags: [], language: "fr" }, busy: false } });
+    expect(b.text()).toContain("Qui peut voir ce cas"); expect(b.text()).toContain("Confirmer le résumé et terminer");
+    const c = mount(PeerCases, { props: { scope: "all", title: "x" } }); await flushPromises();
+    expect(c.text()).toContain("Un producteur de votre organisation"); expect(c.text()).toContain("Résultat pas encore communiqué"); expect(c.text()).toContain("Poser une question à ce sujet");
+    (state as { ui: string }).ui = "en";
   });
 });

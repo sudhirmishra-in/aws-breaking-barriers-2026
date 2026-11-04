@@ -5,11 +5,12 @@ import { ClipboardCheck, MessageCircle } from "lucide-vue-next";
 import PeerCases from "../components/PeerCases.vue";
 import ProducerInfo from "../components/ProducerInfo.vue";
 import { api } from "../lib/api";
-import { CORRECTION_STATUS, INFO_LABEL, show } from "../lib/labels";
+import { CORRECTION_STATUS, INFO_LABEL, show, useL } from "../lib/labels";
 import { state } from "../session";
 import { t } from "../lib/i18n";
 import type { ConversationSummary, CorrectionDto, Overview } from "../types";
 const s = computed(() => t(state.ui));
+const l = useL();
 const route = useRoute(); const router = useRouter();
 const denied = computed(() => route.query.denied);
 const ov = ref<Overview | null>(null); const err = ref("");
@@ -17,8 +18,8 @@ const recent = ref<ConversationSummary[]>([]);
 const corrections = ref<CorrectionDto[]>([]); const corrErr = ref("");
 const isProducer = computed(() => state.me?.roles.includes("producer"));
 const isReviewer = computed(() => state.me?.roles.includes("reviewer"));
-const GROUPS = [["today", "Today"], ["previous_7_days", "Previous 7 days"], ["older", "Older"]] as const;
-const grouped = computed(() => GROUPS.map(([k, label]) => ({ k, label, list: recent.value.filter((c) => (c.group ?? "older") === k) })).filter((g) => g.list.length));
+const GROUPS = computed(() => [["today", l.value.today], ["previous_7_days", l.value.prev7], ["older", l.value.older]] as const);
+const grouped = computed(() => GROUPS.value.map(([k, label]) => ({ k, label, list: recent.value.filter((c) => (c.group ?? "older") === k) })).filter((g) => g.list.length));
 async function loadCorrections() { try { corrections.value = (await api.reviewCorrections("all")).items.filter((c) => c.status === "pending" || c.status === "accepted_awaiting_source_update"); corrErr.value = ""; } catch (e) { corrErr.value = (e as Error).message; } }
 async function decide(c: CorrectionDto, d: "accept" | "reject" | "mark_applied") { try { await api.decideCorrection(c.correctionId, d); await loadCorrections(); } catch (e) { corrErr.value = (e as Error).message; } }
 onMounted(async () => {
@@ -32,10 +33,10 @@ const fmt = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month
 <template>
   <section class="hero hero-compact fade-up">
     <div>
-      <h1>Welcome<template v-if="state.me?.profile">, {{ state.me.profile.displayName }}</template></h1>
+      <h1>{{ l.welcome }}<template v-if="state.me?.profile">, {{ state.me.profile.displayName }}</template></h1>
       <span class="bar" aria-hidden="true" />
-      <p v-if="isProducer">Ask a question, look something up, or tell us about a challenge. The AI Agent can help with all three.</p>
-      <RouterLink v-if="isProducer && !state.me?.configurationError" to="/chat?new=1" class="btn primary"><MessageCircle :size="16" aria-hidden="true" /> Ask the AI Agent</RouterLink>
+      <p v-if="isProducer">{{ l.intro }}</p>
+      <RouterLink v-if="isProducer && !state.me?.configurationError" to="/chat?new=1" class="btn primary"><MessageCircle :size="16" aria-hidden="true" /> {{ l.askAgent }}</RouterLink>
     </div>
   </section>
   <p v-if="err" class="banner error" role="alert">{{ err }}</p>
@@ -44,14 +45,14 @@ const fmt = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month
   <template v-if="isProducer">
     <ProducerInfo />
     <section class="grp" aria-label="Recent conversations">
-      <h2 class="page-title" style="font-size:1.05rem">Recent conversations</h2>
-      <p v-if="!recent.length" class="hint">No conversations yet.</p>
+      <h2 class="page-title" style="font-size:1.05rem">{{ l.recent }}</h2>
+      <p v-if="!recent.length" class="hint">{{ l.none }}</p>
       <div v-for="g in grouped" :key="g.k"><h3>{{ g.label }}</h3>
         <ul class="list"><li v-for="c in g.list" :key="c.conversationId"><RouterLink class="item" :to="`/chat/${c.conversationId}`">
-          <span>{{ c.title || "Untitled conversation" }} <span class="hint">· {{ fmt(c.createdAt) }}</span></span>
-          <span class="pill" :class="c.status === 'in_progress' ? 'warn' : 'ok'">{{ c.status === "in_progress" ? "In progress" : c.stopped ? "Stopped" : "Completed" }}</span></RouterLink></li></ul></div>
+          <span>{{ c.title || l.untitled }} <span class="hint">· {{ fmt(c.createdAt) }}</span></span>
+          <span class="pill" :class="c.status === 'in_progress' ? 'warn' : 'ok'">{{ c.status === "in_progress" ? l.inProgress : c.stopped ? l.stopped : l.completed }}</span></RouterLink></li></ul></div>
     </section>
-    <PeerCases scope="organization" title="Conversations from my peers" @ask="askAbout" />
+    <PeerCases scope="organization" :title="l.peersTitle" @ask="askAbout" />
   </template>
 
   <template v-if="isReviewer && ov?.reviewer">

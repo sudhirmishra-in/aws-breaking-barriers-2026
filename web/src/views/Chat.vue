@@ -9,6 +9,7 @@ import InsightsPanel from "../components/InsightsPanel.vue";
 import ProducerInfo from "../components/ProducerInfo.vue";
 import SharingStep from "../components/SharingStep.vue";
 import type { SharingChoice } from "../types";
+import { L } from "../lib/labels";
 import { api, newRequestId } from "../lib/api";
 import { renderMarkdown } from "../lib/markdown";
 import { audioSupported, playMp3, stopAudio, unlockAudio } from "../lib/speech";
@@ -125,6 +126,13 @@ async function run(action: (requestId: string) => Promise<ConversationView>, req
     scrollDown(); return false;
   } finally { busy.value = false; }
 }
+// Switching the interface language during an open conversation also switches the language of the agent's later replies (this conversation only; the profile is never changed).
+watch(() => state.ui, async (ui) => {
+  startLang.value = ui;
+  const cur = conv.value;
+  if (!cur || cur.status !== "active" || cur.language === ui || busy.value) return;
+  try { const v = await api.setLanguage(cur.conversationId, newRequestId(), ui); if (conv.value?.conversationId === cur.conversationId) conv.value = v.conversation; } catch { /* the next message still uses the saved language */ }
+});
 const start = () => run((rid) => api.create(startLang.value, rid, typeof route.query.case === "string" ? route.query.case : undefined));
 async function send() {
   const text = draft.value.trim(); if (!text || !conv.value || busy.value) return;
@@ -213,7 +221,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
 
       <!-- A conversation: active or closed -->
       <template v-else>
-        <div v-if="view?.referencedCaseCard" class="banner info" role="note" style="margin:.5rem"><b>Asking about a colleague's case</b><br />{{ view.referencedCaseCard.challenge }}<span v-if="view.referencedCaseCard.action"> · {{ view.referencedCaseCard.action }}</span></div>
+        <div v-if="view?.referencedCaseCard" class="banner info" role="note" style="margin:.5rem"><b>{{ L(state.ui).peer.askingAbout }}</b><br />{{ view.referencedCaseCard.challenge }}<span v-if="view.referencedCaseCard.action"> · {{ view.referencedCaseCard.action }}</span></div>
         <div ref="log" class="log chat-body" role="log" aria-live="polite" aria-label="Messages">
           <template v-for="(m, i) in messages" :key="m.seq">
             <div v-if="m.role === 'user'" class="bubble-u fade-up" :data-stage="m.stage !== messages[i - 1]?.stage ? m.stage : undefined">{{ m.text }}</div>
@@ -275,7 +283,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
 
           <div v-if="closed" class="decision closed-note" role="status">
             <span class="done-ic"><Heart v-if="outcome === 'saved'" :size="18" aria-hidden="true" /><Check v-else :size="18" aria-hidden="true" /></span>
-            <p style="margin:0">{{ outcome === "saved" ? "Thank you. Your confirmed summary was sent to Fair Trade USA for review." : stopped ? "This conversation was stopped. It is kept for now and you can still read it or ask for deletion." : s.doneDeclined }}</p>
+            <p style="margin:0">{{ outcome === "saved" ? L(state.ui).ins.thanksDone : stopped ? L(state.ui).ins.stoppedDone : s.doneDeclined }}</p>
             <p v-if="outcome === 'saved' || stopped" class="hint" style="margin:0">{{ s.readOnly }}</p>
             <div><button type="button" class="btn primary" @click="newConversation"><Plus :size="16" aria-hidden="true" />{{ s.newConversation }}</button></div>
           </div>
