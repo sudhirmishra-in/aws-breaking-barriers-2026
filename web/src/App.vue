@@ -2,20 +2,23 @@
 import { computed } from "vue";
 import { RouterLink, RouterView } from "vue-router";
 import { Sprout, Sun, Moon, LogOut, Globe } from "lucide-vue-next";
-import { setUi, signIn, signOut, state } from "./session";
+import { useRoute, useRouter } from "vue-router";
+import { setUi, signOut, state } from "./session";
 import { dark, toggleTheme } from "./lib/theme";
 import { t } from "./lib/i18n";
 const s = computed(() => t(state.ui));
-const here = () => window.location.pathname;
+const router = useRouter();
+const route = useRoute();
+function goLogin() { state.expired = false; state.authError = false; router.push({ path: "/login", query: { next: window.location.pathname } }); }
 </script>
 <template>
   <a class="skip" href="#main">Skip to content</a>
   <header class="hdr">
     <div class="hdr-in">
-      <RouterLink to="/" class="logo" style="text-decoration:none;color:inherit">
+      <RouterLink :to="state.me ? '/' : '/login'" class="logo" style="text-decoration:none;color:inherit">
         <span class="logo-mark brand-gradient"><Sprout :size="16" aria-hidden="true" /></span>{{ s.title }}
       </RouterLink>
-      <nav class="nav" aria-label="Main">
+      <nav v-if="state.me" class="nav" aria-label="Main">
         <RouterLink to="/">{{ s.navHome }}</RouterLink>
         <template v-if="state.me?.roles.includes('producer')">
           <RouterLink to="/share">{{ s.navShare }}</RouterLink>
@@ -38,10 +41,10 @@ const here = () => window.location.pathname;
     </div>
   </header>
   <div v-if="state.expired" class="banner error" role="alert" style="max-width:72rem;margin:.5rem auto">
-    {{ s.expired }} <button class="btn sm" @click="signIn(here())">{{ s.signIn }}</button>
+    {{ s.expired }} <button class="btn sm" @click="goLogin()">{{ s.signIn }}</button>
   </div>
-  <div v-if="state.authError" class="banner error" role="alert" style="max-width:72rem;margin:.5rem auto">
-    {{ s.signInPrompt }} <button class="btn sm" @click="signIn(here())">{{ s.signIn }}</button>
+  <div v-if="state.authError && route.path !== '/login'" class="banner error" role="alert" style="max-width:72rem;margin:.5rem auto">
+    {{ s.signInPrompt }} <button class="btn sm" @click="goLogin()">{{ s.signIn }}</button>
   </div>
   <main id="main"><RouterView /></main>
   <footer class="foot">{{ s.protoNote }}</footer>
