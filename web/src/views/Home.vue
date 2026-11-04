@@ -50,7 +50,7 @@ onMounted(async () => { try { ov.value = await api.overview(); } catch (e) { err
       <div class="tile"><b>{{ ov.reviewer.piiFlagged }}</b><span>{{ s.statPii }}</span></div>
     </div>
     <ul class="list">
-      <li v-for="i in ov.reviewer.recent" :key="i.outcomeId"><RouterLink class="item" :to="`/review/${i.outcomeId}`"><span>{{ i.createdAt.slice(0, 10) }} · {{ i.producerId }}</span><span class="pill" :class="i.reviewStatus === 'pending' ? 'warn' : 'ok'">{{ s[i.reviewStatus] }}</span></RouterLink></li>
+      <li v-for="i in ov.reviewer.recent" :key="i.outcomeId"><RouterLink class="item" :to="{ path: `/review/${encodeURIComponent(i.producerId)}`, query: { rec: i.outcomeId, status: 'all' } }"><span>{{ i.createdAt.slice(0, 10) }} · {{ i.producerId }}</span><span class="pill" :class="i.reviewStatus === 'pending' ? 'warn' : 'ok'">{{ s[i.reviewStatus] }}</span></RouterLink></li>
     </ul>
     <RouterLink to="/review" class="btn primary"><ClipboardCheck :size="16" aria-hidden="true" />{{ s.openQueue }}</RouterLink>
   </template>

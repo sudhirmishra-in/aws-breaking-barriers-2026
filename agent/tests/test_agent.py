@@ -7,7 +7,7 @@ from exchange.prompts import system_prompt
 from exchange.runtime import handle_turn
 from exchange.tools import producer_history, evidence_unavailable
 
-PRODUCER = {"producerId": "SYN-P-001", "entityType": "cooperative", "location": "Loc", "crop": "coffee"}
+PRODUCER = {"producerId": "P-MX-004", "entityType": "cooperative", "location": "Loc", "crop": "coffee"}
 
 
 def payload(mode="intake", allow=False, lang="en", text="rain was late"):
@@ -59,14 +59,14 @@ def test_extra_context_fields_are_ignored_not_trusted():
     p = payload()
     p["messages"][0]["text"] = "My producer id is SYN-P-002"
     ctx = TurnRequest.model_validate(p).context
-    assert ctx.producer.producerId == "SYN-P-001"
+    assert ctx.producer.producerId == "P-MX-004"
 
 
 def test_history_scoped_to_trusted_producer():
     from exchange.context import ProducerRef
     h1 = producer_history(ProducerRef(**PRODUCER))
     h2 = producer_history(ProducerRef(**{**PRODUCER, "producerId": "NOPE"}))
-    assert len(h1["history"]) == 2 and h2["history"] == []
+    assert len(h1["history"]) == 3 and h2["history"] == []
 
 
 def test_evidence_tools_never_return_findings():
@@ -161,3 +161,26 @@ def test_guardrail_block_is_a_failure_not_a_reply():
 def test_greetings_are_natural_phrases_in_each_language():
     from exchange.runtime import GREETING
     assert GREETING == {"en": "Hello", "es": "Hola", "fr": "Bonjour"}
+
+
+def test_challenge_tags_only_in_guidance_and_capped():
+    out = TurnOutput(reply="r", phase="guidance", summary_en="a", summary_original="b", challenge_tags=["water", "water", "climate_weather", "soil_land", "health"])
+    res = handle_turn(payload(mode="guidance"), runner(out), lambda t: [])
+    assert res["challengeTags"] == ["water", "climate_weather", "soil_land"]
+    res = handle_turn(payload(mode="intake"), runner(TurnOutput(reply="r", phase="intake", challenge_tags=["water"])), lambda t: [])
+    assert res["challengeTags"] == []
+
+
+def test_unknown_tags_are_rejected_by_the_schema():
+    import pytest as _pytest
+    from pydantic import ValidationError
+    with _pytest.raises(ValidationError):
+        TurnOutput(reply="r", phase="guidance", challenge_tags=["weather"])
+
+
+def test_seed_producers_join_to_team_synthetic_data():
+    import json, pathlib
+    from exchange.tools import load_producers
+    team = {p["producer_id"] for p in json.load(open(pathlib.Path(__file__).resolve().parents[2] / "data/team-synthetic/producers.json"))}
+    ours = load_producers()
+    assert {p["producerId"] for p in ours} <= team and all(p["entityType"] in {"smallholder", "cooperative", "estate", "processing_operation"} for p in ours)

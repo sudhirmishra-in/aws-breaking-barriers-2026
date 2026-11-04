@@ -1,14 +1,16 @@
 import { randomUUID } from "node:crypto";
 import type { AgentClient, AgentTurnResponse } from "./agent";
 import { runtimeSessionIdFor } from "./agent";
-import type { Conversation, Language, Message, Outcome, ProducerProfile, Stage, Workflow } from "./contracts";
+import type { ChallengeTag, Conversation, Language, Message, Outcome, ProducerProfile, Stage, Workflow } from "./contracts";
+import { CHALLENGE_TAGS, ENTITY_TYPES } from "./contracts";
+import { relatedFor, teamProducer } from "./relatedData";
 import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, forbidden, notFound } from "./errors";
 import type { Store } from "./store";
 import type { Transcriber } from "./transcribe";
 import { toSpokenText, type Speaker } from "./speech";
 
-export interface Principal { sub: string; groups: string[] }
+export interface Principal { sub: string; groups: string[]; name?: string }
 export interface Deps {
   store: Store;
   agent: AgentClient;
@@ -22,7 +24,7 @@ export const MIN_USER_TURNS_BEFORE_PLAYBACK = 2;
 export const AUDIO_BYTES_PER_SECOND = 32000; // 16 kHz x 2 bytes, mono
 export const AUDIO_MIN_BYTES = Math.round(AUDIO_BYTES_PER_SECOND * 0.3);
 export const AUDIO_MAX_BYTES = AUDIO_BYTES_PER_SECOND * 60;
-export const ENTITY_TYPES = ["smallholder", "cooperative", "processor", "exporter", "other"];
+export { ENTITY_TYPES };
 const LOCK_MS = 120_000;
 const ACTIVE_TTL_S = 7 * 86400; // sandbox retention: active conversations expire 7 days after last activity
 const CLOSED_META_TTL_S = 30 * 86400; // closed: narrative-free metadata kept 30 days
@@ -253,6 +255,7 @@ export class Service {
         const count2 = await this.append(cur, [{ role: "assistant", text: r.reply, stage: r.summaryEn && r.summaryOriginal ? "consent" : "response" }]);
         const saved = await this.save(cur, {
           messageCount: count2, summaryOriginal: r.summaryOriginal ?? undefined, summaryEn: r.summaryEn ?? undefined,
+          challengeTags: (r.challengeTags ?? []).filter((t): t is ChallengeTag => (CHALLENGE_TAGS as readonly string[]).includes(t)).slice(0, 3),
           workflow: r.summaryEn && r.summaryOriginal ? "consent_pending" : "guidance_pending",
           piiFlag: cur.piiFlag || r.piiFlag, piiTypes: [...new Set([...cur.piiTypes, ...r.piiTypes])],
         });
@@ -264,7 +267,7 @@ export class Service {
       let text = req.correction ?? "";
       const pc = req.profileCorrection;
       if (pc) {
-        if (pc.field === "entityType" && !ENTITY_TYPES.includes(pc.value)) throw new ApiError(400, "validation_error", "Unknown entity type.");
+        if (pc.field === "entityType" && !(ENTITY_TYPES as readonly string[]).includes(pc.value)) throw new ApiError(400, "validation_error", "Unknown entity type.");
         assertions[pc.field] = pc.value;
         text = text || `Correction: my ${pc.field === "entityType" ? "entity type" : "location"} is ${pc.value}.`;
       }
@@ -298,11 +301,14 @@ export class Service {
   }
 
   private async close(c: Conversation, consent: "granted" | "declined", reason: "declined_storage" | "ended_early") {
-    const base = { outcomeId: "", ownerSub: c.ownerSub, producerId: c.producerId, conversationId: c.conversationId, language: c.language, createdAt: this.iso() };
+    const profile = await this.d.store.getProfileBySub(c.ownerSub);
+    const base = { outcomeId: "", ownerSub: c.ownerSub, producerId: c.producerId, conversationId: c.conversationId, language: c.language, createdAt: this.iso(),
+      producerName: profile?.displayName }; // identity reference only, no narrative
     if (consent === "granted") {
       const o: Outcome = {
         ...base, outcomeId: `rec-${c.conversationId}`, kind: "record", source: "agent conversation",
-        entityType: (await this.d.store.getProfileBySub(c.ownerSub))?.entityType, summaryOriginal: c.summaryOriginal, summaryEn: c.summaryEn,
+        entityType: profile?.entityType, crop: profile?.crop, location: profile?.location,
+        summaryOriginal: c.summaryOriginal, summaryEn: c.summaryEn, challengeTags: c.challengeTags ?? [], agentChallengeTags: c.challengeTags ?? [],
         piiFlag: c.piiFlag, piiTypes: c.piiTypes, evidenceStatus: "unavailable", reviewStatus: "pending",
       };
       await this.d.store.putOutcome(o);
@@ -321,7 +327,7 @@ export class Service {
       playbackSummary: undefined, confirmedAccount: undefined, producerAssertions: undefined,
       // Saved: the confirmed summary stays with the transcript for the producer's history. Declined: nothing narrative is kept.
       // Saved: the summary and title stay until the producer deletes them (no expiry). Declined: nothing narrative is kept.
-      ...(consent === "granted" ? { expiresAt: 0 } : { title: undefined, summaryOriginal: undefined, summaryEn: undefined }),
+      ...(consent === "granted" ? { expiresAt: 0 } : { title: undefined, summaryOriginal: undefined, summaryEn: undefined, challengeTags: undefined }),
     });
     await this.d.store.clearCurrent(c.ownerSub, c.conversationId);
     this.log({ event: "conversation_closed", conversationId: c.conversationId, consent });
@@ -410,6 +416,94 @@ export class Service {
         recent: recs.slice(0, 5).map((r) => this.reviewView(r)) };
     }
     return out;
+  }
+
+  // ---- review screen (spec REV-01..24); reviewer role checked on every call ---------------------------
+  private outcomeKind(o: Outcome): "completed" | "declined" | "out_of_scope" { return o.kind === "record" ? "completed" : "declined"; }
+  private producerInfo(o: Outcome) {
+    const t = teamProducer(o.producerId);
+    return { producerId: o.producerId, producerName: o.producerName ?? t?.name ?? o.producerId, entityType: o.entityType ?? t?.entityType ?? null,
+      crop: o.crop ?? t?.crop ?? null, location: o.location ?? t?.location ?? null };
+  }
+  /** Declined records expose only producer, time, language and outcome (REV-12): no narrative, tags or claims. */
+  private recordView(o: Outcome) {
+    const base = { recordId: o.outcomeId, ...this.producerInfo(o), language: o.language, createdAt: o.createdAt, outcome: this.outcomeKind(o) };
+    if (o.kind !== "record") return { ...base, reviewStatus: null };
+    return { ...base, source: "agent conversation" as const, reviewStatus: o.reviewStatus ?? "pending",
+      summaryOriginal: o.summaryOriginal ?? o.summaryEs ?? null, summaryEn: o.summaryEn ?? null,
+      challengeTags: o.challengeTags ?? [], agentChallengeTags: o.agentChallengeTags ?? o.challengeTags ?? [],
+      claims: [] as unknown[], evidenceStatus: o.evidenceStatus ?? "unavailable",
+      piiFlag: !!o.piiFlag, piiEntityTypes: o.piiTypes ?? [], feedbackHelpful: null, peerExampleOk: false, reasoningLogRef: null,
+      reviewerNote: o.reviewerNote ?? null, reviewedBy: o.reviewedByName ?? (o.reviewedBy ? "Reviewer" : null), reviewedAt: o.reviewedAt ?? null };
+  }
+  async reviewStats(p: Principal) {
+    requireReviewer(p);
+    const all = await this.d.store.listOutcomes();
+    const recs = all.filter((o) => o.kind === "record");
+    const today = new Date(this.now()).toISOString().slice(0, 10);
+    const n = (s: string) => recs.filter((o) => (o.reviewStatus ?? "pending") === s).length;
+    return { pending: n("pending"), approved: n("approved"), corrected: n("corrected"), declined: all.filter((o) => o.kind === "declined").length,
+      piiFlagged: recs.filter((o) => o.piiFlag).length, conversationsToday: all.filter((o) => o.createdAt.slice(0, 10) === today).length, asOf: this.iso() };
+  }
+  async reviewProducers(p: Principal, f: { q?: string; review_status?: string; outcome?: string; pii_only?: string }) {
+    requireReviewer(p);
+    const all = await this.d.store.listOutcomes();
+    const q = (f.q ?? "").toLowerCase();
+    const status = f.review_status ?? "all", outcome = f.outcome ?? "all", piiOnly = f.pii_only === "true";
+    const matches = (o: Outcome) => {
+      const kind = this.outcomeKind(o);
+      if (outcome !== "all" && kind !== outcome) return false;
+      if (status !== "all" && (o.kind !== "record" || (o.reviewStatus ?? "pending") !== status)) return false;
+      if (piiOnly && !o.piiFlag) return false;
+      if (!q) return true;
+      const info = this.producerInfo(o);
+      const hay = [info.producerName, info.producerId, o.outcomeId, ...(o.kind === "record" ? o.challengeTags ?? [] : [])].join(" ").toLowerCase();
+      return hay.includes(q);
+    };
+    const groups = new Map<string, Outcome[]>();
+    for (const o of all) { if (!groups.has(o.producerId)) groups.set(o.producerId, []); groups.get(o.producerId)!.push(o); }
+    const items = [...groups.values()].filter((list) => list.some(matches)).map((list) => {
+      const recs = list.filter((o) => o.kind === "record");
+      return { ...this.producerInfo(list[0]), recordCount: list.length, pendingCount: recs.filter((o) => (o.reviewStatus ?? "pending") === "pending").length,
+        piiFlag: recs.some((o) => o.piiFlag), latestAt: list[0].createdAt, matchingRecords: list.filter(matches).length };
+    }).sort((a, b) => (b.pendingCount > 0 ? 1 : 0) - (a.pendingCount > 0 ? 1 : 0) || b.latestAt.localeCompare(a.latestAt));
+    return { items };
+  }
+  async reviewProducerRecords(p: Principal, producerId: string) {
+    requireReviewer(p);
+    return { items: (await this.d.store.listOutcomes()).filter((o) => o.producerId === producerId).map((o) => this.recordView(o)) };
+  }
+  async reviewRelated(p: Principal, producerId: string) {
+    requireReviewer(p);
+    return relatedFor(producerId);
+  }
+  async getRecord(p: Principal, id: string) {
+    requireReviewer(p);
+    const o = await this.d.store.getOutcome(id);
+    if (!o) throw notFound();
+    return this.recordView(o);
+  }
+  async patchRecord(p: Principal, id: string, req: { review_status: "approved" | "corrected"; summary_original?: string; summary_en?: string; challenge_tags?: string[]; reviewer_note?: string }) {
+    requireReviewer(p);
+    const o = await this.d.store.getOutcome(id);
+    if (!o) throw notFound();
+    if (o.kind !== "record") throw conflict("not_reviewable", "Declined outcomes have nothing to review.");
+    const name = p.name ?? "Reviewer";
+    if (o.reviewStatus && o.reviewStatus !== "pending") {
+      if (o.reviewStatus === req.review_status && o.reviewedBy === p.sub) return this.recordView(o); // retry of a completed review
+      throw conflict("already_reviewed", "This record has already been reviewed.");
+    }
+    const patch: Partial<Outcome> = { reviewStatus: req.review_status, reviewedBy: p.sub, reviewedByName: name, reviewedAt: this.iso() };
+    if (req.reviewer_note) patch.reviewerNote = req.reviewer_note;
+    if (req.review_status === "corrected") {
+      if (req.summary_original !== undefined) patch.summaryOriginal = req.summary_original;
+      if (req.summary_en !== undefined) patch.summaryEn = req.summary_en;
+      if (req.challenge_tags !== undefined) patch.challengeTags = [...new Set(req.challenge_tags)];
+    }
+    const n = await this.d.store.reviewOutcome(id, patch);
+    if (!n) throw conflict("already_reviewed", "This record has already been reviewed.");
+    this.log({ event: "review_updated", outcomeId: id, status: req.review_status });
+    return this.recordView(n);
   }
 
   // ---- reviewer ---------------------------------------------------------
