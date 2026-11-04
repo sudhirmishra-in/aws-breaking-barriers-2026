@@ -324,7 +324,7 @@ export class ServiceV2 extends Service {
         const r = await this.d.agent.match({ task: "match", language: own.language, producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop },
           account: (own.summaryEn ?? "").slice(0, 2000), tags,
           candidates: cands.map((x) => ({ caseId: x.c.caseId, challenge: x.c.challenge, action: x.c.action, result: x.c.resultReported ? x.c.result : null, tags: x.c.tags, sameOrganization: x.c.sameOrganization, sameCountry: x.sameCountry })) },
-          `ftusa-match-${conversationId}`, p.sub);
+          `ftusa-match-${sha(conversationId).slice(0, 40)}`, p.sub); // AgentCore needs a session id of at least 33 characters
         // 2. The model only ranks: unknown or duplicate ids are dropped, so it can never introduce a case.
         const byId = new Map(cands.map((x) => [x.c.caseId, x]));
         const seen = new Set<string>();
