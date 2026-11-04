@@ -118,6 +118,7 @@ export class Service {
         ? { summaryHash: summaryHashOf(c), summaryOriginal: c.summaryOriginal, summaryEn: c.summaryEn, tags: c.challengeTags ?? [], language: c.language } : null,
       record: await this.recordState(c),
       referencedCase: c.referencedCase ?? null,
+      referencedCaseCard: c.referencedCase ? await this.referenceCard(c) : null,
       retention: {
         activeDays: 7, savedDays: 30,
         text: "Messages are kept so you can continue, for up to 7 days without activity. If you save the conversation, its summary stays in your history until you delete it, and the full conversation is kept for 30 days in this sandbox. If you don't save it, its messages are deleted when it ends.",
@@ -125,6 +126,8 @@ export class Service {
       syntheticDemo: true,
     };
   }
+
+  protected async referenceCard(_c: Conversation): Promise<unknown> { return null; }
 
   /** What the producer may see about their own finalized record: sharing, review and publication are independent and all shown. */
   protected async recordState(c: Conversation) {
@@ -223,14 +226,15 @@ export class Service {
   // ---- operations -------------------------------------------------------
   /** Starts a new conversation. Retrying with the same requestId returns the same conversation (no duplicates). */
   /** Hook for "Ask about this": ServiceV2 validates the referenced peer case against current eligibility. */
-  protected async resolveReference(_p: Principal, _profile: ProducerProfile, _caseId: string): Promise<{ caseId: string; version: number }> { throw new ApiError(400, "validation_error", "Case references are not available."); }
+  protected async resolveReference(_p: Principal, _profile: ProducerProfile, _caseId: string): Promise<{ caseId: string; version: number; challenge?: string }> { throw new ApiError(400, "validation_error", "Case references are not available."); }
 
   async create(p: Principal, requested: Language | undefined, requestId: string, referenceCaseId?: string) {
     requireProducer(p);
     const profile = await this.profileFor(p);
     // New conversations start in the producer's preferred language unless a temporary language was requested. The profile is never modified.
     const language: Language = requested ?? profile.preferredLanguage ?? "en";
-    const referencedCase = referenceCaseId ? await this.resolveReference(p, profile, referenceCaseId) : undefined;
+    const ref = referenceCaseId ? await this.resolveReference(p, profile, referenceCaseId) : undefined;
+    const referencedCase = ref && { caseId: ref.caseId, version: ref.version };
     const scope = `owner-${p.sub}`;
     const claim = await this.d.store.claimRequest(scope, requestId, Math.floor(this.now() / 1000) + IDEM_TTL_S);
     if (claim === "pending") throw conflict("request_in_progress", "This conversation is still being started. Please wait a moment.", true);
@@ -249,7 +253,8 @@ export class Service {
       // Real agent opener; deterministic fallback so a model outage cannot block starting.
       let opener = OPENER[language];
       try {
-        const r = await this.runAgent(conv, profile, "intake", [], GREETING[language], false, p);
+        // A natural first turn; when asking about a colleague's case, the (already authorized, projected) case summary is part of what the producer says.
+        const r = await this.runAgent(conv, profile, "intake", [], ref?.challenge ? `${GREETING[language]}. I would like to talk about this case: ${ref.challenge}` : GREETING[language], false, p);
         opener = r.reply;
       } catch { this.log({ event: "opener_fallback", conversationId: id }); }
       const count = await this.append(conv, [{ role: "assistant", text: opener }]);

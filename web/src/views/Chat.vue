@@ -105,6 +105,8 @@ async function load() {
     else if (f.status === 404) { missing.value = true; apply({ conversation: null }); }
     else error.value = { text: f.message, retry: load };
   } finally { loading.value = false; lastSeenSeq = maxAgentSeq(); }
+  // "Ask about this": start the conversation right away, about that case (validated server-side), instead of showing an empty start screen.
+  if (!id && !conv.value && typeof route.query.case === "string" && !error.value) await start();
 }
 watch(() => [route.params.conversationId, route.query.new], () => { stopAudio(); speakingSeq.value = null; void load(); }, { immediate: true });
 
@@ -211,6 +213,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
 
       <!-- A conversation: active or closed -->
       <template v-else>
+        <div v-if="view?.referencedCaseCard" class="banner info" role="note" style="margin:.5rem"><b>Asking about a colleague's case</b><br />{{ view.referencedCaseCard.challenge }}<span v-if="view.referencedCaseCard.action"> · {{ view.referencedCaseCard.action }}</span></div>
         <div ref="log" class="log chat-body" role="log" aria-live="polite" aria-label="Messages">
           <template v-for="(m, i) in messages" :key="m.seq">
             <div v-if="m.role === 'user'" class="bubble-u fade-up" :data-stage="m.stage !== messages[i - 1]?.stage ? m.stage : undefined">{{ m.text }}</div>

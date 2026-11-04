@@ -202,6 +202,7 @@ describe("peer summaries", () => {
     const v = await svc.create(mateo, undefined, rid(), c.caseId);
     expect(v.referencedCase).toEqual({ caseId: c.caseId, version: c.version });
     expect(await code(svc.getConversation(ana, v.conversation.conversationId))).toBe("not_found"); // owned by Mateo only
+    expect(v.referencedCaseCard).toMatchObject({ caseId: c.caseId, challenge: "EN summary" }); // the chat shows what it is about
     expect(await code(svc.create(mateo, undefined, rid(), "rec-forged-123456@1"))).toBe("case_unavailable");
   });
   it("deletion request withdraws publication at once and is idempotent", async () => {

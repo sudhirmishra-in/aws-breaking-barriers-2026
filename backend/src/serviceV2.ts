@@ -348,6 +348,11 @@ export class ServiceV2 extends Service {
 
   protected override async resolveReference(p: Principal, _profile: ProducerProfile, caseId: string) {
     const c = await this.peerCase(p, caseId).catch(() => { throw new ApiError(409, "case_unavailable", "This case is no longer available."); });
-    return { caseId: c.caseId, version: c.version };
+    return { caseId: c.caseId, version: c.version, challenge: c.challenge };
+  }
+
+  /** The referenced case as the viewer may see it now (re-checked on every view; null once it is withdrawn). */
+  protected override async referenceCard(c: { ownerSub: string; referencedCase?: { caseId: string } }) {
+    try { return await this.peerCase({ sub: c.ownerSub, groups: ["producer"] }, c.referencedCase!.caseId); } catch { return null; }
   }
 }

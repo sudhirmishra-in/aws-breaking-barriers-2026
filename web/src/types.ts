@@ -18,7 +18,7 @@ export interface RecordStateDto {
 }
 export interface ConversationView {
   conversation: ConversationDto; messages: Message[]; retention: { activeDays: number; savedDays?: number; text: string }; syntheticDemo: true;
-  confirmation?: ConfirmationDto | null; record?: RecordStateDto | null; referencedCase?: { caseId: string; version: number } | null;
+  confirmation?: ConfirmationDto | null; record?: RecordStateDto | null; referencedCase?: { caseId: string; version: number } | null; referencedCaseCard?: PeerCase | null;
 }
 export interface ConversationSummary { conversationId: string; title: string | null; language: Lang; createdAt: string; updatedAt: string; status: "in_progress" | "completed"; stopped?: boolean; group?: "today" | "previous_7_days" | "older"; summary: string | null }
 export interface CurrentView { conversation: ConversationDto | null; messages?: Message[]; retention?: ConversationView["retention"] }
