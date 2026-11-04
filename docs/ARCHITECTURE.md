@@ -27,6 +27,7 @@ flowchart LR
 One CDK stack: KMS key, 2 DynamoDB tables (CMK), Cognito (groups `producer`, `reviewer`), HTTP API (throttled, access logs), Lambda (30-day logs), AgentCore Runtime + role, Guardrail + version, private S3 + CloudFront (OAC, security headers), error alarm. No VPC, no public data stores.
 
 ## 3. Authentication and trusted context
+0. Sign-in is explicit: signed-out visitors land on a `/login` screen with a role dropdown (Producer or Reviewer) and press **Continue to sign in**; nothing redirects to Cognito automatically. The dropdown only chooses the landing page and is remembered per browser. It grants nothing: access comes from the account's Cognito group, checked on the server, and the UI shows a message if the chosen role is not on the account. Because tokens are kept in memory only, a page refresh returns to the login screen (the Cognito session makes the next sign-in instant).
 1. Browser signs in via Cognito (authorization code + PKCE, public client, no secret). Access token held **in memory only**; refresh re-runs the redirect (Cognito session cookie makes it silent). Trade-off: one redirect per page load, no script-readable long-lived token.
 2. API Gateway JWT authorizer checks signature, issuer, audience (`client_id`) and expiry. The Lambda re-checks `token_use=access`, client, issuer, exp; ID tokens are rejected.
 3. Identity = `sub`. Role = `cognito:groups` (`producer`/`reviewer`), checked in the service for every operation. Frontend route guards are UX only.

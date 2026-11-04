@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRoute } from "vue-router";
 import { ArrowRight, ClipboardCheck, HelpCircle, MessageCircle, ShieldCheck } from "lucide-vue-next";
 import { api } from "../lib/api";
 import { state } from "../session";
 import { t } from "../lib/i18n";
 import type { Overview } from "../types";
 const s = computed(() => t(state.ui));
+const route = useRoute();
+const denied = computed(() => route.query.denied);
 const ov = ref<Overview | null>(null); const err = ref("");
 const isProducer = computed(() => state.me?.roles.includes("producer"));
 const isReviewer = computed(() => state.me?.roles.includes("reviewer"));
@@ -23,6 +25,7 @@ onMounted(async () => { try { ov.value = await api.overview(); } catch (e) { err
     </div>
   </section>
   <p v-if="err" class="banner error" role="alert">{{ err }}</p>
+  <p v-if="denied" class="banner error" role="alert">{{ denied === "reviewer" ? s.deniedRole : s.deniedProducer }}</p>
 
   <template v-if="isProducer">
     <div class="grid3">
