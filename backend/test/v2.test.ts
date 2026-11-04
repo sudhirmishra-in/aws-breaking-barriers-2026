@@ -277,6 +277,20 @@ describe("feedback", () => {
   });
 });
 
+describe("guidance turn without summary fields", () => {
+  it("English conversations fall back to the confirmed account; other languages stay at guidance (retry), never an invented translation", async () => {
+    const store = new MemoryStore(); store.profiles.set("s-en", prof("PRD-EN", undefined, "en")); store.profiles.set("s-es", prof("PRD-ES", undefined, "es"));
+    const bare = new Stub(); const orig = bare.turn.bind(bare);
+    bare.turn = async (req) => { const r = await orig(req); return req.context.mode === "guidance" ? { ...r, summaryEn: null, summaryOriginal: null, reply: "Another question?" } : r; };
+    const svc = new ServiceV2({ store, agent: bare });
+    for (const [p, expected] of [[P("s-en"), "consent_pending"], [P("s-es"), "guidance_pending"]] as const) {
+      const id = (await svc.create(p, undefined, rid())).conversation.conversationId;
+      await svc.message(p, id, rid(), "a"); await svc.message(p, id, rid(), "b");
+      expect((await svc.playback(p, id, { requestId: rid(), decision: "confirm" })).conversation.workflow).toBe(expected);
+    }
+  });
+});
+
 describe("history grouping", () => {
   it("groups by Today / Previous 7 days / Older", () => {
     const now = Date.parse("2026-11-04T15:00:00Z");

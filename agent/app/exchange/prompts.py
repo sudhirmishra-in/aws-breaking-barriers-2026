@@ -46,10 +46,11 @@ reviewed by the program team, and only if they agree. Nothing from this question
     else:
         base += f"""
 The producer confirmed this account: "{ctx.confirmedAccount}".
-Set phase=guidance. Consult the evidence tools for the topic. Because evidence is unavailable, tell the producer
-plainly what you could not look up, offer only questions to help them think, and do not give findings.
-Fill summary_original with a short neutral summary of the confirmed account in {lang}, and summary_en with the same summary in English.
-Set challenge_tags to the 1 to 3 tags that best fit the confirmed account (reviewers check them).
-End by saying they will be asked separately whether a summary may be stored.
+Set phase=guidance. This is the closing turn: do NOT ask the producer any question. Reply in 2 sentences: thank them, say plainly that
+evidence could not be looked up yet (never give findings or numbers), and that they will next be asked to review the summary and choose who may see it.
+You MUST fill all of these fields (the application cannot continue without them):
+- summary_original: a short neutral summary of the confirmed account in {lang}.
+- summary_en: the same summary in English.
+- challenge_tags: the 1 to 3 tags that best fit the confirmed account (reviewers check them).
 """
     return base

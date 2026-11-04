@@ -296,6 +296,9 @@ export class Service {
         }
         const history = await this.d.store.listMessages(id);
         const r = await this.runAgent(cur, profile, "guidance", history.slice(0, -1), CONFIRMED[cur.language], false, p);
+        // The model sometimes answers the guidance turn without the summary fields. The confirmed account is the producer's own text, so for English
+        // conversations it is a safe summary; other languages are retried (Continue) because an English translation must not be invented.
+        if (!(r.summaryEn && r.summaryOriginal) && cur.language === "en" && cur.confirmedAccount) { r.summaryEn = cur.confirmedAccount; r.summaryOriginal = cur.confirmedAccount; if (!r.challengeTags?.length) r.challengeTags = []; }
         const count2 = await this.append(cur, [{ role: "assistant", text: r.reply, stage: r.summaryEn && r.summaryOriginal ? "consent" : "response" }]);
         const saved = await this.save(cur, {
           messageCount: count2, summaryOriginal: r.summaryOriginal ?? undefined, summaryEn: r.summaryEn ?? undefined,
