@@ -26,6 +26,7 @@ class TrustedContext(BaseModel):
     language: Language
     mode: Mode
     allowPlayback: bool
+    forcePlayback: bool = False  # set by the application after several turns so intake cannot go on indefinitely
     producer: ProducerRef
     confirmedAccount: str | None = None
 

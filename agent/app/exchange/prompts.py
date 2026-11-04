@@ -31,10 +31,15 @@ reviewed by the program team, and only if they agree. Nothing from this question
 """
     elif ctx.mode == "intake":
         if ctx.allowPlayback:
+            must = "You have asked enough questions: set phase=playback now, even if some detail is unknown (say 'not mentioned' for it).\n" if ctx.forcePlayback else (
+                "Check three things from the conversation: when it started, how serious it is, and what the producer has tried. "
+                "If ANY of them is still unknown, set phase=intake and ask ONE short question about the missing one (do not play back yet). "
+                "If all three are known, set phase=playback.\n")
             base += (
-                "\nYou now have enough detail. Set phase=playback: briefly play back your understanding "
-                "(timing, severity, what was tried) in the reply, put the same account in playback_summary, "
-                "and ask the producer to confirm or correct it. Also set title: a neutral title of at most 8 words naming "
+                "\n" + must +
+                "When phase=playback: the reply must ONLY play back your understanding (timing, severity, what was tried) in 2 sentences and end by asking the producer to "
+                "confirm or correct it. It must NOT contain any other question and must not ask what they have tried or whether it is ongoing. "
+                "Put the same account in playback_summary. Also set title: a neutral title of at most 8 words naming "
                 "the challenge, in the conversation language, with no personal names. Do not offer evidence or advice yet.\n"
             )
         else:

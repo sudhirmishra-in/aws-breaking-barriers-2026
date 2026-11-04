@@ -26,6 +26,7 @@ export interface Deps {
 }
 
 export const MIN_USER_TURNS_BEFORE_PLAYBACK = 2;
+export const FORCE_PLAYBACK_TURN = 4; // by the 4th producer message the agent must play back, so intake cannot loop
 export const AUDIO_BYTES_PER_SECOND = 32000; // 16 kHz x 2 bytes, mono
 export const AUDIO_MIN_BYTES = Math.round(AUDIO_BYTES_PER_SECOND * 0.3);
 export const AUDIO_MAX_BYTES = AUDIO_BYTES_PER_SECOND * 60;
@@ -199,7 +200,7 @@ export class Service {
     try {
       return await this.d.agent.turn({
         context: {
-          conversationId: c.conversationId, language: c.language, mode, allowPlayback,
+          conversationId: c.conversationId, language: c.language, mode, allowPlayback, forcePlayback: allowPlayback && c.userTurns + 1 >= FORCE_PLAYBACK_TURN,
           // Trusted: built from the server-side profile, never from the request.
           producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop },
           confirmedAccount: c.confirmedAccount ?? null,

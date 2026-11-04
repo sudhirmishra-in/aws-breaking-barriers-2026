@@ -7,6 +7,7 @@ export interface AgentTurnRequest {
     language: Language;
     mode: "intake" | "guidance" | "ask";
     allowPlayback: boolean;
+    forcePlayback?: boolean;
     producer: { producerId: string; entityType: string; location: string; crop: string };
     confirmedAccount?: string | null;
   };

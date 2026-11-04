@@ -221,3 +221,12 @@ def test_handle_turn_routes_match_tasks(monkeypatch):
     import exchange.runtime as rt
     monkeypatch.setattr(rt, "handle_match", lambda payload: {"routed": True})
     assert handle_turn(match_payload()) == {"routed": True}
+
+
+def test_playback_prompt_forbids_extra_questions_and_gates_on_missing_details():
+    from exchange.context import TrustedContext
+    ctx = TrustedContext.model_validate(payload(allow=True)["context"])
+    p = system_prompt(ctx)
+    assert "ONLY play back" in p and "must NOT contain any other question" in p and "set phase=intake and ask ONE short question" in p
+    forced = system_prompt(TrustedContext.model_validate({**payload(allow=True)["context"], "forcePlayback": True}))
+    assert "set phase=playback now" in forced and "set phase=intake and ask" not in forced

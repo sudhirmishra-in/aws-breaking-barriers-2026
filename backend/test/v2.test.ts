@@ -360,6 +360,18 @@ describe("guidance turn without summary fields", () => {
   });
 });
 
+describe("playback is forced after enough turns", () => {
+  it("the agent is told to play back from the 4th producer message, never earlier", async () => {
+    const store = new MemoryStore(); store.orgs.set("ORG-A", org("ORG-A", "A")); store.profiles.set("s-ana", prof("PRD-ANA", "ORG-A", "en", "Ana"));
+    const seen: boolean[] = []; const agent = new Stub(); const orig = agent.turn.bind(agent);
+    agent.turn = async (req) => { seen.push(!!(req.context as { forcePlayback?: boolean }).forcePlayback); const r = await orig(req); return req.context.allowPlayback ? { ...r, phase: "intake" as const, playbackSummary: null } : r; };
+    const svc = new ServiceV2({ store, agent });
+    const id = (await svc.create(ana, undefined, rid())).conversation.conversationId;
+    for (const t of ["a", "b", "c", "d"]) await svc.message(ana, id, rid(), t);
+    expect(seen.slice(1)).toEqual([false, false, false, true]); // messages 1-3 never forced (playback allowed from 2); message 4 must
+  });
+});
+
 describe("history grouping", () => {
   it("groups by Today / Previous 7 days / Older", () => {
     const now = Date.parse("2026-11-04T15:00:00Z");
