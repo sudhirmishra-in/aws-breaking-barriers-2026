@@ -102,6 +102,7 @@ def handle_turn(
         reply=out.reply,
         phase=phase,
         playbackSummary=playback,
+        title=(out.title or "").strip()[:80] or None if playback else None,
         summaryEn=out.summary_en if phase == "guidance" else None,
         summaryEs=out.summary_es if phase == "guidance" else None,
         piiFlag=bool(pii_types),

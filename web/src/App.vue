@@ -21,7 +21,7 @@ function goLogin() { state.expired = false; state.authError = false; router.push
       <nav v-if="state.me" class="nav" aria-label="Main">
         <RouterLink to="/">{{ s.navHome }}</RouterLink>
         <template v-if="state.me?.roles.includes('producer')">
-          <RouterLink to="/share">{{ s.navShare }}</RouterLink>
+          <RouterLink to="/chat" :class="{ 'router-link-exact-active': $route.path.startsWith('/chat') }">{{ s.navShare }}</RouterLink>
           <RouterLink to="/ask">{{ s.navAsk }}</RouterLink>
         </template>
         <RouterLink v-if="state.me?.roles.includes('reviewer')" to="/review">{{ s.navReview }}</RouterLink>

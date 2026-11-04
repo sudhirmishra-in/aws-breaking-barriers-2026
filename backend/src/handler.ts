@@ -34,7 +34,8 @@ export async function route(svc: Service, p: Principal, method: string, path: st
   if (method === "POST" && r0 === "transcribe") { const q = TranscribeReq.parse(body); return svc.transcribe(p, q.language, q.audio); }
   if (method === "POST" && r0 === "ask") { const q = AskReq.parse(body); return svc.ask(p, q.text, q.language); }
   if (r0 === "conversations") {
-    if (method === "POST" && !r1) { const q = CreateConversationReq.parse(body); return svc.create(p, q.language); }
+    if (method === "GET" && !r1) return svc.listConversations(p);
+    if (method === "POST" && !r1) { const q = CreateConversationReq.parse(body); return svc.create(p, q.language, q.requestId); }
     if (method === "GET" && r1 === "current") return svc.getCurrent(p);
     if (r1 && method === "GET" && !r2) return svc.getConversation(p, r1);
     if (r1 && method === "POST" && r2 === "messages") { const q = SubmitMessageReq.parse(body); return svc.message(p, r1, q.requestId, q.text); }

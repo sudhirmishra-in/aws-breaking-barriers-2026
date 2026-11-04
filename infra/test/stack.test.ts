@@ -26,6 +26,9 @@ describe("stack", () => {
     t.hasResourceProperties("AWS::BedrockAgentCore::Runtime", { ProtocolConfiguration: "HTTP", AgentRuntimeArtifact: { CodeConfiguration: Match.objectLike({ Runtime: "PYTHON_3_13" }) } });
     expect(JSON.stringify(Object.values(t.findResources("AWS::BedrockAgentCore::Runtime"))[0])).not.toContain("AuthorizerConfiguration");
   });
+  it("conversations table has the owner history index", () => {
+    t.hasResourceProperties("AWS::DynamoDB::GlobalTable", { GlobalSecondaryIndexes: Match.arrayWith([Match.objectLike({ IndexName: "owner-index" })]) });
+  });
   it("API role can start Transcribe streaming and nothing broader on Transcribe", () => {
     const pol = JSON.stringify(Object.values(t.findResources("AWS::IAM::Policy")));
     expect(pol).toContain("transcribe:StartStreamTranscription"); expect(pol).not.toContain("transcribe:*");

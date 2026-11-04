@@ -16,6 +16,7 @@ export interface AgentTurnResponse {
   reply: string;
   phase: "intake" | "playback" | "guidance" | "answer";
   playbackSummary?: string | null;
+  title?: string | null;
   summaryEn?: string | null;
   summaryEs?: string | null;
   piiFlag: boolean;

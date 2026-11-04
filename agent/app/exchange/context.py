@@ -49,6 +49,10 @@ class TurnOutput(BaseModel):
     playback_summary: str | None = Field(
         default=None, description="Short account of what the producer said, only when phase is playback."
     )
+    title: str | None = Field(
+        default=None,
+        description="Only when phase is playback: a neutral title of at most 8 words naming the challenge, in the conversation language.",
+    )
     summary_en: str | None = Field(default=None, description="English summary proposal (guidance only).")
     summary_es: str | None = Field(default=None, description="Spanish summary proposal (guidance only).")
 
@@ -57,6 +61,7 @@ class TurnResponse(BaseModel):
     reply: str
     phase: Literal["intake", "playback", "guidance", "answer"]
     playbackSummary: str | None = None
+    title: str | None = None
     summaryEn: str | None = None
     summaryEs: str | None = None
     piiFlag: bool = False

@@ -37,6 +37,8 @@ export type Workflow = "intake" | "playback_pending" | "guidance_pending" | "con
 export type Confirmation = "none" | "pending" | "confirmed";
 export type Consent = "unanswered" | "granted" | "declined";
 export type ConvStatus = "active" | "completed" | "declined";
+/** UI stage of a message (spec CHAT-07): intake, playback, response, consent, feedback. */
+export type Stage = "intake" | "playback" | "response" | "consent" | "feedback";
 
 export interface ProducerProfile {
   producerId: string;
@@ -56,6 +58,7 @@ export interface Conversation {
   confirmation: Confirmation;
   consent: Consent;
   status: ConvStatus;
+  title?: string; // short challenge title for the history list; removed on decline
   playbackSummary?: string;
   confirmedAccount?: string;
   producerAssertions?: { location?: string; entityType?: string }; // asserted, not trusted scope
@@ -73,7 +76,7 @@ export interface Conversation {
   expiresAt: number; // epoch seconds (DynamoDB TTL)
 }
 
-export interface Message { seq: number; role: "user" | "assistant"; text: string; at: string }
+export interface Message { seq: number; role: "user" | "assistant"; text: string; at: string; stage?: Stage }
 
 export type OutcomeKind = "record" | "declined";
 export type ReviewStatus = "pending" | "approved" | "corrected";

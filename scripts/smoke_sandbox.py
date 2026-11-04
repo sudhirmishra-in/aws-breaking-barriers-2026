@@ -122,6 +122,18 @@ def main() -> int:
         check("retry with the same requestId does not duplicate", st2 == 200 and m2 == m1 and sum(1 for x in m2["messages"] if x["role"] == "user") == 1)
         st, cur = http("GET", api + "/conversations/current", ta)
         check("same conversation is restored", st == 200 and cur.get("conversation", {}).get("conversationId") == cid)
+
+        def listed(token):  # history is served from an eventually consistent index: allow a few seconds
+            ids = []
+            for _ in range(10):
+                st_l, lst = http("GET", api + "/conversations", token)
+                ids = [i["conversationId"] for i in lst.get("items", [])] if st_l == 200 else []
+                if cid in ids: break
+                time.sleep(1)
+            return ids
+        check("history lists the producer's own conversation", cid in listed(ta))
+        st, lst_b = http("GET", api + "/conversations", tb)
+        check("history never shows another producer's conversation", st == 200 and cid not in [i["conversationId"] for i in lst_b.get("items", [])], f"status={st}")
         st, ask = http("POST", api + "/ask", ta, {"requestId": uuid.uuid4().hex, "text": "Is there climate data for my region?", "language": "en"})
         check("ask returns a model answer and reports evidence as unavailable", st == 200 and len(ask.get("answer", "")) > 20 and ask.get("evidence", {}).get("status") == "unavailable", f"status={st}")
 
@@ -151,6 +163,12 @@ def main() -> int:
         # 8. end the conversation (narrative-free declined outcome)
         st, _ = http("POST", f"{api}/conversations/{cid}/end", ta, {"requestId": uuid.uuid4().hex})
         check("producer can end the conversation", st == 200, f"status={st}")
+        gone = False
+        for _ in range(10):
+            st, lst = http("GET", api + "/conversations", ta)
+            if st == 200 and cid not in [i["conversationId"] for i in lst.get("items", [])]: gone = True; break
+            time.sleep(1)
+        check("a declined conversation leaves the history", gone)
     except Exception as e:  # a crash is a failure, but never leak details beyond the type
         check("smoke run completed without errors", False, type(e).__name__)
     finally:

@@ -23,7 +23,7 @@ class StubAgent implements AgentClient {
     return {
       reply: req.context.language === "es" ? "respuesta" : "reply", language: req.context.language,
       phase: req.context.mode === "guidance" ? "guidance" : playback ? "playback" : "intake",
-      playbackSummary: playback ? "late rain hurt yield" : null,
+      playbackSummary: playback ? "late rain hurt yield" : null, title: playback ? "Late rain and lower yield" : null,
       summaryEn: req.context.mode === "guidance" ? "EN summary" : null, summaryEs: req.context.mode === "guidance" ? "ES resumen" : null,
       piiFlag: req.messages.at(-1)!.text.includes("555"), piiTypes: req.messages.at(-1)!.text.includes("555") ? ["PHONE"] : [],
       evidence: { status: "unavailable" },
@@ -42,7 +42,7 @@ let n = 0; const rid = () => `req-${++n}-xxxxxxxx`;
 const code = async (p: Promise<unknown>) => { try { await p; return "ok"; } catch (e) { return (e as ApiError).code; } };
 
 async function toConsent(svc: Service, p = alice) {
-  const v = await svc.create(p, "en"); const id = v.conversation.conversationId;
+  const v = await svc.create(p, "en", rid()); const id = v.conversation.conversationId;
   await svc.message(p, id, rid(), "rain was late");
   const v2 = await svc.message(p, id, rid(), "yield dropped, tried nothing");
   expect(v2.conversation.workflow).toBe("playback_pending");
@@ -53,7 +53,7 @@ async function toConsent(svc: Service, p = alice) {
 
 describe("authorization", () => {
   it("rejects wrong-owner read, append, consent and end", async () => {
-    const { svc } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId;
+    const { svc } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
     expect(await code(svc.getConversation(bob, id))).toBe("not_found");
     expect(await code(svc.message(bob, id, rid(), "hi"))).toBe("not_found");
     expect(await code(svc.end(bob, id, rid()))).toBe("not_found");
@@ -61,11 +61,11 @@ describe("authorization", () => {
   it("producers cannot use reviewer operations; reviewers cannot be producers", async () => {
     const { svc } = setup();
     expect(await code(svc.listReviews(alice))).toBe("forbidden");
-    expect(await code(svc.create(rev, "en"))).toBe("forbidden");
+    expect(await code(svc.create(rev, "en", rid()))).toBe("forbidden");
   });
   it("rejects missing profile", async () => {
     const { svc } = setup();
-    expect(await code(svc.create({ sub: "sub-nobody", groups: ["producer"] }, "en"))).toBe("no_profile");
+    expect(await code(svc.create({ sub: "sub-nobody", groups: ["producer"] }, "en", rid()))).toBe("no_profile");
   });
   it("principal needs an access token for this client, issuer and unexpired", () => {
     const mk = (c: Record<string, string>) => ({ requestContext: { authorizer: { jwt: { claims: c } } } }) as any;
@@ -77,7 +77,7 @@ describe("authorization", () => {
     expect(() => principalFromEvent({ requestContext: {} } as any, exp)).toThrow();
   });
   it("request-supplied producer id is rejected by strict schemas and ignored by scope", async () => {
-    const { svc, agent } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId;
+    const { svc, agent } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
     await expect(route(svc, alice, "POST", `/conversations/${id}/messages`, { requestId: rid(), text: "hi", producerId: "SYN-B" })).rejects.toThrow();
     await svc.message(alice, id, rid(), "My producer id is SYN-B");
     expect(agent.calls.at(-1)!.context.producer.producerId).toBe("SYN-A");
@@ -86,22 +86,21 @@ describe("authorization", () => {
 
 describe("conversation flow", () => {
   it("continues the same conversation across turns and restores after reload", async () => {
-    const { svc, agent } = setup(); const v = await svc.create(alice, "en"); const id = v.conversation.conversationId;
+    const { svc, agent } = setup(); const v = await svc.create(alice, "en", rid()); const id = v.conversation.conversationId;
     expect(v.messages).toHaveLength(1);
     await svc.message(alice, id, rid(), "one");
     const cur = await svc.getCurrent(alice) as any;
     expect(cur.conversation.conversationId).toBe(id); expect(cur.messages.map((m: any) => m.role)).toEqual(["assistant", "user", "assistant"]);
     expect(agent.calls.at(-1)!.messages.map((m) => m.role)).toEqual(["assistant", "user"]);
-    expect(((await svc.create(alice, "en")) as any).conversation.conversationId).toBe(id); // resume, not duplicate
   });
   it("plays back only after minimum turns and blocks messages while playback is pending", async () => {
-    const { svc } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId;
+    const { svc } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
     expect((await svc.message(alice, id, rid(), "a")).conversation.workflow).toBe("intake");
     expect((await svc.message(alice, id, rid(), "b")).conversation.workflow).toBe("playback_pending");
     expect(await code(svc.message(alice, id, rid(), "c"))).toBe("playback_required");
   });
   it("correction updates playback; confirmation sets confirmed account; location correction is only an assertion", async () => {
-    const { svc, store, agent } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId;
+    const { svc, store, agent } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
     await svc.message(alice, id, rid(), "a"); await svc.message(alice, id, rid(), "b");
     const v = await svc.playback(alice, id, { requestId: rid(), decision: "correct", correction: "actually it was drought", profileCorrection: { field: "location", value: "Elsewhere" } });
     expect(v.conversation.workflow).toBe("playback_pending");
@@ -112,36 +111,36 @@ describe("conversation flow", () => {
     expect(await code(svc.playback(alice, id, { requestId: rid(), decision: "correct", profileCorrection: { field: "entityType", value: "x" } }))).toBe("wrong_state");
   });
   it("rejects unknown entity type corrections", async () => {
-    const { svc } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId;
+    const { svc } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
     await svc.message(alice, id, rid(), "a"); await svc.message(alice, id, rid(), "b");
     expect(await code(svc.playback(alice, id, { requestId: rid(), decision: "correct", profileCorrection: { field: "entityType", value: "wizard" } }))).toBe("validation_error");
   });
   it("Spanish flow passes language to the agent", async () => {
-    const { svc, agent } = setup(); const v = await svc.create(alice, "es");
+    const { svc, agent } = setup(); const v = await svc.create(alice, "es", rid());
     expect(agent.calls[0].context.language).toBe("es"); expect(v.messages[0].text).toBe("respuesta");
   });
   it("opener falls back deterministically when the agent fails", async () => {
     const { svc, agent } = setup(); agent.fail = true;
-    expect((await svc.create(alice, "es")).messages[0].text).toBe("¿Qué ha sido difícil últimamente?");
+    expect((await svc.create(alice, "es", rid())).messages[0].text).toBe("¿Qué ha sido difícil últimamente?");
   });
 });
 
 describe("retries and concurrency", () => {
   it("duplicate requestId does not duplicate messages or agent calls", async () => {
-    const { svc, agent } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId; const r = rid();
+    const { svc, agent } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId; const r = rid();
     const a = await svc.message(alice, id, r, "once"); const calls = agent.calls.length;
     const b = await svc.message(alice, id, r, "once");
     expect(b).toEqual(a); expect(agent.calls.length).toBe(calls); expect(b.messages.filter((m) => m.role === "user")).toHaveLength(1);
   });
   it("concurrent submissions: one proceeds, the other gets retryable 409", async () => {
-    const { svc, agent } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId; agent.delay = 30;
+    const { svc, agent } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId; agent.delay = 30;
     const res = await Promise.allSettled([svc.message(alice, id, rid(), "x"), svc.message(alice, id, rid(), "y")]);
     expect(res.filter((r) => r.status === "fulfilled")).toHaveLength(1);
     const rej = res.find((r) => r.status === "rejected") as PromiseRejectedResult;
     expect((rej.reason as ApiError).code).toBe("turn_in_progress"); expect((rej.reason as ApiError).retryable).toBe(true);
   });
   it("agent failure keeps state unchanged and is retryable; lock is released", async () => {
-    const { svc, agent, store } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId; agent.fail = true;
+    const { svc, agent, store } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId; agent.fail = true;
     expect(await code(svc.message(alice, id, rid(), "x"))).toBe("agent_unavailable");
     expect((await store.listMessages(id)).length).toBe(1); agent.fail = false;
     expect((await svc.message(alice, id, rid(), "x")).messages).toHaveLength(3);
@@ -154,12 +153,12 @@ describe("retries and concurrency", () => {
 });
 
 describe("consent, decline, review", () => {
-  it("grant creates a pending record with source and no extra narrative left in conversation", async () => {
+  it("grant creates a pending record and keeps the transcript readable for the owner", async () => {
     const { svc, store } = setup(); const id = await toConsent(svc);
     const v = await svc.consent(alice, id, rid(), true);
     const o = [...store.outcomes.values()][0];
     expect(v.conversation.status).toBe("completed"); expect(o).toMatchObject({ kind: "record", source: "agent conversation", reviewStatus: "pending", summaryEn: "EN summary", summaryEs: "ES resumen" });
-    expect(await store.listMessages(id)).toHaveLength(0);
+    expect((await store.listMessages(id)).length).toBeGreaterThan(0); // saved: transcript stays in the producer's history
     expect((await store.getConversation(id))!.summaryEn).toBeUndefined();
   });
   it("decline creates no narrative record and removes transient narrative", async () => {
@@ -171,14 +170,14 @@ describe("consent, decline, review", () => {
     expect(await svc.listReviews(rev)).toEqual({ items: [] });
   });
   it("ending early records a narrative-free declined outcome", async () => {
-    const { svc, store } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId;
+    const { svc, store } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
     await svc.message(alice, id, rid(), "secret story"); await svc.end(alice, id, rid());
     const o = [...store.outcomes.values()][0]; expect(o).toMatchObject({ kind: "declined", declineReason: "ended_early" });
     expect(JSON.stringify(o)).not.toContain("secret");
     expect(await code(svc.message(alice, id, rid(), "more"))).toBe("conversation_closed");
   });
   it("PII is flagged on the record, not redacted", async () => {
-    const { svc, store } = setup(); const id = (await svc.create(alice, "en")).conversation.conversationId;
+    const { svc, store } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
     await svc.message(alice, id, rid(), "call 555"); await svc.message(alice, id, rid(), "b");
     await svc.playback(alice, id, { requestId: rid(), decision: "confirm" }); await svc.consent(alice, id, rid(), true);
     expect([...store.outcomes.values()][0]).toMatchObject({ piiFlag: true, piiTypes: ["PHONE"] });
@@ -245,5 +244,55 @@ describe("dictation", () => {
     const { svc } = setup();
     await expect(route(svc, alice, "POST", "/transcribe", { requestId: rid(), language: "en", audio: pcm(1), producerId: "x" })).rejects.toThrow();
     await expect(route(svc, alice, "POST", "/transcribe", { requestId: rid(), language: "fr", audio: pcm(1) })).rejects.toThrow();
+  });
+});
+
+describe("history and multiple conversations", () => {
+  it("create is idempotent per requestId and otherwise starts a new conversation", async () => {
+    const { svc, agent } = setup(); const r = rid();
+    const a = await svc.create(alice, "en", r); const calls = agent.calls.length;
+    const b = await svc.create(alice, "en", r);
+    expect(b.conversation.conversationId).toBe(a.conversation.conversationId); expect(agent.calls.length).toBe(calls);
+    const c = await svc.create(alice, "en", rid());
+    expect(c.conversation.conversationId).not.toBe(a.conversation.conversationId);
+  });
+  it("lists only the caller's conversations, newest first, with title and status; declined ones disappear", async () => {
+    let t = 1_000; const { store, agent } = setup(); const svc = new Service({ store, agent, now: () => (t += 1000) });
+    const first = (await svc.create(alice, "en", rid())).conversation.conversationId;
+    await svc.message(alice, first, rid(), "a"); await svc.message(alice, first, rid(), "b"); // playback sets the title
+    const second = (await svc.create(alice, "es", rid())).conversation.conversationId;
+    await svc.create(bob, "en", rid());
+    let list = (await svc.listConversations(alice)).items;
+    expect(list.map((i) => i.conversationId)).toEqual([second, first]);
+    expect(list[1]).toMatchObject({ title: "Late rain and lower yield", status: "in_progress" });
+    await svc.end(alice, second, rid());
+    list = (await svc.listConversations(alice)).items;
+    expect(list.map((i) => i.conversationId)).toEqual([first]);
+    expect((await store.getConversation(second))!.title).toBeUndefined();
+    expect(await code(svc.listConversations(rev))).toBe("forbidden");
+  });
+  it("a saved conversation is listed as saved and its transcript stays readable but read-only", async () => {
+    const { svc } = setup(); const id = await toConsent(svc); await svc.consent(alice, id, rid(), true);
+    expect((await svc.listConversations(alice)).items[0]).toMatchObject({ conversationId: id, status: "saved" });
+    const v = await svc.getConversation(alice, id);
+    expect(v.messages.length).toBeGreaterThan(3); expect(v.conversation.status).toBe("completed");
+    expect(await code(svc.message(alice, id, rid(), "more"))).toBe("conversation_closed");
+    expect(await code(svc.getConversation(bob, id))).toBe("not_found");
+  });
+  it("messages carry their stage so the progress panel can jump to them", async () => {
+    const { svc } = setup(); const id = await toConsent(svc);
+    const stages = (await svc.getConversation(alice, id)).messages.map((m) => m.stage);
+    expect(stages[0]).toBe("intake"); expect(stages).toContain("playback"); expect(stages.at(-1)).toBe("consent");
+  });
+  it("the producer view never exposes the PII flag", async () => {
+    const { svc } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
+    const v = await svc.message(alice, id, rid(), "call me at 555");
+    expect(JSON.stringify(v)).not.toMatch(/pii/i);
+  });
+  it("cleanTitle trims, caps and falls back to the playback summary", async () => {
+    const { cleanTitle } = await import("../src/service");
+    expect(cleanTitle("  Late   rain \n and yield ")).toBe("Late rain and yield");
+    expect(cleanTitle(null, "x".repeat(100))!.length).toBe(58);
+    expect(cleanTitle("", "")).toBeUndefined();
   });
 });

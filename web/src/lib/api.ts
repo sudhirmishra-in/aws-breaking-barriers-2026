@@ -1,6 +1,6 @@
 import { accessToken } from "./auth";
 import { loadConfig } from "./config";
-import { ApiFailure, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me, type ReviewItem } from "../types";
+import { ApiFailure, type ConversationSummary, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me, type ReviewItem } from "../types";
 
 export const newRequestId = () => crypto.randomUUID();
 
@@ -30,7 +30,9 @@ export const api = {
   overview: () => call<Overview>("GET", "/overview"),
   ask: (requestId: string, text: string, language: Lang) => call<AskResponse>("POST", "/ask", { requestId, text, language }),
   current: () => call<CurrentView>("GET", "/conversations/current"),
-  create: (language: Lang) => call<ConversationView>("POST", "/conversations", { requestId: newRequestId(), language }),
+  list: () => call<{ items: ConversationSummary[] }>("GET", "/conversations"),
+  get: (id: string) => call<ConversationView>("GET", `/conversations/${encodeURIComponent(id)}`),
+  create: (language: Lang, requestId: string = newRequestId()) => call<ConversationView>("POST", "/conversations", { requestId, language }),
   message: (id: string, requestId: string, text: string) => call<ConversationView>("POST", `/conversations/${id}/messages`, { requestId, text }),
   playback: (id: string, requestId: string, body: { decision: "confirm" | "correct"; correction?: string; profileCorrection?: { field: "location" | "entityType"; value: string } }) =>
     call<ConversationView>("POST", `/conversations/${id}/playback`, { requestId, ...body }),

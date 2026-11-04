@@ -92,3 +92,11 @@ def test_ask_mode_answers_and_reports_unavailable_evidence():
     res = handle_turn(payload(mode="ask"), runner(out), lambda t: [])
     assert res["phase"] == "answer" and res["playbackSummary"] is None and res["summaryEn"] is None
     assert res["evidence"]["status"] == "unavailable"
+
+
+def test_title_only_returned_with_playback():
+    out = TurnOutput(reply="r", phase="playback", playback_summary="s", title="  Lluvias irregulares y menor cosecha  ")
+    res = handle_turn(payload(allow=True), runner(out), lambda t: [])
+    assert res["title"] == "Lluvias irregulares y menor cosecha"
+    out = TurnOutput(reply="r", phase="intake", title="ignored")
+    assert handle_turn(payload(allow=False), runner(out), lambda t: [])["title"] is None

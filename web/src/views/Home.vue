@@ -29,10 +29,10 @@ onMounted(async () => { try { ov.value = await api.overview(); } catch (e) { err
 
   <template v-if="isProducer">
     <div class="grid3">
-      <RouterLink to="/share" class="card action"><span class="ic brand-gradient"><MessageCircle :size="18" aria-hidden="true" /></span><div><h3>{{ s.shareCard }} <ArrowRight :size="14" aria-hidden="true" /></h3><p>{{ s.shareCardD }}</p></div></RouterLink>
+      <RouterLink to="/chat" class="card action"><span class="ic brand-gradient"><MessageCircle :size="18" aria-hidden="true" /></span><div><h3>{{ s.shareCard }} <ArrowRight :size="14" aria-hidden="true" /></h3><p>{{ s.shareCardD }}</p></div></RouterLink>
       <RouterLink to="/ask" class="card action"><span class="ic brand-gradient"><HelpCircle :size="18" aria-hidden="true" /></span><div><h3>{{ s.askCard }} <ArrowRight :size="14" aria-hidden="true" /></h3><p>{{ s.askCardD }}</p></div></RouterLink>
       <div class="card"><h3>{{ ov?.producer?.activeConversation ? s.resume : s.noActive }}</h3>
-        <p v-if="ov?.producer?.activeConversation">{{ s.resumeD }} <RouterLink to="/share">{{ s.continue }} →</RouterLink></p></div>
+        <p v-if="ov?.producer?.activeConversation">{{ s.resumeD }} <RouterLink to="/chat">{{ s.continue }} →</RouterLink></p></div>
     </div>
     <div class="grid3">
       <div v-if="state.me?.profile" class="card"><h3>{{ s.yourProfile }}</h3>

@@ -44,6 +44,8 @@ export class ExchangeStack extends cdk.Stack {
       partitionKey: { name: "pk", type: ddb.AttributeType.STRING }, sortKey: { name: "sk", type: ddb.AttributeType.STRING },
       billing: ddb.Billing.onDemand(), timeToLiveAttribute: "ttl", encryption: ddb.TableEncryptionV2.customerManagedKey(key),
       pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: false }, removalPolicy: removal,
+      // Producer history (CONV-01): a producer's conversations, newest first.
+      globalSecondaryIndexes: [{ indexName: "owner-index", partitionKey: { name: "ownerSub", type: ddb.AttributeType.STRING }, sortKey: { name: "createdAt", type: ddb.AttributeType.STRING } }],
     });
     const outcomes = new ddb.TableV2(this, "Outcomes", {
       tableName: n("outcomes"), partitionKey: { name: "outcomeId", type: ddb.AttributeType.STRING },

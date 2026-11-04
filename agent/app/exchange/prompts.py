@@ -34,7 +34,8 @@ reviewed by the program team, and only if they agree. Nothing from this question
             base += (
                 "\nYou now have enough detail. Set phase=playback: briefly play back your understanding "
                 "(timing, severity, what was tried) in the reply, put the same account in playback_summary, "
-                "and ask the producer to confirm or correct it. Do not offer evidence or advice yet.\n"
+                "and ask the producer to confirm or correct it. Also set title: a neutral title of at most 8 words naming "
+                "the challenge, in the conversation language, with no personal names. Do not offer evidence or advice yet.\n"
             )
         else:
             base += (
