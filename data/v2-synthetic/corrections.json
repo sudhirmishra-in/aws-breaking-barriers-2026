@@ -26,8 +26,8 @@
       "changes": [
         {
           "field": "product_category_name",
-          "original": "Coffee",
-          "proposed": "Coffee; Plantain"
+          "original": "Coffee (green, washed arabica); Specialty micro-lots",
+          "proposed": "Coffee (green, washed arabica); Specialty micro-lots; Plantain"
         }
       ],
       "explanation": null,
@@ -42,8 +42,8 @@
       "changes": [
         {
           "field": "structure_txt",
-          "original": null,
-          "proposed": "Association of 40 member farms"
+          "original": "Association of 210 smallholder members in 9 communities",
+          "proposed": "Association of 210 smallholder members in 10 communities"
         }
       ],
       "explanation": null,
@@ -59,7 +59,7 @@
         {
           "field": "certification_status_name",
           "original": "Certified",
-          "proposed": "Certified (renewed)"
+          "proposed": "Certified (renewed 2026)"
         }
       ],
       "explanation": null,
@@ -74,8 +74,8 @@
       "changes": [
         {
           "field": "raw_supply_chain_role_txt",
-          "original": "Grower; Aggregator",
-          "proposed": "Grower; Aggregator; Processor"
+          "original": "Grower (member farms); Aggregator; Fermentation and drying",
+          "proposed": "Grower (member farms); Aggregator; Fermentation and drying; Exporter"
         }
       ],
       "explanation": "We also dry beans",
@@ -90,7 +90,7 @@
       "changes": [
         {
           "field": "account_type_name",
-          "original": "Producer organization",
+          "original": "Small producer organization (SPO)",
           "proposed": "Producer group"
         }
       ],

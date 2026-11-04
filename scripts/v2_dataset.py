@@ -15,9 +15,9 @@ def info(sk, cat, products, typ, scope, status, country, roles, structure):
             "certificationStatusName": status, "countryName": country, "rawSupplyChainRoleTxt": roles, "structureTxt": structure}
 
 ORGS = [
-    {"organizationId": "ORG-AND-COL", "name": "Andean Coffee Cooperative", "info": info("ACC-COL-0000412873", "Cooperative", ["Coffee"], "Producer organization", "Small producer organization", "Certified", "Colombia", ["Grower", "Cooperative mill"], "Cooperative with member farms")},
-    {"organizationId": "ORG-COP-HON", "name": "Copán Coffee Association", "info": info("ACC-HND-0000377120", "Association", ["Coffee"], "Producer organization", "Small producer organization", "Certified", "Honduras", ["Grower"], None)},
-    {"organizationId": "ORG-NAW-CIV", "name": "Nawa Cocoa Cooperative", "info": info("ACC-CIV-0000559004", "Cooperative", ["Cocoa", "Plantain"], "Producer organization", "Small producer organization", "Certification suspended", "Côte d'Ivoire", ["Grower", "Aggregator"], "Cooperative with village sections")},
+    {"organizationId": "ORG-AND-COL", "name": "Andean Coffee Cooperative", "info": info("ACC-COL-0000412873", "Producer organization (cooperative)", ["Coffee (green, washed arabica)", "Specialty micro-lots"], "Small producer organization (SPO)", "Coffee production and cooperative wet milling", "Certified", "Colombia", ["Grower (member farms)", "Primary processor (wet mill)", "Exporter"], "Cooperative of 640 member farms in 14 veredas, general assembly and elected board")},
+    {"organizationId": "ORG-COP-HON", "name": "Copán Coffee Association", "info": info("ACC-HND-0000377120", "Producer association", ["Coffee (green, washed arabica)"], "Small producer organization (SPO)", "Coffee production", "Certified", "Honduras", ["Grower (member farms)", "Dry mill operator"], "Association of 210 smallholder members in 9 communities")},
+    {"organizationId": "ORG-NAW-CIV", "name": "Nawa Cocoa Cooperative", "info": info("ACC-CIV-0000559004", "Producer organization (cooperative)", ["Cocoa (fermented, dried beans)", "Plantain (intercrop)"], "Small producer organization (SPO)", "Cocoa production, fermentation and bulk aggregation", "Certification suspended pending audit follow-up", "Côte d'Ivoire", ["Grower (member farms)", "Aggregator", "Fermentation and drying"], "Cooperative of 1,150 members in 22 village sections, supervised by a management committee")},
 ]
 PRODUCERS = [  # name, org, language, handle
     ("PRD-ANA", "Ana", "ORG-AND-COL", "es"), ("PRD-MATEO", "Mateo", "ORG-AND-COL", "es"), ("PRD-ELENA", "Elena", "ORG-AND-COL", "en"),
@@ -120,11 +120,11 @@ def corr(i, prod, field, orig, prop, status, expl=None):
             "changes": [{"field": field, "original": orig, "proposed": prop}], "explanation": expl}
 CORRECTIONS = [
  corr(1, "PRD-ANA", "country_name", "Colombia", "Colombia (Huila)", "pending", "Add the department"),
- corr(2, "PRD-MATEO", "product_category_name", "Coffee", "Coffee; Plantain", "pending"),
- corr(3, "PRD-LUCIA", "structure_txt", None, "Association of 40 member farms", "accepted_awaiting_source_update"),
- corr(4, "PRD-DIEGO", "certification_status_name", "Certified", "Certified (renewed)", "applied"),
- corr(5, "PRD-AWA", "raw_supply_chain_role_txt", "Grower; Aggregator", "Grower; Aggregator; Processor", "rejected", "We also dry beans"),
- corr(6, "PRD-KOFFI", "account_type_name", "Producer organization", "Producer group", "pending"),
+ corr(2, "PRD-MATEO", "product_category_name", "Coffee (green, washed arabica); Specialty micro-lots", "Coffee (green, washed arabica); Specialty micro-lots; Plantain", "pending"),
+ corr(3, "PRD-LUCIA", "structure_txt", "Association of 210 smallholder members in 9 communities", "Association of 210 smallholder members in 10 communities", "accepted_awaiting_source_update"),
+ corr(4, "PRD-DIEGO", "certification_status_name", "Certified", "Certified (renewed 2026)", "applied"),
+ corr(5, "PRD-AWA", "raw_supply_chain_role_txt", "Grower (member farms); Aggregator; Fermentation and drying", "Grower (member farms); Aggregator; Fermentation and drying; Exporter", "rejected", "We also dry beans"),
+ corr(6, "PRD-KOFFI", "account_type_name", "Small producer organization (SPO)", "Producer group", "pending"),
 ]
 for c in CORRECTIONS: c["decidedBy"] = {"pending": None}.get(c["status"], "Reviewer One")
 
