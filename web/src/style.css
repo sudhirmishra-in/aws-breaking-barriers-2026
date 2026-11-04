@@ -186,3 +186,38 @@ p.hist-meta { margin:0; }
 .hist-confirm { border:1px solid color-mix(in srgb,var(--err) 35%,var(--border)); border-radius:4px; padding:.6rem .7rem; display:grid; gap:.5rem; }
 .hist-confirm p { margin:0; font-size:.82rem; }
 .btn.danger { background:var(--err); border-color:var(--err); color:#fff; } .btn.danger:hover:not(:disabled) { background:#8e1c1c; border-color:#8e1c1c; color:#fff; }
+
+/* ---- Type and color matched to fairtradecertified.org's live styles (measured in the browser):
+        body text Rubik 18px #39373A; nav Rubik 16px/500 #333 title case; buttons Rubik 16px/500 uppercase,
+        8px 24px padding, lime #93D73B; headings Source Serif bold navy #313D7F; inline links #2EA3F2. ---- */
+:root { --fg:#39373a; --nav-ink:#333333; --link:#2ea3f2; --btn-lime:#93d73b; }
+body { font-size:18px; line-height:1.45; color:var(--fg); }
+a { color:var(--link); }
+.logo { font-size:1.25rem; color:var(--accent); }
+.nav a { font-size:1rem; font-weight:500; text-transform:none; letter-spacing:normal; color:var(--nav-ink); }
+.nav a:hover, .nav a.router-link-exact-active { color:var(--nav-ink); }
+.btn { font-size:1rem; font-weight:500; letter-spacing:normal; padding:.5rem 1.5rem; }
+.btn.sm { font-size:.875rem; padding:.3rem 1rem; }
+/* Reading text at 18px, dark */
+.md, .bubble-u, .composer textarea, .hero p, .quote, .decision p, .err-bubble, .hist-summary p, .card p, .privacy, .info-note { font-size:1.125rem; }
+.md { line-height:1.5; } .md p { margin:0 0 .75rem; }
+.card p, .privacy, .info-note, .decision p, .hero p { color:var(--fg); }
+/* Headings: serif, navy, larger */
+.hero h1 { font-size:clamp(2rem, 4.5vw, 3rem); }
+.page-title { font-size:2rem; }
+.card h2, .card h3 { font-size:1.25rem; }
+.decision h2 { font-size:1.375rem; }
+.chat-title { font-size:1.25rem; }
+.pp-step { font-size:1.5rem; }
+.hist-pop-title, .drawer-hd h2 { font-size:1.25rem; }
+.hist-detail-title { font-size:1.125rem; }
+/* Supporting text */
+.fld { font-size:.9375rem; color:var(--fg); } .fld input, .fld textarea, .fld select { font-size:1rem; }
+.seg button { font-size:1rem; color:var(--fg); }
+.chip { font-size:.9375rem; color:var(--fg); border-color:var(--lime); }
+.kv { font-size:1rem; } .hint { font-size:.9375rem; }
+.pp-name { font-size:1rem; } .pp-desc { font-size:.875rem; }
+.hist-title { font-size:1rem; } .hist-meta { font-size:.8125rem; }
+.dark .card p, .dark .privacy, .dark .info-note, .dark .decision p, .dark .hero p { color:var(--fg); }
+.dark .nav a, .dark .nav a:hover, .dark .nav a.router-link-exact-active { color:var(--fg); }
+.btn { white-space:nowrap; }
