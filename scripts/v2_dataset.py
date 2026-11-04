@@ -151,6 +151,40 @@ EVIDENCE = [  # regional; ILLUSTRATIVE, not measured data. origin vs curation ar
 ]
 FAILURES = {"memoryUpdateFailures": [{"outcomeId": "rec-cv-17", "reason": "memory_write_failed", "retries": 2}], "retryFixtures": [{"requestId": "seed-retry-001", "note": "duplicate turn submission fixture"}]}
 
+# ---- history for the ORIGINAL demo accounts (their organizations get colleagues without logins so "my peers" is realistic) ----
+LEGACY = {  # old account id -> (organization id, colleagues [(id, name, language)])
+    "P-MX-004": ("ORG-P-MX-004", [("PRD-MX-CARLA", "Carla", "es"), ("PRD-MX-JOSE", "José", "es")]),
+    "P-CO-001": ("ORG-P-CO-001", [("PRD-CO-LUIS", "Luis", "es"), ("PRD-CO-MARTA", "Marta", "es")]),
+    "P-CI-005": ("ORG-P-CI-005", [("PRD-CI-ADAMA", "Adama", "fr"), ("PRD-CI-FATOU", "Fatou", "fr")]),
+}
+LEGACY_LANG = {"P-MX-004": "en", "P-CO-001": "es", "P-CI-005": "fr"}
+LEGACY_PRODUCERS, LEGACY_CONVS, n = [], [], 100
+for owner, (org, cols) in LEGACY.items():
+    ORG_OF[owner] = org; LANG_OF[owner] = LEGACY_LANG[owner]
+    for pid, nm, lg in cols:
+        ORG_OF[pid] = org; LANG_OF[pid] = lg
+        LEGACY_PRODUCERS.append({"producerId": pid, "displayName": nm, "organizationId": org, "preferredLanguage": lg, "entityType": "smallholder", "location": "", "crop": "coffee" if owner != "P-CI-005" else "cocoa", "noLogin": True, "synthetic": True})
+    c1, c2 = cols
+    topics = ("drought", "water", "price") if owner != "P-CI-005" else ("labor", "soil", "price")
+    plan = [  # (producer, topic, daysAgo, sharing, identity, review/pub, action, result)
+        (owner, topics[0], 2, "share_summary", False, ("pending", "awaiting_review"), None, None),
+        (owner, topics[1], 21, "ftusa_only", False, ("approved", "not_shared"), "Joined a group purchase of storage tanks", "Too early to tell (fictional)"),
+        (owner, topics[2], 63, "share_summary", False, ("approved", "published"), "Sold through the cooperative's forward contract", "Income steadier across the season (fictional)"),
+        (c1[0], topics[0], 6, "share_conversation", True, ("approved", "published"), "Shifted pruning and added mulch", "Fewer plants lost this season (fictional)"),
+        (c1[0], topics[2], 38, "ftusa_only", False, ("approved", "not_shared"), None, None),
+        (c1[0], topics[1], 80, "share_summary", False, ("approved", "published"), "Dug a shared reservoir with two neighbors", "Water lasted through the dry weeks (fictional)"),
+        (c2[0], topics[1], 4, "share_summary", False, ("pending", "awaiting_review"), None, None),
+        (c2[0], topics[0], 27, "ftusa_only", False, ("pending", "not_shared"), "Asked the cooperative technician for a visit", None),
+        (c2[0], topics[2], 52, "share_conversation", True, ("approved", "published"), "Negotiated a delayed sale with the buyer", "Price recovered partly (fictional)"),
+    ]
+    for pid, topic, days, sh, ident, (rv, pb), act, res in plan:
+        n += 1
+        LEGACY_CONVS.append(conv(f"cv-{n}", pid, topic, days, sharing=sh, identity=ident, review=rv, pub=pb, action=act, result=res))
+    n += 1; LEGACY_CONVS.append(conv(f"cv-{n}", owner, topics[0], 0, status="active"))
+    n += 1; LEGACY_CONVS.append(conv(f"cv-{n}", owner, "soil" if owner != "P-CI-005" else "drought", 9, kind="search"))
+for c in LEGACY_CONVS:
+    if c["kind"] == "search": c.pop("summaryOriginal", None)
+
 def dump(name, obj):
     (OUT / name).write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n")
 
@@ -164,5 +198,6 @@ if __name__ == "__main__":
     dump("premium_projects.json", {"_notice": NOTE, "projects": PREMIUM})
     dump("surveys_certifications.json", {"_notice": NOTE, "surveys": SURVEYS, "certifications": CERTS})
     dump("regional_evidence.json", {"_notice": NOTE, "evidence": EVIDENCE})
+    dump("legacy_history.json", {"_notice": NOTE, "producers": LEGACY_PRODUCERS, "conversations": LEGACY_CONVS})
     dump("failure_fixtures.json", {"_notice": NOTE, **FAILURES})
     print("wrote", len(CONVS), "conversations,", len(ISSUES), "issues,", len(CORRECTIONS), "corrections")

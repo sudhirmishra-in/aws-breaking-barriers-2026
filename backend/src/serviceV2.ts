@@ -3,7 +3,7 @@ import type { CorrectionRecord, CorrectableField, Organization, Outcome, Produce
 import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, notFound } from "./errors";
 import { evidenceFor } from "./evidence";
-import { isEligible, parseCaseId, projectCase, type Viewer } from "./peers";
+import { isEligible, parseCaseId, projectCase, versionOf, type Viewer } from "./peers";
 import { RETENTION, requireProducer, requireReviewer, Service, summaryHashOf, type Principal } from "./service";
 
 /** Source columns for the producer-information view. Source meanings are preserved; the browser translates labels only. */
@@ -20,7 +20,7 @@ const sha = (...parts: string[]) => createHash("sha256").update(JSON.stringify(p
 const OPEN_CORRECTION: CorrectionRecord["status"][] = ["pending", "accepted_awaiting_source_update"];
 
 export const DELETION_NOTE = "Publication is withdrawn now and no new answers will use this case. FTUSA will review deletion of the retained record. Answers already given are not recalled.";
-export const VISIBILITY_NOTE = "You see only reviewed summaries that producers chose to share. Names appear only when the producer allowed it. Conversations marked 'do not share' stay with FTUSA.";
+export const VISIBILITY_NOTE = "You see the summaries of colleagues in your organization, whatever they chose to share, but never their conversations. Producers in other organizations appear only if they chose to share and FTUSA approved. Names appear only when the producer allowed it.";
 
 export class ServiceV2 extends Service {
   // ---- producer information and corrections ----------------------------------------------------------------------------
@@ -292,7 +292,7 @@ export class ServiceV2 extends Service {
     const seen = new Map<string, Outcome>();
     if (scope !== "other" && v.organizationId) for (const o of await this.d.store.listRecordsByOrganization(v.organizationId)) seen.set(o.outcomeId, o);
     if (scope !== "organization") for (const o of await this.d.store.listPublishedRecords()) if (!v.organizationId || o.organizationId !== v.organizationId) seen.set(o.outcomeId, o);
-    const items = [...seen.values()].filter((o) => isEligible(o, v)).sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "")).map((o) => projectCase(o, v));
+    const items = [...seen.values()].filter((o) => isEligible(o, v)).sort((a, b) => (b.publishedAt ?? b.confirmedAt ?? "").localeCompare(a.publishedAt ?? a.confirmedAt ?? "")).map((o) => projectCase(o, v));
     return { items, syntheticLabel: SYNTHETIC_LABEL, visibility: VISIBILITY_NOTE };
   }
 
@@ -301,7 +301,7 @@ export class ServiceV2 extends Service {
     const ref = parseCaseId(caseId);
     const o = ref ? await this.d.store.getOutcome(ref.outcomeId) : undefined;
     // Exact version, current status and permissions are re-checked on every call; stale and withdrawn cases look the same as missing ones.
-    if (!ref || !o || !isEligible(o, v) || o.publishedVersion !== ref.version) throw new ApiError(404, "case_unavailable", "This case is no longer available.");
+    if (!ref || !o || !isEligible(o, v) || versionOf(o) !== ref.version) throw new ApiError(404, "case_unavailable", "This case is no longer available.");
     return projectCase(o, v);
   }
 

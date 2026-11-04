@@ -138,7 +138,9 @@ describe("finalize, sharing and review independence", () => {
     const r = await approve(svc, id) as { publicationStatus: string };
     expect(r.publicationStatus).toBe("not_shared");
     expect(store.outcomes.get(`rec-${id}`)!.reviewStatus).toBe("approved");
-    expect((await svc.peerSummaries(mateo)).items).toHaveLength(0);
+    expect((await svc.peerSummaries(lucia, "all")).items).toHaveLength(0); // other organizations never see an FTUSA-only case
+    const org = (await svc.peerSummaries(mateo)).items; // ...but the producer's own organization sees the summary
+    expect(org).toHaveLength(1); expect(org[0]).toMatchObject({ visibility: "organization_only", sameOrganization: true });
   });
   it("identity can only be shared with the conversation choice", async () => {
     const { svc } = setup();
@@ -156,18 +158,19 @@ describe("finalize, sharing and review independence", () => {
 });
 
 describe("peer summaries", () => {
-  it("shows only reviewed, published, sharing-permitted cases of OTHER producers in the organization; never pending or FTUSA-only", async () => {
+  it("organization peers see colleagues' confirmed summaries whatever the sharing choice; other organizations only see reviewed, published, shared cases", async () => {
     const { svc } = setup();
     const pending = await finalized(svc, ana, "share_summary");
     const ftusa = await finalized(svc, ana, "ftusa_only"); await approve(svc, ftusa);
-    expect((await svc.peerSummaries(mateo)).items).toHaveLength(0); // pending + ftusa-only
+    expect((await svc.peerSummaries(mateo)).items).toHaveLength(2); // pending + ftusa-only are visible inside the organization
+    expect((await svc.peerSummaries(lucia, "all")).items).toHaveLength(0); // and nowhere else
     await approve(svc, pending, { case_card: { action: "Built tanks", result: null, standards: ["APS 2.1"] } });
-    const items = (await svc.peerSummaries(mateo)).items;
+    const items = (await svc.peerSummaries(mateo)).items.filter((i) => i.visibility === "published");
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({ sameOrganization: true, origin: "your_organization", producer: null, anonymousLabel: "A producer in your organization",
       challenge: "EN summary", action: "Built tanks", result: "Outcome not yet reported", resultReported: false, standards: ["APS 2.1"] });
     expect((await svc.peerSummaries(ana)).items).toHaveLength(0); // never your own
-    expect(JSON.stringify(items)).not.toContain("PRD-ANA"); expect(JSON.stringify(items)).not.toContain("rain was late"); // no ids, no transcript
+    expect(JSON.stringify((await svc.peerSummaries(mateo)).items)).not.toContain("PRD-ANA"); expect(JSON.stringify(items)).not.toContain("rain was late"); // no ids, no transcript
   });
   it("names appear only with explicit identity permission", async () => {
     const { svc } = setup();
@@ -184,13 +187,14 @@ describe("peer summaries", () => {
   });
   it("withdrawing sharing blocks retrieval immediately; stale versions and withdrawn cases are rejected", async () => {
     const { svc } = setup(); const id = await finalized(svc, ana, "share_summary"); await approve(svc, id);
-    const c = (await svc.peerSummaries(mateo)).items[0];
-    expect((await svc.peerCase(mateo, c.caseId)).challenge).toBe("EN summary");
-    expect(await code(svc.peerCase(mateo, c.caseId.replace(/@\d+$/, "@9")))).toBe("case_unavailable"); // stale / wrong version
+    const c = (await svc.peerSummaries(lucia, "all")).items[0]; // another organization: strict rules
+    expect((await svc.peerCase(lucia, c.caseId)).challenge).toBe("EN summary");
+    expect(await code(svc.peerCase(lucia, c.caseId.replace(/@\d+$/, "@9")))).toBe("case_unavailable"); // stale / wrong version
     await svc.updateSharing(ana, id, { sharing: "ftusa_only", identityPermitted: false });
-    expect(await code(svc.peerCase(mateo, c.caseId))).toBe("case_unavailable");
-    expect((await svc.peerSummaries(mateo, "all")).items).toHaveLength(0);
-    expect(await code(svc.create(mateo, undefined, rid(), c.caseId))).toBe("case_unavailable");
+    expect(await code(svc.peerCase(lucia, c.caseId))).toBe("case_unavailable");
+    expect((await svc.peerSummaries(lucia, "all")).items).toHaveLength(0);
+    expect(await code(svc.create(lucia, undefined, rid(), c.caseId))).toBe("case_unavailable");
+    expect((await svc.peerSummaries(mateo)).items).toHaveLength(1); // the organization still sees the summary
   });
   it("'Ask about this' validates the case server-side and stores the reference on the viewer's own conversation", async () => {
     const { svc } = setup(); const id = await finalized(svc, ana, "share_summary"); await approve(svc, id);
@@ -217,13 +221,14 @@ describe("summary versions, re-confirmation and publication", () => {
     const r = await svc.patchRecord(rev, `rec-${id}`, { review_status: "corrected", summary_en: "Edited EN summary" }) as { publicationStatus: string; summaryVersions: { kind: string }[] };
     expect(r.publicationStatus).toBe("awaiting_reconfirmation");
     expect(r.summaryVersions.map((v) => v.kind)).toEqual(["producer_confirmed", "reviewer_revision"]);
-    expect((await svc.peerSummaries(mateo)).items).toHaveLength(0);
+    expect((await svc.peerSummaries(lucia, "all")).items).toHaveLength(0);
+    expect((await svc.peerSummaries(mateo)).items[0].challenge).toBe("EN summary"); // colleagues see the producer-confirmed text, not the unconfirmed edit
     const st = (await svc.getConversation(ana, id)).record!;
     expect(st.reconfirmation).toMatchObject({ summaryEn: "Edited EN summary" });
     expect(await code(svc.reconfirm(ana, id, { summaryHash: "f".repeat(64), accept: true }))).toBe("stale_confirmation");
     const out = await svc.reconfirm(ana, id, { summaryHash: st.reconfirmation!.summaryHash, accept: true });
     expect(out.publicationStatus).toBe("published");
-    expect((await svc.peerSummaries(mateo)).items[0].challenge).toBe("Edited EN summary");
+    expect((await svc.peerSummaries(lucia, "all")).items[0].challenge).toBe("Edited EN summary");
     expect(store.outcomes.get(`rec-${id}`)!.versions!.map((v) => v.kind)).toEqual(["producer_confirmed", "reviewer_revision", "producer_confirmed"]);
   });
   it("declining the revision publishes the original confirmed content", async () => {
@@ -243,7 +248,7 @@ describe("summary versions, re-confirmation and publication", () => {
     failPublish.on = true;
     const r = await approve(svc, id) as { publicationStatus: string; publishError: string };
     expect(r).toMatchObject({ publicationStatus: "failed", publishError: "Error" });
-    expect((await svc.peerSummaries(mateo)).items).toHaveLength(0);
+    expect((await svc.peerSummaries(lucia, "all")).items).toHaveLength(0);
     failPublish.on = false;
     const ok = await svc.retryPublication(rev, `rec-${id}`) as { publicationStatus: string; publishedVersion: number };
     expect(ok).toMatchObject({ publicationStatus: "published", publishedVersion: 1 });

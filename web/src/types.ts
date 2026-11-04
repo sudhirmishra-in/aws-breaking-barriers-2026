@@ -37,7 +37,7 @@ export interface ProducerInfo {
   summary: { products: string[]; country: string | null }; pendingCorrections: CorrectionDto[]; correctableFields: InfoKey[]; verified: false;
 }
 export interface PeerCase {
-  caseId: string; version: number; sameOrganization: boolean; origin: "your_organization" | "other_organization"; producer: { name: string } | null; anonymousLabel: string;
+  caseId: string; version: number; sameOrganization: boolean; origin: "your_organization" | "other_organization"; visibility: "published" | "organization_only"; language?: string; summaryOriginal?: string; producer: { name: string } | null; anonymousLabel: string;
   challenge: string; action: string | null; result: string; resultReported: boolean; tags: ChallengeTag[]; standards: string[]; citations: { label: string; url?: string }[]; publishedAt: string | null; illustrative: boolean;
 }
 export interface ReviewItem {

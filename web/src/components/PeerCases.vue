@@ -26,8 +26,9 @@ onMounted(load);
       <article v-for="c in items" :key="c.caseId" class="card peer">
         <div class="row"><b>{{ c.producer?.name ?? c.anonymousLabel }}</b>
           <span class="pill" :class="c.sameOrganization ? 'ok' : ''">{{ c.sameOrganization ? "Your organization" : "Another organization" }}</span>
+          <span v-if="c.visibility === 'organization_only'" class="pill" title="Only people in your organization can see this summary">Organization only</span>
           <span v-if="c.illustrative" class="pill warn">Illustrative</span></div>
-        <dl class="kv"><dt>Challenge they faced</dt><dd>{{ c.challenge }}</dd><dt>What they did</dt><dd>{{ c.action ?? "Not reported" }}</dd>
+        <dl class="kv"><dt>Challenge they faced</dt><dd>{{ c.challenge }}<span v-if="c.summaryOriginal && c.language !== 'en'" class="hint" :lang="c.language" style="display:block">{{ c.summaryOriginal }}</span></dd><dt>What they did</dt><dd>{{ c.action ?? "Not reported" }}</dd>
           <dt>Result</dt><dd :class="{ hint: !c.resultReported }">{{ c.result }}</dd></dl>
         <div class="chips"><span v-for="r in c.citations" :key="r.label" class="chip">{{ r.label }}</span><span v-for="s in c.standards" :key="s" class="chip">{{ s }}</span></div>
         <button type="button" class="btn sm" @click="emit('ask', c.caseId)">Ask about this</button>

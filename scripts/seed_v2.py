@@ -17,16 +17,18 @@ load = lambda n: json.loads((D / n).read_text())
 CONV_TTL, REC_TTL = 90 * 86400, 180 * 86400
 
 
-def build(now: datetime, subs: dict[str, str]):
+def build(now: datetime, subs: dict[str, str], doc: dict | None = None):
     """Pure: returns (conversation_table_items, outcome_table_items) as plain dicts. Unit-testable without AWS."""
-    people, orgs, convs, corrs = load("people.json"), load("organizations.json")["organizations"], load("conversations.json")["conversations"], load("corrections.json")["corrections"]
-    P = {p["producerId"]: p for p in people["producers"]}
+    if doc is None: doc = {"producers": load("people.json")["producers"], "orgs": load("organizations.json")["organizations"], "convs": load("conversations.json")["conversations"], "corrs": load("corrections.json")["corrections"]}
+    orgs, convs, corrs = doc["orgs"], doc["convs"], doc["corrs"]
+    P = {p["producerId"]: p for p in doc["producers"]}
     iso = lambda days: (now - timedelta(days=days)).isoformat().replace("+00:00", "Z")
     ts = int(now.timestamp())
     ct, ot = [], []
     for o in orgs: ct.append({"pk": f"ORG#{o['organizationId']}", "sk": "META", "org": o})
     for p in P.values():
         sub = subs[p["producerId"]]
+        if p.get("noLogin"): continue  # colleague without an account: owns history, has no profile mapping
         prof = {k: p[k] for k in ("producerId", "displayName", "entityType", "location", "crop", "preferredLanguage", "organizationId", "applicationUserId")}
         ct.append({"pk": f"PROFILE#{sub}", "sk": "META", "profile": prof})
     for c in convs:
