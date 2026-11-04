@@ -44,7 +44,7 @@ export interface PeerCase {
   visibility: "published" | "organization_only"; language?: string; summaryOriginal?: string;
   producer: { name: string } | null; anonymousLabel: string;
   challenge: string; action: string | null; result: string; resultReported: boolean;
-  tags: string[]; standards: string[]; citations: { label: string; url?: string }[]; publishedAt: string | null; illustrative: boolean;
+  relevance?: string[]; tags: string[]; standards: string[]; citations: { label: string; url?: string }[]; publishedAt: string | null; illustrative: boolean;
 }
 
 /** Projection: no transcript, no ids of other producers, names only with explicit identity permission (conversation-sharing choice only). */

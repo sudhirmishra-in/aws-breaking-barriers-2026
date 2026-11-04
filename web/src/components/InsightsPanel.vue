@@ -16,7 +16,6 @@ const evidence = ref<EvidenceItem[]>([]); const limitation = ref("");
 const curated = computed(() => evidence.value.filter((e) => e.curationStatus === "ftusa_curated"));
 onMounted(async () => { try { const r = await api.evidence(props.view.conversation.conversationId); evidence.value = r.items; limitation.value = r.limitation ?? ""; } catch { limitation.value = "Evidence could not be loaded just now."; } });
 const msg = ref(""); const busy = ref(false); const confirmDelete = ref(false);
-const tags = computed<string[]>(() => rec.value?.tags ?? []);
 async function act(fn: () => Promise<unknown>) { busy.value = true; msg.value = ""; try { await fn(); emit("changed"); } catch (e) { msg.value = (e as ApiFailure).message; } finally { busy.value = false; } }
 const fbBusy = ref(false);
 async function sendFeedback(h: "yes" | "partly" | "no") { fbBusy.value = true; msg.value = ""; try { await api.feedback(props.view.conversation.conversationId, h); emit("changed"); } catch (e) { msg.value = (e as ApiFailure).message; } finally { fbBusy.value = false; } }
@@ -52,9 +51,9 @@ const deletion = () => act(async () => { const r = await api.requestDeletion(pro
     <div class="card"><h3>Information curated by Fair Trade USA</h3>
       <EvidenceCard v-for="e in curated" :key="e.evidenceId" :item="e" />
       <p v-if="!curated.length" class="hint">Nothing curated by Fair Trade USA is available for this case yet.</p></div>
+    <PeerCases scope="all" title="What others have done" :related-to="view.conversation.conversationId" @ask="(id) => emit('ask', id)" />
     <div v-if="rec" class="card" role="group" aria-label="Feedback"><h3>Was this helpful?</h3>
       <p v-if="rec.feedback" class="hint" role="status">Thank you. You answered: {{ { yes: "Yes", partly: "Partly", no: "No" }[rec.feedback.helpful] }}. You can change your answer.</p>
       <div class="row"><button v-for="o in [['yes', 'Yes'], ['partly', 'Partly'], ['no', 'No']] as const" :key="o[0]" class="btn sm" :class="{ primary: rec.feedback?.helpful === o[0] }" :aria-pressed="rec.feedback?.helpful === o[0]" :disabled="fbBusy" @click="sendFeedback(o[0])">{{ o[1] }}</button></div></div>
-    <PeerCases scope="all" title="What others have done" :only="tags" @ask="(id) => emit('ask', id)" />
   </section>
 </template>

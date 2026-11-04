@@ -296,6 +296,31 @@ export class ServiceV2 extends Service {
     return { items, syntheticLabel: SYNTHETIC_LABEL, visibility: VISIBILITY_NOTE };
   }
 
+  /**
+   * "What others have done" for one of the caller's own finalized conversations. Only comparable cases: same crop AND at least one shared challenge tag
+   * (scope is derived server-side from the caller's own record, never from the browser). Ranked: same organization, same country, shared tags, a reported result.
+   */
+  async relatedCases(p: Principal, conversationId: string) {
+    const own = await this.ownRecord(p, conversationId);
+    const profile = await this.profileFor(p);
+    const org = await this.orgFor(profile);
+    const v: Viewer = { producerId: profile.producerId, organizationId: profile.organizationId };
+    const crop = (own.crop ?? profile.crop ?? "").toLowerCase(); const tags = own.challengeTags ?? [];
+    const country = (org?.info.countryName ?? "").toLowerCase();
+    const pool = new Map<string, Outcome>();
+    if (v.organizationId) for (const o of await this.d.store.listRecordsByOrganization(v.organizationId)) pool.set(o.outcomeId, o);
+    for (const o of await this.d.store.listPublishedRecords()) pool.set(o.outcomeId, o);
+    const scored = [...pool.values()].filter((o) => o.outcomeId !== own.outcomeId && isEligible(o, v)).flatMap((o) => {
+      const shared = (o.challengeTags ?? []).filter((t) => tags.includes(t));
+      if (!crop || (o.crop ?? "").toLowerCase() !== crop || !shared.length) return []; // different farming or a different challenge: not comparable
+      const same = o.organizationId === v.organizationId, sameCountry = !!country && (o.location ?? "").toLowerCase().includes(country);
+      const c = projectCase(o, v);
+      const relevance = [`Same crop: ${crop}`, `Same challenge: ${shared.join(", ")}`, ...(same ? ["Your organization"] : []), ...(sameCountry ? [`Same country: ${org!.info.countryName}`] : [])];
+      return [{ ...c, relevance, score: (same ? 3 : 0) + (sameCountry ? 2 : 0) + shared.length * 2 + (c.resultReported ? 1 : 0) }];
+    }).sort((a, b) => b.score - a.score).slice(0, 5);
+    return { items: scored.map(({ score: _s, ...c }) => c), crop, tags, limitation: scored.length ? null : `No comparable cases yet for ${crop || "this crop"} and this challenge.` };
+  }
+
   async peerCase(p: Principal, caseId: string) {
     const v = await this.viewer(p);
     const ref = parseCaseId(caseId);

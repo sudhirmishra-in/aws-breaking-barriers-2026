@@ -34,6 +34,7 @@ export async function route(svc: ServiceV2, p: Principal, method: string, path: 
   if (method === "GET" && r0 === "me") return svc.me(p);
   if (method === "GET" && r0 === "overview") return svc.overview(p);
   if (method === "GET" && r0 === "producer-info") return svc.producerInformation(p);
+  if (method === "GET" && r0 === "related" && r1) return svc.relatedCases(p, r1);
   if (method === "GET" && r0 === "evidence" && r1) return svc.evidence(p, r1);
   if (r0 === "corrections") {
     if (method === "POST" && !r1) return svc.createCorrection(p, CorrectionCreateReq.parse(body));

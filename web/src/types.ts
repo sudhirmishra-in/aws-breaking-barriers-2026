@@ -38,7 +38,7 @@ export interface ProducerInfo {
 }
 export interface PeerCase {
   caseId: string; version: number; sameOrganization: boolean; origin: "your_organization" | "other_organization"; visibility: "published" | "organization_only"; language?: string; summaryOriginal?: string; producer: { name: string } | null; anonymousLabel: string;
-  challenge: string; action: string | null; result: string; resultReported: boolean; tags: ChallengeTag[]; standards: string[]; citations: { label: string; url?: string }[]; publishedAt: string | null; illustrative: boolean;
+  relevance?: string[]; challenge: string; action: string | null; result: string; resultReported: boolean; tags: ChallengeTag[]; standards: string[]; citations: { label: string; url?: string }[]; publishedAt: string | null; illustrative: boolean;
 }
 export interface ReviewItem {
   outcomeId: string; source: string; producerId: string; entityType?: string; language: Lang; summaryOriginal?: string; summaryEn?: string;

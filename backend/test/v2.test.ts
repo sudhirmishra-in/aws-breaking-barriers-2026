@@ -268,6 +268,22 @@ describe("summary versions, re-confirmation and publication", () => {
   });
 });
 
+describe("related cases", () => {
+  it("only comparable cases: same crop and a shared challenge tag; ranked with reasons; unrelated crops never appear", async () => {
+    const { svc, store } = setup();
+    store.profiles.set("s-cocoa", { ...prof("PRD-COCOA", "ORG-H", "en", "Cocoa"), crop: "cocoa" });
+    const mine = await finalized(svc, ana, "share_summary");               // coffee, tag water
+    const coffeePeer = await finalized(svc, lucia, "share_summary"); await approve(svc, coffeePeer, { case_card: { result: "Fewer lost days" } });
+    const cocoa = await finalized(svc, P("s-cocoa"), "share_summary"); await approve(svc, cocoa);
+    const r = await svc.relatedCases(ana, mine);
+    expect(r.items.map((i) => i.caseId)).toEqual([`rec-${coffeePeer}@1`]);
+    expect(r.items[0].relevance).toEqual(expect.arrayContaining(["Same crop: coffee", "Same challenge: water"]));
+    const none = await svc.relatedCases(P("s-cocoa"), cocoa); // cocoa grower: coffee cases are not comparable
+    expect(none.items).toHaveLength(0); expect(none.limitation).toContain("cocoa");
+    expect(await code(svc.relatedCases(mateo, mine))).toBe("not_found"); // not the owner
+  });
+});
+
 describe("feedback", () => {
   it("owner records helpfulness (replaceable); reviewers see it; others cannot", async () => {
     const { svc } = setup(); const id = await finalized(svc, ana, "ftusa_only");
