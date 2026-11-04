@@ -32,7 +32,7 @@ cd infra && npx cdk bootstrap            # one-time, creates CDKToolkit stack
 npx cdk diff && npx cdk deploy           # after ./scripts/build_agent.sh and npm run build:web
 python ../scripts/seed_users.py --stack FtusaExchange-sandbox
 ```
-Local web dev against the deployed stack: put outputs in `web/public/config.json`, `npm run dev -w web` (port 5173 is an allowed callback). Region, env name, model, callback URLs are CDK context (`.env.example`).
+Local web dev: see [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) (mock mode with no AWS, or `npm run config:local && npm run dev:web` against the sandbox; port 5173 is an allowed callback). Region, env name, model, callback URLs are CDK context (`.env.example`).
 
 ## CI/CD
 See `docs/CI_CD.md` (workflows, required checks, OIDC roles, prerequisites).
