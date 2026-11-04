@@ -14,6 +14,7 @@ Status: deployed 2026-11-03 to the breaking-barriers-ny account, us-west-2, stac
 | `agent/` | Python Strands agent and AgentCore entry point (`app/main.py`) |
 | `web/` | Vue 3 + TypeScript producer chat and reviewer UI |
 | `scripts/` | `build_agent.sh` (arm64 zip), `seed_users.py` (synthetic users/profiles) |
+| `memory-agent/` | Python: L0 and L1 memory and a multi-turn agent up to the draft, not wired into the stack yet. See `memory-agent/README.md` |
 
 ## Local checks
 ```bash
