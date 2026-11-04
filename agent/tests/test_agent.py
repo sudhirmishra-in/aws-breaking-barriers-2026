@@ -116,3 +116,48 @@ def test_english_summary_original_falls_back_to_english():
     out = TurnOutput(reply="r", phase="guidance", summary_en="Late rain")
     res = handle_turn(payload(mode="guidance"), runner(out), lambda t: [])
     assert res["summaryOriginal"] == "Late rain"
+
+
+def test_structured_output_used_when_present():
+    from exchange.runtime import resolve_output
+    out = TurnOutput(reply="ok", phase="intake")
+    assert resolve_output(out, force=lambda: (_ for _ in ()).throw(AssertionError("not called")), text="x") is out
+
+
+def test_missing_structured_output_is_forced_once():
+    from exchange.runtime import resolve_output
+    forced = TurnOutput(reply="forced", phase="playback", playback_summary="s")
+    calls = []
+    res = resolve_output(None, force=lambda: calls.append(1) or forced, text="plain")
+    assert res is forced and calls == [1]
+
+
+def test_failed_retry_keeps_plain_text_as_a_safe_intake_reply():
+    from exchange.runtime import resolve_output
+    def boom():
+        raise ValueError("no tool call")
+    res = resolve_output(None, force=boom, text="  ¿Qué ha sido difícil últimamente?  ")
+    assert res.reply == "¿Qué ha sido difícil últimamente?" and res.phase == "intake" and res.playback_summary is None
+
+
+def test_plain_text_fallback_cannot_advance_guidance_or_store_summaries():
+    out = TurnOutput(reply="plain", phase="intake")
+    res = handle_turn(payload(mode="guidance"), runner(out), lambda t: [])
+    assert res["phase"] == "guidance" and res["summaryEn"] is None and res["summaryOriginal"] is None
+
+
+def test_no_text_at_all_still_fails():
+    from exchange.runtime import resolve_output
+    import pytest as _pytest
+    with _pytest.raises(RuntimeError):
+        resolve_output(None, force=lambda: None, text="   ")
+
+
+def test_guardrail_block_is_a_failure_not_a_reply():
+    from exchange.runtime import GuardrailBlocked, BLOCKED_STOP_REASONS
+    assert "guardrail_intervened" in BLOCKED_STOP_REASONS and issubclass(GuardrailBlocked, RuntimeError)
+
+
+def test_greetings_are_natural_phrases_in_each_language():
+    from exchange.runtime import GREETING
+    assert GREETING == {"en": "Hello", "es": "Hola", "fr": "Bonjour"}

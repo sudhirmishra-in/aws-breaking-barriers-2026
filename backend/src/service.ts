@@ -29,6 +29,11 @@ const CLOSED_META_TTL_S = 30 * 86400; // closed: narrative-free metadata kept 30
 const SAVED_TRANSCRIPT_TTL_S = 30 * 86400; // saved conversations stay readable in the producer's history for 30 days (sandbox)
 const IDEM_TTL_S = 86400;
 
+// Synthetic producer turns sent to the agent are natural phrases, not instructions: instruction-like text is
+// flagged by the guardrail's prompt-attack filter (seen in the sandbox), which blocked the agent's opener.
+const GREETING: Record<Language, string> = { en: "Hello", es: "Hola", fr: "Bonjour" };
+const CONFIRMED: Record<Language, string> = { en: "Yes, that's right.", es: "Sí, es correcto.", fr: "Oui, c'est exact." };
+
 const OPENER: Record<Language, string> = {
   en: "What has been difficult recently?",
   es: "¿Qué ha sido difícil últimamente?",
@@ -198,7 +203,7 @@ export class Service {
       // Real agent opener; deterministic fallback so a model outage cannot block starting.
       let opener = OPENER[language];
       try {
-        const r = await this.runAgent(conv, profile, "intake", [], "(The producer has just joined. Open the conversation with one open question.)", false, p);
+        const r = await this.runAgent(conv, profile, "intake", [], GREETING[language], false, p);
         opener = r.reply;
       } catch { this.log({ event: "opener_fallback", conversationId: id }); }
       const count = await this.append(conv, [{ role: "assistant", text: opener }]);
@@ -244,7 +249,7 @@ export class Service {
           cur = await this.save(c, { workflow: "guidance_pending", confirmation: "confirmed", confirmedAccount: c.playbackSummary, messageCount: count });
         }
         const history = await this.d.store.listMessages(id);
-        const r = await this.runAgent(cur, profile, "guidance", history.slice(0, -1), "The producer confirmed the account. Please continue.", false, p);
+        const r = await this.runAgent(cur, profile, "guidance", history.slice(0, -1), CONFIRMED[cur.language], false, p);
         const count2 = await this.append(cur, [{ role: "assistant", text: r.reply, stage: r.summaryEn && r.summaryOriginal ? "consent" : "response" }]);
         const saved = await this.save(cur, {
           messageCount: count2, summaryOriginal: r.summaryOriginal ?? undefined, summaryEn: r.summaryEn ?? undefined,

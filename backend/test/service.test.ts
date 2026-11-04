@@ -402,3 +402,14 @@ describe("read aloud", () => {
     expect(parts.every((p) => p.length <= 100)).toBe(true); expect(parts.join(" ").length).toBeGreaterThan(4000);
   });
 });
+
+describe("synthetic producer turns are natural phrases", () => {
+  it("opens with a greeting and confirms with a plain sentence in the conversation language", async () => {
+    const { svc, agent } = setup(); const id = (await svc.create(alice, "es", rid())).conversation.conversationId;
+    expect(agent.calls[0].messages.at(-1)!.text).toBe("Hola");
+    await svc.message(alice, id, rid(), "a"); await svc.message(alice, id, rid(), "b");
+    await svc.playback(alice, id, { requestId: rid(), decision: "confirm" });
+    expect(agent.calls.at(-1)!.messages.at(-1)!.text).toBe("Sí, es correcto.");
+    expect(JSON.stringify(agent.calls)).not.toMatch(/Open the conversation|Please continue/);
+  });
+});
