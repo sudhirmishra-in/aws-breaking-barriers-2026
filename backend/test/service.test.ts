@@ -10,7 +10,7 @@ import { ApiError } from "../src/errors";
 const alice: Principal = { sub: "sub-alice", groups: ["producer"] };
 const bob: Principal = { sub: "sub-bob", groups: ["producer"] };
 const rev: Principal = { sub: "sub-rev", groups: ["reviewer"] };
-const profile = (id: string) => ({ producerId: id, displayName: "x", entityType: "cooperative", location: "L", crop: "coffee", preferredLanguage: "en" as const });
+const profile = (id: string) => ({ producerId: id, displayName: "x", entityType: "cooperative", location: "L", crop: "coffee", preferredLanguage: "en" as const, organizationId: "ORG-T" });
 
 class StubAgent implements AgentClient {
   calls: AgentTurnRequest[] = [];
@@ -434,7 +434,7 @@ describe("review screen API", () => {
   const rv: Principal = { sub: "sub-rev", groups: ["reviewer"], name: "reviewer.demo@example.com" };
   async function seed() {
     let t = Date.parse("2026-11-04T10:00:00Z"); const { store, agent } = setup(); const svc = new Service({ store, agent, now: () => (t += 60_000) });
-    store.profiles.set("sub-alice", { ...profile("P-CO-001"), displayName: "Finca Alto Mirador", entityType: "smallholder", location: "Cauca, Colombia" });
+    store.profiles.set("sub-alice", { ...profile("P-CO-001"), displayName: "Finca Alto Mirador", entityType: "association", location: "Cauca, Colombia" });
     const a = await toConsent(svc); await svc.consent(alice, a, rid(), true);           // Finca: saved, pending
     const b = (await svc.create(bob, "en", rid())).conversation.conversationId; await svc.end(bob, b, rid()); // SYN-B: declined
     const c = await toConsent(svc); await svc.consent(alice, c, rid(), true);           // Finca: second record
@@ -449,7 +449,7 @@ describe("review screen API", () => {
   it("records carry valid agent tags and a trusted producer snapshot", async () => {
     const { svc, a } = await seed();
     expect(await svc.getRecord(rv, `rec-${a}`)).toMatchObject({ challengeTags: ["water", "climate_weather"], producerName: "Finca Alto Mirador",
-      entityType: "smallholder", outcome: "completed", reviewStatus: "pending", source: "agent conversation", peerExampleOk: false, claims: [] });
+      entityType: "association", outcome: "completed", reviewStatus: "pending", source: "agent conversation", peerExampleOk: false, claims: [] });
   });
   it("stats count pending, declined and today's outcomes", async () => {
     const { svc } = await seed();

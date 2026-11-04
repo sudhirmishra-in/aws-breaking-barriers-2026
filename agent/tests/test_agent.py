@@ -183,7 +183,7 @@ def test_seed_producers_join_to_team_synthetic_data():
     from exchange.tools import load_producers
     team = {p["producer_id"] for p in json.load(open(pathlib.Path(__file__).resolve().parents[2] / "data/team-synthetic/producers.json"))}
     ours = load_producers()
-    assert {p["producerId"] for p in ours} <= team and all(p["entityType"] in {"smallholder", "cooperative", "estate", "processing_operation"} for p in ours)
+    assert {p["producerId"] for p in ours} <= team and all(p["entityType"] in {"cooperative", "association", "estate", "processing_operation"} for p in ours)
 
 
 # ---- case matching ----

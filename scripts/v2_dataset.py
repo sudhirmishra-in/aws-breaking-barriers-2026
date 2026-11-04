@@ -29,7 +29,7 @@ ORG_OF = {p[0]: p[2] for p in PRODUCERS}
 NAME_OF = {p[0]: p[1] for p in PRODUCERS}
 LANG_OF = {p[0]: p[3] for p in PRODUCERS}
 
-producers = [{"producerId": p, "displayName": n, "organizationId": o, "applicationUserId": f"user-{HANDLE[n]}", "preferredLanguage": l, "entityType": "smallholder",
+producers = [{"producerId": p, "displayName": n, "organizationId": o, "applicationUserId": f"user-{HANDLE[n]}", "preferredLanguage": l, "entityType": ("association" if o == "ORG-COP-HON" else "cooperative"),
               "seedUsername": f"{HANDLE[n]}.demo@example.com", "location": {"ORG-AND-COL": "Huila, Colombia", "ORG-COP-HON": "Copán, Honduras", "ORG-NAW-CIV": "Nawa, Côte d'Ivoire"}[o],
               "crop": "cocoa" if o == "ORG-NAW-CIV" else "coffee", "synthetic": True} for p, n, o, l in PRODUCERS]
 reviewers = [{"reviewerId": "REV-1", "displayName": "Reviewer One", "seedUsername": "reviewer1.demo@example.com"}, {"reviewerId": "REV-2", "displayName": "Reviewer Two", "seedUsername": "reviewer2.demo@example.com"}]
@@ -163,7 +163,7 @@ for owner, (org, cols) in LEGACY.items():
     ORG_OF[owner] = org; LANG_OF[owner] = LEGACY_LANG[owner]
     for pid, nm, lg in cols:
         ORG_OF[pid] = org; LANG_OF[pid] = lg
-        LEGACY_PRODUCERS.append({"producerId": pid, "displayName": nm, "organizationId": org, "preferredLanguage": lg, "entityType": "smallholder", "location": "", "crop": "coffee" if owner != "P-CI-005" else "cocoa", "noLogin": True, "synthetic": True})
+        LEGACY_PRODUCERS.append({"producerId": pid, "displayName": nm, "organizationId": org, "preferredLanguage": lg, "entityType": ("association" if owner == "P-CO-001" else "cooperative"), "location": "", "crop": "coffee" if owner != "P-CI-005" else "cocoa", "noLogin": True, "synthetic": True})
     c1, c2 = cols
     topics = ("drought", "water", "price") if owner != "P-CI-005" else ("labor", "soil", "price")
     plan = [  # (producer, topic, daysAgo, sharing, identity, review/pub, action, result)

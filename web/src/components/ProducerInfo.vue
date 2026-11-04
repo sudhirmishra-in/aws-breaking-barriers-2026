@@ -50,7 +50,7 @@ defineExpose({ load });
 
 <template>
   <section class="card pinfo" aria-label="Your producer information">
-    <p v-if="configError" class="banner error" role="alert">This account is not linked to a producer. Please contact Fair Trade USA support; no producer information can be shown.</p>
+    <p v-if="configError" class="banner error" role="alert">{{ configError === "organization_missing" ? "This account is not linked to an organization." : "This account is not linked to a producer." }} Please contact Fair Trade USA support; no producer information can be shown.</p>
     <p v-else-if="err" class="banner error" role="alert">{{ err }} <button type="button" class="btn sm" @click="load">Try again</button></p>
     <p v-else-if="loading" role="status" class="hint">Loading your producer information…</p>
     <details v-else-if="info" :open="props.open" class="pinfo-d">

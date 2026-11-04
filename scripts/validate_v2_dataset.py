@@ -47,6 +47,7 @@ check(all(re.fullmatch(r"[A-Za-z0-9-]{8,80}", "seed-" + i) for i in ids), "case 
 check(all(c["issueId"] in {i["issueId"] for i in issues} for c in convs if c.get("issueId")), "issue links")
 check(all(p["seedUsername"].endswith("@example.com") for p in people["producers"] + people["reviewers"]), "example.com accounts only")
 check("password" not in json.dumps([people, orgs]).lower(), "no credentials in dataset")
+check(all(p.get("organizationId") for p in people["producers"]) and all(p["entityType"] != "smallholder" for p in people["producers"]), "every producer belongs to an organization; no individual-farmer entity type")
 print(Counter(c.get("publicationStatus", "-") for c in convs))
 if errs:
     print("FAILED:\n - " + "\n - ".join(errs)); sys.exit(1)

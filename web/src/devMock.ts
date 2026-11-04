@@ -6,7 +6,7 @@ export function installDevMock(role: "producer" | "reviewer") {
   const profile = { displayName: "Synthetic Producer One", entityType: "cooperative", location: "Synthetic Highlands (fictional region)", crop: "coffee", preferredLanguage: "en" };
   const item = (id: string, st: string, pii = false) => ({ outcomeId: id, source: "agent conversation", producerId: "SYN-P-001", language: "es", summaryEn: "Late rains reduced yield.", summaryOriginal: "Las lluvias tardías redujeron la producción.", piiFlag: pii, piiTypes: pii ? ["PHONE"] : [], reviewStatus: st, createdAt: "2026-11-03T14:00:00Z" });
   const iso = (daysAgo: number) => new Date(Date.now() - daysAgo * 86_400_000).toISOString();
-  const rec = (id: string, st: string, pii = false) => ({ recordId: id, producerId: "P-CO-001", producerName: "Finca Alto Mirador", entityType: "smallholder", crop: "coffee", location: "Huila, Colombia",
+  const rec = (id: string, st: string, pii = false) => ({ recordId: id, producerId: "P-CO-001", producerName: "Finca Alto Mirador", entityType: "association", crop: "coffee", location: "Huila, Colombia",
     language: "es", createdAt: iso(id === "rec-1" ? 0 : 1), outcome: "completed", reviewStatus: st, source: "agent conversation",
     summaryOriginal: "Las lluvias tardías redujeron la producción cerca de 25 %. Los tanques de agua de lluvia ya no alcanzan.", summaryEn: "Late rains cut the harvest by about 25%. The rainwater tanks are no longer enough.",
     challengeTags: ["water", "climate_weather"], agentChallengeTags: ["water", "climate_weather"], claims: [], evidenceStatus: "unavailable", piiFlag: pii, piiEntityTypes: pii ? ["PHONE"] : [],
@@ -43,9 +43,9 @@ export function installDevMock(role: "producer" | "reviewer") {
     "GET /conversations/current": sample,
     "GET /review/stats": { pending: 2, approved: 1, corrected: 0, declined: 1, piiFlagged: 1, conversationsToday: 3, asOf: iso(0) },
     "GET /review/producers": { items: [
-      { producerId: "P-CO-001", producerName: "Finca Alto Mirador", entityType: "smallholder", crop: "coffee", location: "Huila, Colombia", recordCount: 3, pendingCount: 2, piiFlag: true, latestAt: iso(0), matchingRecords: 2 },
+      { producerId: "P-CO-001", producerName: "Finca Alto Mirador", entityType: "association", crop: "coffee", location: "Huila, Colombia", recordCount: 3, pendingCount: 2, piiFlag: true, latestAt: iso(0), matchingRecords: 2 },
       { producerId: "P-MX-004", producerName: "Unión Sierra Madre", entityType: "cooperative", crop: "coffee", location: "Chiapas, Mexico", recordCount: 1, pendingCount: 0, piiFlag: false, latestAt: iso(2), matchingRecords: 1 }] },
-    "GET /review/producers/P-CO-001/records": { items: [rec("rec-1", "pending", true), rec("rec-2", "pending"), { recordId: "rec-0", producerId: "P-CO-001", producerName: "Finca Alto Mirador", entityType: "smallholder", crop: "coffee", location: "Huila, Colombia", language: "es", createdAt: iso(3), outcome: "declined", reviewStatus: null }] },
+    "GET /review/producers/P-CO-001/records": { items: [rec("rec-1", "pending", true), rec("rec-2", "pending"), { recordId: "rec-0", producerId: "P-CO-001", producerName: "Finca Alto Mirador", entityType: "association", crop: "coffee", location: "Huila, Colombia", language: "es", createdAt: iso(3), outcome: "declined", reviewStatus: null }] },
     "GET /review/producers/P-CO-001/related": { producerId: "P-CO-001", source: "Team synthetic dataset (fictional, not FTUSA data)", query: null,
       premiumProjects: [{ year: 2022, title: "Rainwater catchment tanks", tags: ["water"], amountUsd: 5000, status: "completed", outcome: "Members report fewer lost harvest days." }],
       surveys: [{ year: 2025, topConcern: "water", concerns: ["water", "climate and weather"], respondents: 1, incomeChangePct: -10, lowerYieldPct: 65 }],

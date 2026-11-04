@@ -25,7 +25,7 @@ export interface CurrentView { conversation: ConversationDto | null; messages?: 
 export interface Me {
   roles: ("producer" | "reviewer")[]; profile?: { displayName: string; entityType: string; location: string; crop: string; preferredLanguage: Lang }; syntheticDemo: true;
   identity?: { producerId: string; organizationId: string | null; applicationUserId: string | null };
-  preferred_language?: Lang | null; configurationError?: "producer_mapping_missing" | null;
+  preferred_language?: Lang | null; configurationError?: "producer_mapping_missing" | "organization_missing" | null;
 }
 export type InfoKey = "account_sk" | "account_category_name" | "product_category_name" | "account_type_name" | "certification_scope_name" | "certification_status_name" | "country_name" | "raw_supply_chain_role_txt" | "structure_txt";
 export type CorrectionStatus = "pending" | "accepted_awaiting_source_update" | "applied" | "rejected";

@@ -14,7 +14,7 @@ CC = {"Colombia": "COL", "Peru": "PER", "Honduras": "HND", "Mexico": "MEX", "Cô
 
 REAL = {  # realistic synthetic organization records for the original demo accounts
  "P-MX-004": ("Producer organization (cooperative)", ["Coffee (green, washed arabica)", "Honey (secondary)"], "Small producer organization (SPO)", "Coffee production and cooperative wet milling", "Certified", ["Grower (member farms)", "Primary processor (wet mill)", "Exporter"], "Union of cooperatives with 980 members in 38 communities, general assembly and elected council"),
- "P-CO-001": ("Individual farm", ["Coffee (green, washed arabica)"], "Individual smallholder (via producer group)", "Coffee production", "Certified", ["Grower"], None),
+ "P-CO-001": ("Producer association", ["Coffee (green, washed arabica)"], "Producer organization", "Coffee production", "Certified", ["Grower (member farms)"], "Association of member farms in Cauca (synthetic)"),
  "P-CI-005": ("Producer organization (cooperative)", ["Cocoa (fermented, dried beans)"], "Small producer organization (SPO)", "Cocoa production, fermentation and bulk aggregation", "Certified", ["Grower (member farms)", "Aggregator", "Fermentation and drying"], "Cooperative of 1,150 members in 24 village sections, supervised by a management committee"),
 }
 

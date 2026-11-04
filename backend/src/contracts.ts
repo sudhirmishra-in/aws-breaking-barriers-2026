@@ -7,7 +7,7 @@ export const CHALLENGE_TAGS = ["climate_weather", "water", "soil_land", "market_
   "education", "health", "infrastructure", "biodiversity_conservation", "social_community"] as const;
 export const ChallengeTag = z.enum(CHALLENGE_TAGS);
 export type ChallengeTag = z.infer<typeof ChallengeTag>;
-export const ENTITY_TYPES = ["smallholder", "cooperative", "estate", "processing_operation"] as const; // spec enumeration
+export const ENTITY_TYPES = ["cooperative", "association", "estate", "processing_operation"] as const; // organization types only: every producer belongs to an organization, so there is no "individual farmer" type
 
 export const RequestId = z.string().min(8).max(64).regex(/^[A-Za-z0-9_-]+$/);
 

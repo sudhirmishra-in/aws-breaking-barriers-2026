@@ -70,6 +70,17 @@ describe("identity and language", () => {
   });
 });
 
+describe("every producer belongs to an organization", () => {
+  it("an account without an organization is a configuration error and cannot use producer features; there is no individual-farmer type", async () => {
+    const { svc, store } = setup(); store.profiles.set("s-solo", { ...prof("PRD-SOLO", undefined) });
+    expect(await svc.me(P("s-solo"))).toMatchObject({ configurationError: "organization_missing" });
+    expect(await code(svc.create(P("s-solo"), undefined, rid()))).toBe("no_organization");
+    expect(await code(svc.producerInformation(P("s-solo")))).toBe("no_organization");
+    const { ENTITY_TYPES } = await import("../src/contracts");
+    expect([...ENTITY_TYPES]).not.toContain("smallholder"); expect([...ENTITY_TYPES]).toEqual(["cooperative", "association", "estate", "processing_operation"]);
+  });
+});
+
 describe("producer information and corrections", () => {
   it("separates individual from organization data, keeps multi-values and source names, reports missing values as null", async () => {
     const { svc } = setup(); const i = await svc.producerInformation(ana);
@@ -337,7 +348,7 @@ describe("feedback", () => {
 
 describe("guidance turn without summary fields", () => {
   it("English conversations fall back to the confirmed account; other languages stay at guidance (retry), never an invented translation", async () => {
-    const store = new MemoryStore(); store.profiles.set("s-en", prof("PRD-EN", undefined, "en")); store.profiles.set("s-es", prof("PRD-ES", undefined, "es"));
+    const store = new MemoryStore(); store.profiles.set("s-en", prof("PRD-EN", "ORG-A", "en")); store.profiles.set("s-es", prof("PRD-ES", "ORG-A", "es"));
     const bare = new Stub(); const orig = bare.turn.bind(bare);
     bare.turn = async (req) => { const r = await orig(req); return req.context.mode === "guidance" ? { ...r, summaryEn: null, summaryOriginal: null, reply: "Another question?" } : r; };
     const svc = new ServiceV2({ store, agent: bare });

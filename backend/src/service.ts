@@ -90,7 +90,7 @@ export class Service {
       identity: profile && { producerId: profile.producerId, organizationId: profile.organizationId ?? null, applicationUserId: profile.applicationUserId ?? null },
       preferred_language: profile ? profile.preferredLanguage ?? "en" : null, // English is the explicit missing-language fallback
       // A producer without a mapping gets a configuration error, never a default producer.
-      configurationError: isProducer && !profile ? "producer_mapping_missing" as const : null,
+      configurationError: isProducer ? (!profile ? "producer_mapping_missing" as const : !profile.organizationId ? "organization_missing" as const : null) : null,
       syntheticDemo: true,
       syntheticLabel: SYNTHETIC_LABEL,
     };
@@ -99,6 +99,8 @@ export class Service {
   protected async profileFor(p: Principal): Promise<ProducerProfile> {
     const profile = await this.d.store.getProfileBySub(p.sub);
     if (!profile) throw new ApiError(403, "no_profile", "No producer profile is linked to this account.");
+    // Every producer is a member of an organization; there is no individual-farmer entity. An unlinked account is a configuration error, never a default.
+    if (!profile.organizationId) throw new ApiError(403, "no_organization", "This account is not linked to an organization.");
     return profile;
   }
 
