@@ -1,0 +1,24 @@
+{
+  "load_id": "ba46e96f6936",
+  "tables": {
+    "producers": {
+      "rows_loaded": 18,
+      "rows_rejected": 0
+    },
+    "projects": {
+      "rows_loaded": 21,
+      "rows_rejected": 0
+    },
+    "survey_summaries": {
+      "rows_loaded": 7,
+      "rows_rejected": 0
+    }
+  },
+  "vectors": 18,
+  "rejects": {
+    "producers": [],
+    "projects": [],
+    "survey_summaries": []
+  },
+  "mode": "dry-run"
+}
