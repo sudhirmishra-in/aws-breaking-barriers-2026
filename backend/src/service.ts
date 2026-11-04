@@ -6,12 +6,14 @@ import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, forbidden, notFound } from "./errors";
 import type { Store } from "./store";
 import type { Transcriber } from "./transcribe";
+import { toSpokenText, type Speaker } from "./speech";
 
 export interface Principal { sub: string; groups: string[] }
 export interface Deps {
   store: Store;
   agent: AgentClient;
   transcriber?: Transcriber;
+  speaker?: Speaker;
   now?: () => number;
   log?: (event: Record<string, unknown>) => void;
 }
@@ -26,6 +28,11 @@ const ACTIVE_TTL_S = 7 * 86400; // sandbox retention: active conversations expir
 const CLOSED_META_TTL_S = 30 * 86400; // closed: narrative-free metadata kept 30 days
 const SAVED_TRANSCRIPT_TTL_S = 30 * 86400; // saved conversations stay readable in the producer's history for 30 days (sandbox)
 const IDEM_TTL_S = 86400;
+
+// Synthetic producer turns sent to the agent are natural phrases, not instructions: instruction-like text is
+// flagged by the guardrail's prompt-attack filter (seen in the sandbox), which blocked the agent's opener.
+const GREETING: Record<Language, string> = { en: "Hello", es: "Hola", fr: "Bonjour" };
+const CONFIRMED: Record<Language, string> = { en: "Yes, that's right.", es: "Sí, es correcto.", fr: "Oui, c'est exact." };
 
 const OPENER: Record<Language, string> = {
   en: "What has been difficult recently?",
@@ -196,7 +203,7 @@ export class Service {
       // Real agent opener; deterministic fallback so a model outage cannot block starting.
       let opener = OPENER[language];
       try {
-        const r = await this.runAgent(conv, profile, "intake", [], "(The producer has just joined. Open the conversation with one open question.)", false, p);
+        const r = await this.runAgent(conv, profile, "intake", [], GREETING[language], false, p);
         opener = r.reply;
       } catch { this.log({ event: "opener_fallback", conversationId: id }); }
       const count = await this.append(conv, [{ role: "assistant", text: opener }]);
@@ -242,7 +249,7 @@ export class Service {
           cur = await this.save(c, { workflow: "guidance_pending", confirmation: "confirmed", confirmedAccount: c.playbackSummary, messageCount: count });
         }
         const history = await this.d.store.listMessages(id);
-        const r = await this.runAgent(cur, profile, "guidance", history.slice(0, -1), "The producer confirmed the account. Please continue.", false, p);
+        const r = await this.runAgent(cur, profile, "guidance", history.slice(0, -1), CONFIRMED[cur.language], false, p);
         const count2 = await this.append(cur, [{ role: "assistant", text: r.reply, stage: r.summaryEn && r.summaryOriginal ? "consent" : "response" }]);
         const saved = await this.save(cur, {
           messageCount: count2, summaryOriginal: r.summaryOriginal ?? undefined, summaryEn: r.summaryEn ?? undefined,
@@ -333,6 +340,24 @@ export class Service {
   }
 
   private assertActive(c: Conversation) { if (c.status !== "active") throw conflict("conversation_closed", "This conversation has ended."); }
+
+  // ---- read aloud: speech for one of the caller's own agent replies (nothing is stored) -----------------
+  async speech(p: Principal, id: string, seq: number) {
+    const c = await this.owned(p, id); // ownership: another producer's conversation is a 404
+    if (!this.d.speaker) throw new ApiError(501, "not_configured", "Read aloud is not available.");
+    const m = (await this.d.store.listMessages(id)).find((x) => x.seq === seq);
+    if (!m || m.role !== "assistant") throw notFound(); // only the agent's own replies are spoken
+    const text = toSpokenText(m.text);
+    if (!text) throw new ApiError(400, "nothing_to_say", "This message has no text to read.");
+    let out: { audio: Uint8Array; voice: string };
+    try { out = await this.d.speaker.speak(text, c.language); }
+    catch (e) {
+      this.log({ event: "speech_failure", errorName: (e as Error).name });
+      throw new ApiError(502, "speech_unavailable", "We could not read this aloud just now. Please try again.", true);
+    }
+    this.log({ event: "speech", chars: text.length, bytes: out.audio.length }); // never the text
+    return { contentType: "audio/mpeg", audio: Buffer.from(out.audio).toString("base64"), voice: out.voice, language: c.language };
+  }
 
   // ---- dictation (stateless: audio is never stored, transcript is returned to the browser only) -------
   async transcribe(p: Principal, language: Language, audioBase64: string) {

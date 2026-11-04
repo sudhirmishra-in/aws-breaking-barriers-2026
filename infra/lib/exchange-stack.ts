@@ -160,6 +160,8 @@ export class ExchangeStack extends cdk.Stack {
     conversations.grantReadWriteData(fn); outcomes.grantReadWriteData(fn); key.grantEncryptDecrypt(fn);
     // Dictation: Transcribe streaming has no resource-level permissions. Audio is not stored.
     fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["transcribe:StartStreamTranscription"], resources: ["*"] }));
+    // Read aloud: Polly speech synthesis has no resource-level permissions (only lexicons do). Audio is not stored.
+    fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["polly:SynthesizeSpeech"], resources: ["*"] }));
     fn.addToRolePolicy(new iam.PolicyStatement({
       actions: ["bedrock-agentcore:InvokeAgentRuntime", "bedrock-agentcore:InvokeAgentRuntimeForUser"],
       resources: [runtime.attrAgentRuntimeArn, `${runtime.attrAgentRuntimeArn}/*`],

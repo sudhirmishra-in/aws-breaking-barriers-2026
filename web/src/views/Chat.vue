@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { AlertTriangle, Bot, Check, CheckCircle2, Copy, EyeOff, Heart, MessageCircle, Plus, RotateCw, SendHorizontal, ShieldCheck, X } from "lucide-vue-next";
+import { AlertTriangle, Bot, Check, CheckCircle2, Copy, EyeOff, Heart, Keyboard, Loader2, MessageCircle, Square, Volume2, Plus, RotateCw, SendHorizontal, ShieldCheck, X } from "lucide-vue-next";
 import DictateButton from "../components/DictateButton.vue";
 import HistoryPanel from "../components/HistoryPanel.vue";
 import ProgressPanel from "../components/ProgressPanel.vue";
 import { api, newRequestId } from "../lib/api";
 import { renderMarkdown } from "../lib/markdown";
+import { audioSupported, playMp3, stopAudio, unlockAudio } from "../lib/speech";
 import { markExpired, state } from "../session";
 import { t } from "../lib/i18n";
 import { ApiFailure, LANGS, type ConversationDto, type ConversationView, type Lang, type Message, type Stage } from "../types";
@@ -27,6 +28,13 @@ const corr = ref({ text: "", location: "", entity: "" });
 const confirmEnd = ref(false);
 const copiedSeq = ref<number | null>(null);
 const log = ref<HTMLElement | null>(null);
+// Text vs voice conversation: in voice mode each new agent reply is read aloud automatically.
+const savedMode = (() => { try { return localStorage.getItem("conv-mode") === "voice" ? "voice" : "text"; } catch { return "text"; } })();
+const mode = ref<"text" | "voice">(savedMode);
+const speakingSeq = ref<number | null>(null);
+const loadingSeq = ref<number | null>(null);
+const audioErrSeq = ref<number | null>(null);
+let lastSeenSeq = 0;
 const box = ref<HTMLTextAreaElement | null>(null);
 
 const STAGE_OF: Record<ConversationDto["workflow"], Stage> = { intake: "intake", playback_pending: "playback", guidance_pending: "response", consent_pending: "consent", closed: "consent" };
@@ -40,6 +48,36 @@ const heading = computed(() => (conv.value ? conv.value.title || s.value.untitle
 
 function scrollDown() { nextTick(() => log.value?.scrollTo({ top: log.value.scrollHeight })); }
 function apply(v: { conversation: ConversationDto | null; messages?: Message[] }) { conv.value = v.conversation; messages.value = v.messages ?? []; scrollDown(); }
+const maxAgentSeq = () => Math.max(0, ...messages.value.filter((m) => m.role === "assistant").map((m) => m.seq));
+
+function setMode(m: "text" | "voice") {
+  mode.value = m;
+  try { localStorage.setItem("conv-mode", m); } catch { /* per-viewer convenience only */ }
+  if (m === "voice") unlockAudio(); else { stopAudio(); speakingSeq.value = null; }
+}
+async function listen(m: Message) {
+  if (!conv.value) return;
+  if (speakingSeq.value === m.seq) { stopAudio(); speakingSeq.value = null; return; }
+  unlockAudio(); stopAudio();
+  loadingSeq.value = m.seq; audioErrSeq.value = null; speakingSeq.value = null;
+  try {
+    const r = await api.speech(conv.value.conversationId, m.seq);
+    loadingSeq.value = null; speakingSeq.value = m.seq;
+    await playMp3(r.audio);
+  } catch (e) {
+    if ((e as ApiFailure).status === 401) markExpired();
+    audioErrSeq.value = m.seq;
+  } finally {
+    if (loadingSeq.value === m.seq) loadingSeq.value = null;
+    if (speakingSeq.value === m.seq) speakingSeq.value = null;
+  }
+}
+/** After an action, read the newest agent reply aloud in voice mode (never replays history on load). */
+function speakNewReply() {
+  const newest = messages.value.filter((m) => m.role === "assistant" && m.seq > lastSeenSeq).at(-1);
+  lastSeenSeq = maxAgentSeq();
+  if (newest && mode.value === "voice") void listen(newest);
+}
 watch(busy, scrollDown);
 
 // The open conversation lives in the URL (/chat/:conversationId) so a refresh returns to it (spec CONV-05).
@@ -60,15 +98,16 @@ async function load() {
     if (f.status === 401) markExpired();
     else if (f.status === 404) { missing.value = true; apply({ conversation: null }); }
     else error.value = { text: f.message, retry: load };
-  } finally { loading.value = false; }
+  } finally { loading.value = false; lastSeenSeq = maxAgentSeq(); }
 }
-watch(() => [route.params.conversationId, route.query.new], () => void load(), { immediate: true });
+watch(() => [route.params.conversationId, route.query.new], () => { stopAudio(); speakingSeq.value = null; void load(); }, { immediate: true });
 
 /** Runs an API action; a retry re-sends the SAME requestId so the server de-duplicates it. */
 async function run(action: (requestId: string) => Promise<ConversationView>, requestId: string = newRequestId()) {
   busy.value = true; error.value = null;
+  if (mode.value === "voice") unlockAudio(); // still inside the user's tap, so sound is allowed later
   try {
-    const v = await action(requestId); apply(v);
+    const v = await action(requestId); apply(v); speakNewReply();
     if (route.params.conversationId !== v.conversation.conversationId) await router.push(`/chat/${v.conversation.conversationId}`);
     return true;
   } catch (e) {
@@ -118,9 +157,15 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
           <button type="button" class="btn primary sm" @click="newConversation"><Plus :size="14" aria-hidden="true" />{{ s.newConversation }}</button>
           <HistoryPanel :current-id="conv?.conversationId" @open="openConversation" @deleted="onDeleted" />
         </div>
-        <h1 class="chat-title">{{ heading }}</h1>
-        <span v-if="conv" class="pill" :class="closed ? (outcome === 'saved' ? 'ok' : '') : 'warn'">{{ closed ? (outcome === "saved" ? s.outcomeSaved : s.outcomeDeclined) : s.inProgress }}</span>
+        <div class="chat-titlebar">
+          <h1 class="chat-title">{{ heading }}</h1>
+          <span v-if="conv" class="pill" :class="closed ? (outcome === 'saved' ? 'ok' : '') : 'warn'">{{ closed ? (outcome === "saved" ? s.outcomeSaved : s.outcomeDeclined) : s.inProgress }}</span>
+        </div>
         <span class="grow" />
+        <div v-if="audioSupported && conv && !closed" class="mode-seg" role="group" :aria-label="s.modeLabel" :title="mode === 'voice' ? s.modeVoiceHint : s.modeLabel">
+          <button type="button" :aria-pressed="mode === 'text'" @click="setMode('text')"><Keyboard :size="14" aria-hidden="true" />{{ s.modeText }}</button>
+          <button type="button" :aria-pressed="mode === 'voice'" @click="setMode('voice')"><Volume2 :size="14" aria-hidden="true" />{{ s.modeVoice }}</button>
+        </div>
         <template v-if="conv && !closed">
           <button v-if="!confirmEnd" type="button" class="btn sm end-btn" :disabled="busy" :aria-label="s.end" :title="s.end" @click="confirmEnd = true"><X :size="12" aria-hidden="true" /><span class="end-label">{{ s.end }}</span></button>
           <span v-else role="alertdialog" aria-label="confirm end" class="row end-confirm">{{ s.endConfirm }}
@@ -163,7 +208,15 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
               <span class="av brand-gradient"><Bot :size="16" aria-hidden="true" /><span class="sr">{{ s.assistant }}</span></span>
               <div style="min-width:0;flex:1">
                 <div class="md" v-html="renderMarkdown(m.text)" />
-                <button class="btn sm copy" style="border:0;background:none" :aria-label="s.copy" @click="copy(m)"><Check v-if="copiedSeq === m.seq" :size="12" aria-hidden="true" /><Copy v-else :size="12" aria-hidden="true" />{{ copiedSeq === m.seq ? s.copied : s.copy }}</button>
+                <div class="msg-actions">
+                  <button type="button" class="act-btn" :aria-label="s.copy" :title="s.copy" @click="copy(m)"><Check v-if="copiedSeq === m.seq" :size="16" aria-hidden="true" /><Copy v-else :size="16" aria-hidden="true" /></button>
+                  <button v-if="audioSupported" type="button" class="act-btn" :class="{ on: speakingSeq === m.seq }" :aria-label="speakingSeq === m.seq ? s.stopAudio : s.listen" :title="speakingSeq === m.seq ? s.stopAudio : s.listen" :aria-pressed="speakingSeq === m.seq" @click="listen(m)">
+                    <Loader2 v-if="loadingSeq === m.seq" :size="16" class="spin" aria-hidden="true" /><Square v-else-if="speakingSeq === m.seq" :size="14" aria-hidden="true" /><Volume2 v-else :size="16" aria-hidden="true" />
+                  </button>
+                  <span v-if="loadingSeq === m.seq" class="act-note" role="status">{{ s.audioLoading }}</span>
+                  <span v-else-if="audioErrSeq === m.seq" class="act-note err" role="alert">{{ s.audioError }}</span>
+                  <span v-if="copiedSeq === m.seq" class="act-note" role="status">{{ s.copied }}</span>
+                </div>
               </div>
             </div>
           </template>

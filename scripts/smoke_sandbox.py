@@ -120,6 +120,11 @@ def main() -> int:
         check("message reaches AgentCore Runtime and Bedrock returns a reply", st == 200 and len(reply) > 20, f"status={st} reply_chars={len(reply)}")
         st2, m2 = http("POST", f"{api}/conversations/{cid}/messages", ta, {"requestId": rid, "text": "Las lluvias llegaron tarde este año y la cosecha fue menor."})
         check("retry with the same requestId does not duplicate", st2 == 200 and m2 == m1 and sum(1 for x in m2["messages"] if x["role"] == "user") == 1)
+        st, sp = http("POST", f"{api}/conversations/{cid}/messages/1/speech", ta, {})
+        audio = base64.b64decode(sp.get("audio", "")) if st == 200 else b""
+        check("read aloud returns real speech audio for the agent's reply", st == 200 and sp.get("contentType") == "audio/mpeg" and len(audio) > 2000, f"status={st} bytes={len(audio)}")
+        st, _ = http("POST", f"{api}/conversations/{cid}/messages/1/speech", tb, {})
+        check("another producer cannot have the reply read aloud", st == 404, f"status={st}")
         st, cur = http("GET", api + "/conversations/current", ta)
         check("same conversation is restored", st == 200 and cur.get("conversation", {}).get("conversationId") == cid)
 

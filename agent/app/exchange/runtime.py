@@ -32,7 +32,8 @@ def _build_real_runner(req: TurnRequest) -> AgentRunner:
     )
     history = [{"role": m.role, "content": [{"text": m.text}]} for m in req.messages[:-1]]
     if history and history[0]["role"] == "assistant":  # Bedrock requires the first turn to be the user's
-        history.insert(0, {"role": "user", "content": [{"text": "(The producer has just joined.)"}]})
+        # A natural greeting, not an instruction: instruction-like user text trips the guardrail's prompt-attack filter.
+        history.insert(0, {"role": "user", "content": [{"text": GREETING[req.context.language]}]})
     agent = Agent(
         model=model,
         system_prompt=system_prompt(req.context),
@@ -43,11 +44,51 @@ def _build_real_runner(req: TurnRequest) -> AgentRunner:
 
     def run(prompt: str) -> TurnOutput:
         result = agent(prompt, structured_output_model=TurnOutput)
-        if result.structured_output is None:
-            raise RuntimeError("model returned no structured output")
-        return result.structured_output
+        if result.stop_reason in BLOCKED_STOP_REASONS:
+            # Never turn a guardrail block message into a reply; the caller has its own safe fallback.
+            log.warning("guardrail_intervened conversation=%s", req.context.conversationId)
+            raise GuardrailBlocked(result.stop_reason)
+        return resolve_output(
+            result.structured_output,
+            force=lambda: agent.structured_output(TurnOutput, FORCE_FORMAT_PROMPT),
+            text=str(result),
+            conversation_id=req.context.conversationId,
+        )
 
     return run
+
+
+GREETING = {"en": "Hello", "es": "Hola", "fr": "Bonjour"}
+BLOCKED_STOP_REASONS = {"guardrail_intervened", "content_filtered"}
+
+
+class GuardrailBlocked(RuntimeError):
+    """The guardrail blocked this turn. Surfaced as a failure, never as a reply."""
+
+
+FORCE_FORMAT_PROMPT = (
+    "Return your last reply to the producer in the required structured format. "
+    "Do not change its content or language."
+)
+
+
+def resolve_output(structured, force, text: str, conversation_id: str = "") -> TurnOutput:
+    """The model occasionally ends a turn with plain text instead of the structured output.
+    1) use the structured output; 2) ask once more, forcing the format; 3) keep the plain text as an
+    ordinary intake reply, which never triggers a workflow transition (playback, guidance or storage)."""
+    if structured is not None:
+        return structured
+    log.warning("structured_output_missing conversation=%s", conversation_id)
+    try:
+        forced = force()
+        if forced is not None:
+            return forced
+    except Exception as e:  # noqa: BLE001 - recovery path; the reason is logged without content
+        log.warning("structured_output_retry_failed conversation=%s error=%s", conversation_id, type(e).__name__)
+    reply = (text or "").strip()
+    if reply:
+        return TurnOutput(reply=reply, phase="intake")
+    raise RuntimeError("model returned no structured output")
 
 
 def _pii_client():
