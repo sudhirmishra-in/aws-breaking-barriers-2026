@@ -1,6 +1,6 @@
 import { DynamoDBClient, ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
-import type { Conversation, Message, Outcome, ProducerProfile } from "./contracts";
+import type { Conversation, CorrectionRecord, Message, Organization, Outcome, ProducerProfile, PublicationStatus } from "./contracts";
 import type { Store } from "./store";
 
 const META = "META";
@@ -168,5 +168,73 @@ export class DdbStore implements Store {
       return r.Attributes as Outcome;
     } catch (e) { if (isCCF(e)) return undefined; throw e; }
   }
+  // ---- V2 ----------------------------------------------------------------------------------------------------
+  async getOrganization(id: string) {
+    const r = await this.d.send(new GetCommand({ TableName: this.convTable, Key: { pk: `ORG#${id}`, sk: META } }));
+    return r.Item?.org as Organization | undefined;
+  }
+  async putCorrection(c: CorrectionRecord) {
+    try {
+      await this.d.send(new PutCommand({ TableName: this.outTable, Item: { ...c, outcomeId: c.correctionId, gsiKind: "correction" }, ConditionExpression: "attribute_not_exists(outcomeId)" }));
+      return true;
+    } catch (e) { if (isCCF(e)) return false; throw e; }
+  }
+  async getCorrection(id: string) {
+    const r = await this.d.send(new GetCommand({ TableName: this.outTable, Key: { outcomeId: id }, ConsistentRead: true }));
+    return r.Item?.gsiKind === "correction" ? (r.Item as unknown as CorrectionRecord) : undefined;
+  }
+  async listCorrections(f: { organizationId?: string }) {
+    const out: CorrectionRecord[] = [];
+    let start: Record<string, unknown> | undefined;
+    do {
+      const r = f.organizationId
+        ? await this.d.send(new QueryCommand({ TableName: this.outTable, IndexName: "org-index", ExclusiveStartKey: start, FilterExpression: "gsiKind = :k",
+          KeyConditionExpression: "organizationId = :o", ExpressionAttributeValues: { ":o": f.organizationId, ":k": "correction" }, ScanIndexForward: false }))
+        : await this.d.send(new QueryCommand({ TableName: this.outTable, IndexName: "kind-index", ExclusiveStartKey: start,
+          KeyConditionExpression: "gsiKind = :k", ExpressionAttributeValues: { ":k": "correction" }, ScanIndexForward: false }));
+      out.push(...((r.Items ?? []) as unknown as CorrectionRecord[])); start = r.LastEvaluatedKey;
+    } while (start && out.length < 2000);
+    return out;
+  }
+  async updateCorrection(id: string, from: CorrectionRecord["status"][], patch: Partial<CorrectionRecord>) {
+    const names: Record<string, string> = { "#st": "status" }; const vals: Record<string, unknown> = {}; const sets: string[] = []; const ins: string[] = [];
+    Object.entries(patch).forEach(([k, v], i) => { names[`#f${i}`] = k; vals[`:v${i}`] = v; sets.push(`#f${i} = :v${i}`); });
+    from.forEach((f, i) => { vals[`:s${i}`] = f; ins.push(`:s${i}`); });
+    try {
+      const r = await this.d.send(new UpdateCommand({ TableName: this.outTable, Key: { outcomeId: id }, UpdateExpression: `SET ${sets.join(", ")}`,
+        ConditionExpression: `attribute_exists(outcomeId) AND gsiKind = :corr AND #st IN (${ins.join(", ")})`, ExpressionAttributeNames: names,
+        ExpressionAttributeValues: { ...vals, ":corr": "correction" }, ReturnValues: "ALL_NEW" }));
+      return r.Attributes as unknown as CorrectionRecord;
+    } catch (e) { if (isCCF(e)) return undefined; throw e; }
+  }
+  async listRecordsByOrganization(orgId: string) {
+    const out: Outcome[] = []; let start: Record<string, unknown> | undefined;
+    do {
+      const r = await this.d.send(new QueryCommand({ TableName: this.outTable, IndexName: "org-index", ExclusiveStartKey: start, FilterExpression: "gsiKind = :k",
+        KeyConditionExpression: "organizationId = :o", ExpressionAttributeValues: { ":o": orgId, ":k": "record" }, ScanIndexForward: false }));
+      out.push(...((r.Items ?? []) as Outcome[])); start = r.LastEvaluatedKey;
+    } while (start && out.length < 2000);
+    return out;
+  }
+  async listPublishedRecords() {
+    const out: Outcome[] = []; let start: Record<string, unknown> | undefined;
+    do {
+      const r = await this.d.send(new QueryCommand({ TableName: this.outTable, IndexName: "kind-index", ExclusiveStartKey: start, FilterExpression: "publicationStatus = :p",
+        KeyConditionExpression: "gsiKind = :k", ExpressionAttributeValues: { ":k": "record", ":p": "published" }, ScanIndexForward: false }));
+      out.push(...((r.Items ?? []) as Outcome[])); start = r.LastEvaluatedKey;
+    } while (start && out.length < 2000);
+    return out;
+  }
+  async updateOutcome(id: string, from: PublicationStatus[] | null, patch: Partial<Outcome>) {
+    const names: Record<string, string> = { "#ps": "publicationStatus" }; const vals: Record<string, unknown> = {}; const sets: string[] = []; const ins: string[] = [];
+    Object.entries(patch).forEach(([k, v], i) => { names[`#f${i}`] = k; vals[`:v${i}`] = v; sets.push(`#f${i} = :v${i}`); });
+    from?.forEach((f, i) => { vals[`:s${i}`] = f; ins.push(`:s${i}`); });
+    // A record created before V2 has no publicationStatus; it reads as "not_shared".
+    const cond = from ? `attribute_exists(outcomeId) AND (#ps IN (${ins.join(", ")})${from.includes("not_shared") ? " OR attribute_not_exists(#ps)" : ""})` : "attribute_exists(outcomeId)";
+    try {
+      const r = await this.d.send(new UpdateCommand({ TableName: this.outTable, Key: { outcomeId: id }, UpdateExpression: `SET ${sets.join(", ")}`,
+        ConditionExpression: cond, ExpressionAttributeNames: names, ExpressionAttributeValues: vals, ReturnValues: "ALL_NEW" }));
+      return r.Attributes as Outcome;
+    } catch (e) { if (isCCF(e)) return undefined; throw e; }
+  }
 }
-

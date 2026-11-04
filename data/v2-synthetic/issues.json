@@ -1,0 +1,365 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "issues": [
+    {
+      "issueId": "ISS-01",
+      "organizationId": "ORG-AND-COL",
+      "reporters": [
+        "PRD-ANA",
+        "PRD-MATEO"
+      ],
+      "tags": [
+        "climate_weather"
+      ],
+      "crop": "coffee",
+      "geography": "Huila, Colombia",
+      "status": "action_planned",
+      "events": [
+        {
+          "type": "reported",
+          "by": "PRD-ANA",
+          "daysAgo": 30
+        },
+        {
+          "type": "guidance",
+          "daysAgo": 30,
+          "text": "Water storage was discussed"
+        },
+        {
+          "type": "reported",
+          "by": "PRD-MATEO",
+          "daysAgo": 5
+        }
+      ],
+      "linkedConversations": [
+        "cv-02",
+        "cv-05",
+        "cv-01"
+      ],
+      "note": "Guidance given; no outcome recorded (multiple reporters, one incident)"
+    },
+    {
+      "issueId": "ISS-02",
+      "organizationId": "ORG-AND-COL",
+      "reporters": [
+        "PRD-ANA"
+      ],
+      "tags": [
+        "water"
+      ],
+      "crop": "coffee",
+      "geography": "Huila, Colombia",
+      "status": "resolved",
+      "resolutionConfirmed": true,
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 90
+        },
+        {
+          "type": "action",
+          "daysAgo": 80,
+          "text": "Installed two rainwater tanks"
+        },
+        {
+          "type": "outcome",
+          "daysAgo": 60,
+          "text": "Fewer lost harvest days"
+        },
+        {
+          "type": "resolution_confirmed",
+          "daysAgo": 59
+        }
+      ],
+      "linkedConversations": [
+        "cv-03"
+      ]
+    },
+    {
+      "issueId": "ISS-03",
+      "organizationId": "ORG-AND-COL",
+      "reporters": [
+        "PRD-MATEO",
+        "PRD-ELENA"
+      ],
+      "tags": [
+        "water"
+      ],
+      "crop": "coffee",
+      "geography": "Huila, Colombia",
+      "status": "action_in_progress",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 100
+        },
+        {
+          "type": "action",
+          "daysAgo": 12,
+          "text": "Shared irrigation schedule"
+        }
+      ],
+      "linkedConversations": [
+        "cv-04",
+        "cv-21"
+      ],
+      "note": "Action without a reported outcome"
+    },
+    {
+      "issueId": "ISS-04",
+      "organizationId": "ORG-AND-COL",
+      "reporters": [
+        "PRD-ELENA",
+        "PRD-MATEO"
+      ],
+      "tags": [
+        "soil_land"
+      ],
+      "crop": "coffee",
+      "geography": "Huila, Colombia",
+      "status": "open",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 120
+        },
+        {
+          "type": "reported",
+          "daysAgo": 40
+        }
+      ],
+      "linkedConversations": [
+        "cv-22",
+        "cv-07"
+      ],
+      "note": "Same challenge, different profiles; no guidance acted on"
+    },
+    {
+      "issueId": "ISS-05",
+      "organizationId": "ORG-COP-HON",
+      "reporters": [
+        "PRD-LUCIA",
+        "PRD-DIEGO"
+      ],
+      "tags": [
+        "climate_weather"
+      ],
+      "crop": "coffee",
+      "geography": "Copán, Honduras",
+      "status": "recurring",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 75
+        },
+        {
+          "type": "action",
+          "daysAgo": 70,
+          "text": "Planted shade trees"
+        },
+        {
+          "type": "outcome",
+          "daysAgo": 60,
+          "text": "Improved shade"
+        },
+        {
+          "type": "recurrence",
+          "daysAgo": 8
+        }
+      ],
+      "linkedConversations": [
+        "cv-24",
+        "cv-09",
+        "cv-08"
+      ],
+      "note": "Resolution not confirmed; recurrence in a later season"
+    },
+    {
+      "issueId": "ISS-06",
+      "organizationId": "ORG-COP-HON",
+      "reporters": [
+        "PRD-DIEGO"
+      ],
+      "tags": [
+        "market_price"
+      ],
+      "crop": "coffee",
+      "geography": "Copán, Honduras",
+      "status": "action_in_progress",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 25
+        },
+        {
+          "type": "action",
+          "daysAgo": 3,
+          "text": "Drying program"
+        }
+      ],
+      "linkedConversations": [
+        "cv-11",
+        "cv-10"
+      ]
+    },
+    {
+      "issueId": "ISS-07",
+      "organizationId": "ORG-COP-HON",
+      "reporters": [
+        "PRD-ROSA"
+      ],
+      "tags": [
+        "labor_migration"
+      ],
+      "crop": "coffee",
+      "geography": "Copán, Honduras",
+      "status": "unknown",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 6
+        }
+      ],
+      "linkedConversations": [
+        "cv-12"
+      ],
+      "note": "FTUSA-only"
+    },
+    {
+      "issueId": "ISS-08",
+      "organizationId": "ORG-COP-HON",
+      "reporters": [
+        "PRD-ROSA"
+      ],
+      "tags": [
+        "market_price"
+      ],
+      "crop": "coffee",
+      "geography": "Copán, Honduras",
+      "status": "open",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 60
+        }
+      ],
+      "linkedConversations": [
+        "cv-13"
+      ],
+      "note": "FTUSA-only, reviewed"
+    },
+    {
+      "issueId": "ISS-09",
+      "organizationId": "ORG-NAW-CIV",
+      "reporters": [
+        "PRD-AWA",
+        "PRD-KOFFI"
+      ],
+      "tags": [
+        "labor_migration"
+      ],
+      "crop": "cocoa",
+      "geography": "Nawa, Côte d'Ivoire",
+      "status": "action_in_progress",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 55
+        },
+        {
+          "type": "action",
+          "daysAgo": 40,
+          "text": "Asked neighbors"
+        },
+        {
+          "type": "reported",
+          "by": "PRD-KOFFI",
+          "daysAgo": 9
+        },
+        {
+          "type": "action",
+          "daysAgo": 4,
+          "text": "Community harvest exchange"
+        }
+      ],
+      "linkedConversations": [
+        "cv-15",
+        "cv-16",
+        "cv-14"
+      ]
+    },
+    {
+      "issueId": "ISS-10",
+      "organizationId": "ORG-NAW-CIV",
+      "reporters": [
+        "PRD-KOFFI"
+      ],
+      "tags": [
+        "market_price"
+      ],
+      "crop": "cocoa",
+      "geography": "Nawa, Côte d'Ivoire",
+      "status": "open",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 35
+        }
+      ],
+      "linkedConversations": [
+        "cv-17"
+      ],
+      "note": "Summary revision awaiting producer re-confirmation"
+    },
+    {
+      "issueId": "ISS-11",
+      "organizationId": "ORG-NAW-CIV",
+      "reporters": [
+        "PRD-MARIAM"
+      ],
+      "tags": [
+        "soil_land"
+      ],
+      "crop": "cocoa",
+      "geography": "Nawa, Côte d'Ivoire",
+      "status": "action_in_progress",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 20
+        },
+        {
+          "type": "action",
+          "daysAgo": 15,
+          "text": "Compost and cover crops"
+        }
+      ],
+      "linkedConversations": [
+        "cv-19"
+      ]
+    },
+    {
+      "issueId": "ISS-12",
+      "organizationId": "ORG-NAW-CIV",
+      "reporters": [
+        "PRD-MARIAM"
+      ],
+      "tags": [
+        "climate_weather"
+      ],
+      "crop": "cocoa",
+      "geography": "Nawa, Côte d'Ivoire",
+      "status": "unknown",
+      "events": [
+        {
+          "type": "reported",
+          "daysAgo": 45
+        }
+      ],
+      "linkedConversations": [
+        "cv-20"
+      ],
+      "note": "Publication withdrawn"
+    }
+  ]
+}

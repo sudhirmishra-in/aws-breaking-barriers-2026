@@ -1,0 +1,49 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "surveys": [
+    {
+      "organizationId": "ORG-AND-COL",
+      "year": 2025,
+      "topConcern": "climate_weather",
+      "respondents": 112,
+      "synthetic": true
+    },
+    {
+      "organizationId": "ORG-COP-HON",
+      "year": 2025,
+      "topConcern": "market_price",
+      "respondents": 64,
+      "synthetic": true
+    },
+    {
+      "organizationId": "ORG-NAW-CIV",
+      "year": 2025,
+      "topConcern": "labor_migration",
+      "respondents": 143,
+      "synthetic": true
+    }
+  ],
+  "certifications": [
+    {
+      "organizationId": "ORG-AND-COL",
+      "standard": "Fair Trade (synthetic reference)",
+      "status": "Certified",
+      "lastAudit": "2025-09-15",
+      "synthetic": true
+    },
+    {
+      "organizationId": "ORG-COP-HON",
+      "standard": "Fair Trade (synthetic reference)",
+      "status": "Certified",
+      "lastAudit": "2025-09-15",
+      "synthetic": true
+    },
+    {
+      "organizationId": "ORG-NAW-CIV",
+      "standard": "Fair Trade (synthetic reference)",
+      "status": "Certification suspended",
+      "lastAudit": "2025-09-15",
+      "synthetic": true
+    }
+  ]
+}

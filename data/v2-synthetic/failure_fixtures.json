@@ -1,0 +1,16 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "memoryUpdateFailures": [
+    {
+      "outcomeId": "rec-cv-17",
+      "reason": "memory_write_failed",
+      "retries": 2
+    }
+  ],
+  "retryFixtures": [
+    {
+      "requestId": "seed-retry-001",
+      "note": "duplicate turn submission fixture"
+    }
+  ]
+}

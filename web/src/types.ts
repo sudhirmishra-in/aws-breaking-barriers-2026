@@ -6,13 +6,40 @@ export interface Message { seq: number; role: "user" | "assistant"; text: string
 export interface ConversationDto {
   conversationId: string; language: Lang;
   workflow: "intake" | "playback_pending" | "guidance_pending" | "consent_pending" | "closed";
-  confirmation: string; consent: "unanswered" | "granted" | "declined"; status: "active" | "completed" | "declined";
+  confirmation: string; consent: "unanswered" | "granted" | "declined"; status: "active" | "completed" | "declined" | "stopped";
   title?: string | null; playbackSummary?: string; summaryOriginal?: string; summaryEn?: string; expiresAt: string | null;
 }
-export interface ConversationView { conversation: ConversationDto; messages: Message[]; retention: { activeDays: number; savedDays?: number; text: string }; syntheticDemo: true }
-export interface ConversationSummary { conversationId: string; title: string | null; language: Lang; createdAt: string; updatedAt: string; status: "in_progress" | "saved"; summary: string | null }
+export type SharingChoice = "share_conversation" | "share_summary" | "ftusa_only";
+export type PublicationStatus = "not_shared" | "awaiting_review" | "awaiting_reconfirmation" | "pending_publication" | "published" | "failed" | "withdrawn";
+export interface ConfirmationDto { summaryHash: string; summaryOriginal: string; summaryEn: string; tags: ChallengeTag[]; language: Lang }
+export interface RecordStateDto {
+  sharingChoice: SharingChoice; identityPermitted: boolean; reviewStatus: ReviewStatus; publicationStatus: PublicationStatus; summaryVersion: number; deletionRequested: boolean; tags: ChallengeTag[]; feedback: { helpful: "yes" | "partly" | "no" } | null;
+  reconfirmation: { summaryHash: string; summaryOriginal: string; summaryEn: string; version: number } | null;
+}
+export interface ConversationView {
+  conversation: ConversationDto; messages: Message[]; retention: { activeDays: number; savedDays?: number; text: string }; syntheticDemo: true;
+  confirmation?: ConfirmationDto | null; record?: RecordStateDto | null; referencedCase?: { caseId: string; version: number } | null;
+}
+export interface ConversationSummary { conversationId: string; title: string | null; language: Lang; createdAt: string; updatedAt: string; status: "in_progress" | "completed"; stopped?: boolean; group?: "today" | "previous_7_days" | "older"; summary: string | null }
 export interface CurrentView { conversation: ConversationDto | null; messages?: Message[]; retention?: ConversationView["retention"] }
-export interface Me { roles: ("producer" | "reviewer")[]; profile?: { displayName: string; entityType: string; location: string; crop: string; preferredLanguage: Lang }; syntheticDemo: true }
+export interface Me {
+  roles: ("producer" | "reviewer")[]; profile?: { displayName: string; entityType: string; location: string; crop: string; preferredLanguage: Lang }; syntheticDemo: true;
+  identity?: { producerId: string; organizationId: string | null; applicationUserId: string | null };
+  preferred_language?: Lang | null; configurationError?: "producer_mapping_missing" | null;
+}
+export type InfoKey = "account_sk" | "account_category_name" | "product_category_name" | "account_type_name" | "certification_scope_name" | "certification_status_name" | "country_name" | "raw_supply_chain_role_txt" | "structure_txt";
+export type CorrectionStatus = "pending" | "accepted_awaiting_source_update" | "applied" | "rejected";
+export interface CorrectionDto { correctionId: string; status: CorrectionStatus; createdAt: string; requestedByYou: boolean; changes: { field: InfoKey; original: string | null; proposed: string }[];
+  explanation: string | null; decidedAt: string | null; appliedAt: string | null; decisionNote: string | null; organizationId?: string; requesterProducerId?: string; decidedBy?: string | null }
+export interface ProducerInfo {
+  individual: { producerId: string; displayName: string; preferredLanguage: Lang };
+  organization: { organizationId: string; name: string; fields: Record<InfoKey, string | string[] | null> } | null;
+  summary: { products: string[]; country: string | null }; pendingCorrections: CorrectionDto[]; correctableFields: InfoKey[]; verified: false;
+}
+export interface PeerCase {
+  caseId: string; version: number; sameOrganization: boolean; origin: "your_organization" | "other_organization"; producer: { name: string } | null; anonymousLabel: string;
+  challenge: string; action: string | null; result: string; resultReported: boolean; tags: ChallengeTag[]; standards: string[]; citations: { label: string; url?: string }[]; publishedAt: string | null; illustrative: boolean;
+}
 export interface ReviewItem {
   outcomeId: string; source: string; producerId: string; entityType?: string; language: Lang; summaryOriginal?: string; summaryEn?: string;
   piiFlag?: boolean; piiTypes?: string[]; evidenceStatus?: string; reviewStatus: "pending" | "approved" | "corrected"; reviewedAt?: string; createdAt: string;
@@ -48,3 +75,5 @@ export interface RelatedData {
   surveys: { year: number; topConcern: string | null; concerns: string[]; respondents: number; incomeChangePct: number; lowerYieldPct: number }[];
   certification: { standard: string; version: string; status: string; lastAudit: string }[];
 }
+export interface EvidenceItem { evidenceId: string; geography: string; period: string; tag: string; finding: string; source: string;
+  origin: "external_imported" | "ftusa_authored"; curationStatus: "ftusa_curated" | "not_curated"; illustrative: boolean; stale?: boolean; standards: string[] }

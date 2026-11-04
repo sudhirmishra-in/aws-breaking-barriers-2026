@@ -29,6 +29,9 @@ describe("stack", () => {
   it("conversations table has the owner history index", () => {
     t.hasResourceProperties("AWS::DynamoDB::GlobalTable", { GlobalSecondaryIndexes: Match.arrayWith([Match.objectLike({ IndexName: "owner-index" })]) });
   });
+  it("V2: outcomes table has the organization index and expires records (no indefinite retention)", () => {
+    t.hasResourceProperties("AWS::DynamoDB::GlobalTable", { GlobalSecondaryIndexes: Match.arrayWith([Match.objectLike({ IndexName: "org-index" })]), TimeToLiveSpecification: { Enabled: true, AttributeName: "ttl" } });
+  });
   it("API role can start Transcribe streaming and nothing broader on Transcribe", () => {
     const pol = JSON.stringify(Object.values(t.findResources("AWS::IAM::Policy")));
     expect(pol).toContain("transcribe:StartStreamTranscription"); expect(pol).not.toContain("transcribe:*");

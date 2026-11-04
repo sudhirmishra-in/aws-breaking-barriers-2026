@@ -83,7 +83,7 @@ const fmt = (iso: string) => new Date(iso).toLocaleDateString(state.ui, { month:
         <button type="button" class="btn primary sm" @click="seeFull(selected.conversationId)">
           <MessageSquareText :size="14" aria-hidden="true" />{{ selected.status === "in_progress" ? s.continueConv : s.seeFull }}
         </button>
-        <template v-if="selected.status === 'saved'">
+        <template v-if="selected.status === 'completed'">
           <button v-if="!confirming" type="button" class="link-btn hist-delete" @click="confirming = true"><Trash2 :size="13" aria-hidden="true" /> {{ s.deleteFromHistory }}</button>
           <div v-else class="hist-confirm" role="alertdialog" :aria-label="s.deleteFromHistory">
             <p>{{ s.deleteConfirm }}</p>

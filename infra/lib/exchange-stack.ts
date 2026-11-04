@@ -49,9 +49,13 @@ export class ExchangeStack extends cdk.Stack {
     });
     const outcomes = new ddb.TableV2(this, "Outcomes", {
       tableName: n("outcomes"), partitionKey: { name: "outcomeId", type: ddb.AttributeType.STRING },
-      billing: ddb.Billing.onDemand(), encryption: ddb.TableEncryptionV2.customerManagedKey(key),
+      billing: ddb.Billing.onDemand(), encryption: ddb.TableEncryptionV2.customerManagedKey(key), timeToLiveAttribute: "ttl", // records are retained 180 days, not indefinitely
       pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true }, removalPolicy: removal,
-      globalSecondaryIndexes: [{ indexName: "kind-index", partitionKey: { name: "gsiKind", type: ddb.AttributeType.STRING }, sortKey: { name: "createdAt", type: ddb.AttributeType.STRING } }],
+      globalSecondaryIndexes: [
+        { indexName: "kind-index", partitionKey: { name: "gsiKind", type: ddb.AttributeType.STRING }, sortKey: { name: "createdAt", type: ddb.AttributeType.STRING } },
+        // V2: records and correction requests of one organization (peer summaries, producer-information pending corrections).
+        { indexName: "org-index", partitionKey: { name: "organizationId", type: ddb.AttributeType.STRING }, sortKey: { name: "createdAt", type: ddb.AttributeType.STRING } },
+      ],
     });
 
     // ---- web hosting (private bucket + CloudFront OAC) --------------------

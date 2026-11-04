@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { AgentClient, AgentTurnResponse } from "./agent";
 import { runtimeSessionIdFor } from "./agent";
+import { createHash } from "node:crypto";
 import type { ChallengeTag, Conversation, Language, Message, Outcome, ProducerProfile, Stage, Workflow } from "./contracts";
 import { CHALLENGE_TAGS, ENTITY_TYPES } from "./contracts";
 import { relatedFor, teamProducer } from "./relatedData";
@@ -18,6 +19,8 @@ export interface Deps {
   speaker?: Speaker;
   now?: () => number;
   log?: (event: Record<string, unknown>) => void;
+  /** Called by the publisher before a record becomes "published" (derived memory / index update). A throw leaves the record "failed". */
+  publishSideEffect?: (o: Outcome) => Promise<void>;
 }
 
 export const MIN_USER_TURNS_BEFORE_PLAYBACK = 2;
@@ -28,7 +31,10 @@ export { ENTITY_TYPES };
 const LOCK_MS = 120_000;
 const ACTIVE_TTL_S = 7 * 86400; // sandbox retention: active conversations expire 7 days after last activity
 const CLOSED_META_TTL_S = 30 * 86400; // closed: narrative-free metadata kept 30 days
-const SAVED_TRANSCRIPT_TTL_S = 30 * 86400; // saved conversations stay readable in the producer's history for 30 days (sandbox)
+// Sandbox retention (docs/REDESIGN_V2.md section 6): no indefinite default. Completed or stopped conversations (transcript + summary) 90 days,
+// finalized FTUSA records 180 days (set on the record by the finalize step). Producers can request earlier deletion.
+export const RETENTION = { completedConversationS: 90 * 86400, recordS: 180 * 86400 } as const;
+const SAVED_TRANSCRIPT_TTL_S = RETENTION.completedConversationS;
 const IDEM_TTL_S = 86400;
 
 // Synthetic producer turns sent to the agent are natural phrases, not instructions: instruction-like text is
@@ -43,6 +49,17 @@ const OPENER: Record<Language, string> = {
 };
 
 const STAGE_OF: Record<Workflow, Stage> = { intake: "intake", playback_pending: "playback", guidance_pending: "response", consent_pending: "consent", closed: "consent" };
+/** Stable hash of exactly what the producer confirms (original-language summary, English summary, tags, language). */
+export function summaryHashOf(c: Pick<Conversation, "summaryOriginal" | "summaryEn" | "challengeTags" | "language">): string {
+  return createHash("sha256").update(JSON.stringify([c.language, c.summaryOriginal ?? "", c.summaryEn ?? "", [...(c.challengeTags ?? [])].sort()])).digest("hex");
+}
+export type DayGroup = "today" | "previous_7_days" | "older";
+export function dayGroupOf(iso: string, nowMs: number): DayGroup {
+  const d = new Date(nowMs); d.setUTCHours(0, 0, 0, 0);
+  const t = Date.parse(iso);
+  if (t >= d.getTime()) return "today";
+  return t >= d.getTime() - 7 * 86400_000 ? "previous_7_days" : "older";
+}
 /** Short, single-line history title. The model proposes it; it is display text only and never used as scope. */
 export function cleanTitle(title: string | null | undefined, fallback?: string): string | undefined {
   const t = (title ?? "").replace(/\s+/g, " ").trim();
@@ -55,30 +72,36 @@ export const requireProducer = (p: Principal) => { if (!p.groups.includes("produ
 export const requireReviewer = (p: Principal) => { if (!p.groups.includes("reviewer")) throw forbidden("Reviewer access required."); };
 
 export class Service {
-  private now: () => number;
-  constructor(private d: Deps) { this.now = d.now ?? Date.now; }
-  private iso = () => new Date(this.now()).toISOString();
-  private log = (e: Record<string, unknown>) => this.d.log?.(e);
+  protected now: () => number;
+  constructor(protected d: Deps) { this.now = d.now ?? Date.now; }
+  protected iso = () => new Date(this.now()).toISOString();
+  protected log = (e: Record<string, unknown>) => this.d.log?.(e);
 
   // ---- identity -------------------------------------------------------
   async me(p: Principal) {
-    const profile = p.groups.includes("producer") ? await this.d.store.getProfileBySub(p.sub) : undefined;
+    const isProducer = p.groups.includes("producer");
+    const profile = isProducer ? await this.d.store.getProfileBySub(p.sub) : undefined;
     return {
       roles: p.groups.filter((g) => g === "producer" || g === "reviewer"),
       profile: profile && { displayName: profile.displayName, entityType: profile.entityType, location: profile.location, crop: profile.crop, preferredLanguage: profile.preferredLanguage },
+      // V2 identity, resolved server-side from the Cognito subject. Four distinct identifiers; none is accepted from the browser.
+      identity: profile && { producerId: profile.producerId, organizationId: profile.organizationId ?? null, applicationUserId: profile.applicationUserId ?? null },
+      preferred_language: profile ? profile.preferredLanguage ?? "en" : null, // English is the explicit missing-language fallback
+      // A producer without a mapping gets a configuration error, never a default producer.
+      configurationError: isProducer && !profile ? "producer_mapping_missing" as const : null,
       syntheticDemo: true,
       syntheticLabel: SYNTHETIC_LABEL,
     };
   }
 
-  private async profileFor(p: Principal): Promise<ProducerProfile> {
+  protected async profileFor(p: Principal): Promise<ProducerProfile> {
     const profile = await this.d.store.getProfileBySub(p.sub);
     if (!profile) throw new ApiError(403, "no_profile", "No producer profile is linked to this account.");
     return profile;
   }
 
   // ---- views ----------------------------------------------------------
-  private async view(c: Conversation) {
+  protected async view(c: Conversation) {
     // Active and saved conversations show their transcript; declined ones have none (deleted on decline).
     const messages = c.status === "declined" ? [] : await this.d.store.listMessages(c.conversationId);
     return {
@@ -91,6 +114,10 @@ export class Service {
         createdAt: c.createdAt, updatedAt: c.updatedAt, expiresAt: c.expiresAt ? new Date(c.expiresAt * 1000).toISOString() : null,
       },
       messages: messages.map((m) => ({ seq: m.seq, role: m.role, text: m.text, at: m.at, stage: m.stage ?? null })),
+      confirmation: c.workflow === "consent_pending" && c.summaryEn && c.summaryOriginal
+        ? { summaryHash: summaryHashOf(c), summaryOriginal: c.summaryOriginal, summaryEn: c.summaryEn, tags: c.challengeTags ?? [], language: c.language } : null,
+      record: await this.recordState(c),
+      referencedCase: c.referencedCase ?? null,
       retention: {
         activeDays: 7, savedDays: 30,
         text: "Messages are kept so you can continue, for up to 7 days without activity. If you save the conversation, its summary stays in your history until you delete it, and the full conversation is kept for 30 days in this sandbox. If you don't save it, its messages are deleted when it ends.",
@@ -99,7 +126,17 @@ export class Service {
     };
   }
 
-  private async owned(p: Principal, id: string): Promise<Conversation> {
+  /** What the producer may see about their own finalized record: sharing, review and publication are independent and all shown. */
+  protected async recordState(c: Conversation) {
+    if (c.status !== "completed") return null;
+    const o = await this.d.store.getOutcome(`rec-${c.conversationId}`);
+    if (!o || o.kind !== "record") return null;
+    return { sharingChoice: o.sharingChoice ?? "ftusa_only", identityPermitted: !!o.identityPermitted, reviewStatus: o.reviewStatus ?? "pending",
+      publicationStatus: o.publicationStatus ?? "not_shared", tags: o.challengeTags ?? [], feedback: o.feedback ?? null, summaryVersion: o.summaryVersion ?? 1, deletionRequested: !!o.deletionRequestedAt,
+      reconfirmation: o.pendingRevision ? { summaryHash: o.pendingRevision.hash, summaryOriginal: o.pendingRevision.summaryOriginal, summaryEn: o.pendingRevision.summaryEn, version: o.pendingRevision.version } : null };
+  }
+
+  protected async owned(p: Principal, id: string): Promise<Conversation> {
     requireProducer(p);
     const c = await this.d.store.getConversation(id);
     if (!c || c.ownerSub !== p.sub) throw notFound(); // same response for missing and foreign
@@ -108,18 +145,19 @@ export class Service {
 
   async getConversation(p: Principal, id: string) { return this.view(await this.owned(p, id)); }
 
-  /** History (spec CONV-01): the caller's own conversations, newest first. Declined ones are never listed. */
+  /** My conversations: own transcripts only, newest first, grouped Today / Previous 7 days / Older. Declined (purged) ones are never listed. */
   async listConversations(p: Principal) {
     requireProducer(p);
     const items = (await this.d.store.listByOwner(p.sub))
       .filter((c) => c.ownerSub === p.sub && c.status !== "declined")
       .map((c) => ({ conversationId: c.conversationId, title: c.title ?? null, language: c.language, createdAt: c.createdAt, updatedAt: c.updatedAt,
-        status: c.status === "active" ? "in_progress" as const : "saved" as const, summary: this.producerSummary(c) }));
+        status: c.status === "active" ? "in_progress" as const : "completed" as const, stopped: c.status === "stopped",
+        group: dayGroupOf(c.createdAt, this.now()), summary: this.producerSummary(c) }));
     return { items };
   }
 
   /** The summary the producer saw, in their language: the saved summary, else the latest playback. */
-  private producerSummary(c: Conversation): string | null {
+  protected producerSummary(c: Conversation): string | null {
     const saved = c.summaryOriginal ?? (c.language === "en" ? c.summaryEn : undefined);
     return saved ?? c.confirmedAccount ?? c.playbackSummary ?? null;
   }
@@ -131,7 +169,7 @@ export class Service {
   }
 
   // ---- turn execution wrapper (ownership, idempotency, lock) -----------
-  private async guarded<T>(p: Principal, id: string, requestId: string, fn: (c: Conversation) => Promise<T>): Promise<T> {
+  protected async guarded<T>(p: Principal, id: string, requestId: string, fn: (c: Conversation) => Promise<T>): Promise<T> {
     await this.owned(p, id);
     const hit = await this.d.store.getIdem(id, requestId);
     if (hit !== undefined) return hit as T;
@@ -167,7 +205,7 @@ export class Service {
     }
   }
 
-  private async save(c: Conversation, patch: Partial<Conversation>): Promise<Conversation> {
+  protected async save(c: Conversation, patch: Partial<Conversation>): Promise<Conversation> {
     const n = await this.d.store.updateConversation(c.conversationId, c.version, {
       ...patch, updatedAt: this.iso(),
       expiresAt: patch.expiresAt ?? (patch.status && patch.status !== "active" ? Math.floor(this.now() / 1000) + CLOSED_META_TTL_S : Math.floor(this.now() / 1000) + ACTIVE_TTL_S),
@@ -176,7 +214,7 @@ export class Service {
     return n;
   }
 
-  private async append(c: Conversation, entries: { role: "user" | "assistant"; text: string; stage?: Stage }[]): Promise<number> {
+  protected async append(c: Conversation, entries: { role: "user" | "assistant"; text: string; stage?: Stage }[]): Promise<number> {
     const msgs: Message[] = entries.map((e, i) => ({ seq: c.messageCount + i + 1, role: e.role, text: e.text, at: this.iso(), stage: e.stage ?? STAGE_OF[c.workflow] }));
     await this.d.store.addMessages(c.conversationId, msgs);
     return c.messageCount + msgs.length;
@@ -184,9 +222,15 @@ export class Service {
 
   // ---- operations -------------------------------------------------------
   /** Starts a new conversation. Retrying with the same requestId returns the same conversation (no duplicates). */
-  async create(p: Principal, language: Language, requestId: string) {
+  /** Hook for "Ask about this": ServiceV2 validates the referenced peer case against current eligibility. */
+  protected async resolveReference(_p: Principal, _profile: ProducerProfile, _caseId: string): Promise<{ caseId: string; version: number }> { throw new ApiError(400, "validation_error", "Case references are not available."); }
+
+  async create(p: Principal, requested: Language | undefined, requestId: string, referenceCaseId?: string) {
     requireProducer(p);
     const profile = await this.profileFor(p);
+    // New conversations start in the producer's preferred language unless a temporary language was requested. The profile is never modified.
+    const language: Language = requested ?? profile.preferredLanguage ?? "en";
+    const referencedCase = referenceCaseId ? await this.resolveReference(p, profile, referenceCaseId) : undefined;
     const scope = `owner-${p.sub}`;
     const claim = await this.d.store.claimRequest(scope, requestId, Math.floor(this.now() / 1000) + IDEM_TTL_S);
     if (claim === "pending") throw conflict("request_in_progress", "This conversation is still being started. Please wait a moment.", true);
@@ -197,7 +241,7 @@ export class Service {
       const conv: Conversation = {
         conversationId: id, ownerSub: p.sub, producerId: profile.producerId, language, workflow: "intake",
         confirmation: "none", consent: "unanswered", status: "active", piiFlag: false, piiTypes: [],
-        messageCount: 0, userTurns: 0, version: 1, createdAt: nowIso, updatedAt: nowIso,
+        messageCount: 0, userTurns: 0, version: 1, createdAt: nowIso, updatedAt: nowIso, organizationId: profile.organizationId, referencedCase,
         expiresAt: Math.floor(this.now() / 1000) + ACTIVE_TTL_S,
       };
       await this.d.store.putConversation(conv);
@@ -293,23 +337,34 @@ export class Service {
     });
   }
 
+  /** Stopping a conversation is not deleting it: the transcript stays for the retention period and the producer can still request deletion.
+   *  No FTUSA record is created (nothing was confirmed or shared); a narrative-free marker keeps reviewer statistics. */
   async end(p: Principal, id: string, requestId: string) {
     return this.guarded(p, id, requestId, async (c) => {
       if (c.status !== "active") return this.view(c);
-      return this.close(c, "declined", c.workflow === "consent_pending" ? "declined_storage" : "ended_early");
+      const profile = await this.d.store.getProfileBySub(c.ownerSub);
+      await this.d.store.putOutcome({ outcomeId: `dec-${c.conversationId}`, kind: "declined", ownerSub: c.ownerSub, producerId: c.producerId, conversationId: c.conversationId,
+        language: c.language, createdAt: this.iso(), producerName: profile?.displayName, declineReason: "ended_early", organizationId: c.organizationId });
+      const ttl = Math.floor(this.now() / 1000) + RETENTION.completedConversationS;
+      await this.d.store.retainMessages(c.conversationId, ttl);
+      const saved = await this.save(c, { workflow: "closed", status: "stopped", expiresAt: ttl });
+      await this.d.store.clearCurrent(c.ownerSub, c.conversationId);
+      this.log({ event: "conversation_stopped", conversationId: c.conversationId });
+      return this.view(saved);
     });
   }
 
-  private async close(c: Conversation, consent: "granted" | "declined", reason: "declined_storage" | "ended_early") {
+  protected async close(c: Conversation, consent: "granted" | "declined", reason: "declined_storage" | "ended_early", extra: Partial<Outcome> = {}) {
     const profile = await this.d.store.getProfileBySub(c.ownerSub);
     const base = { outcomeId: "", ownerSub: c.ownerSub, producerId: c.producerId, conversationId: c.conversationId, language: c.language, createdAt: this.iso(),
-      producerName: profile?.displayName }; // identity reference only, no narrative
+      producerName: profile?.displayName, organizationId: c.organizationId ?? profile?.organizationId }; // identity reference only, no narrative
     if (consent === "granted") {
       const o: Outcome = {
         ...base, outcomeId: `rec-${c.conversationId}`, kind: "record", source: "agent conversation",
         entityType: profile?.entityType, crop: profile?.crop, location: profile?.location,
         summaryOriginal: c.summaryOriginal, summaryEn: c.summaryEn, challengeTags: c.challengeTags ?? [], agentChallengeTags: c.challengeTags ?? [],
         piiFlag: c.piiFlag, piiTypes: c.piiTypes, evidenceStatus: "unavailable", reviewStatus: "pending",
+        sharingChoice: "ftusa_only", identityPermitted: false, publicationStatus: "not_shared", summaryVersion: 1, ...extra,
       };
       await this.d.store.putOutcome(o);
     } else {
@@ -327,7 +382,7 @@ export class Service {
       playbackSummary: undefined, confirmedAccount: undefined, producerAssertions: undefined,
       // Saved: the confirmed summary stays with the transcript for the producer's history. Declined: nothing narrative is kept.
       // Saved: the summary and title stay until the producer deletes them (no expiry). Declined: nothing narrative is kept.
-      ...(consent === "granted" ? { expiresAt: 0 } : { title: undefined, summaryOriginal: undefined, summaryEn: undefined, challengeTags: undefined }),
+      ...(consent === "granted" ? { expiresAt: Math.floor(this.now() / 1000) + RETENTION.completedConversationS } : { title: undefined, summaryOriginal: undefined, summaryEn: undefined, challengeTags: undefined }),
     });
     await this.d.store.clearCurrent(c.ownerSub, c.conversationId);
     this.log({ event: "conversation_closed", conversationId: c.conversationId, consent });
@@ -345,7 +400,7 @@ export class Service {
     return { deleted: true, conversationId: id };
   }
 
-  private assertActive(c: Conversation) { if (c.status !== "active") throw conflict("conversation_closed", "This conversation has ended."); }
+  protected assertActive(c: Conversation) { if (c.status !== "active") throw conflict("conversation_closed", "This conversation has ended."); }
 
   // ---- read aloud: speech for one of the caller's own agent replies (nothing is stored) -----------------
   async speech(p: Principal, id: string, seq: number) {
@@ -426,14 +481,14 @@ export class Service {
       crop: o.crop ?? t?.crop ?? null, location: o.location ?? t?.location ?? null };
   }
   /** Declined records expose only producer, time, language and outcome (REV-12): no narrative, tags or claims. */
-  private recordView(o: Outcome) {
+  protected recordView(o: Outcome) {
     const base = { recordId: o.outcomeId, ...this.producerInfo(o), language: o.language, createdAt: o.createdAt, outcome: this.outcomeKind(o) };
     if (o.kind !== "record") return { ...base, reviewStatus: null };
     return { ...base, source: "agent conversation" as const, reviewStatus: o.reviewStatus ?? "pending",
       summaryOriginal: o.summaryOriginal ?? o.summaryEs ?? null, summaryEn: o.summaryEn ?? null,
       challengeTags: o.challengeTags ?? [], agentChallengeTags: o.agentChallengeTags ?? o.challengeTags ?? [],
       claims: [] as unknown[], evidenceStatus: o.evidenceStatus ?? "unavailable",
-      piiFlag: !!o.piiFlag, piiEntityTypes: o.piiTypes ?? [], feedbackHelpful: null, peerExampleOk: false, reasoningLogRef: null,
+      piiFlag: !!o.piiFlag, piiEntityTypes: o.piiTypes ?? [], feedbackHelpful: null as string | null, peerExampleOk: false, reasoningLogRef: null,
       reviewerNote: o.reviewerNote ?? null, reviewedBy: o.reviewedByName ?? (o.reviewedBy ? "Reviewer" : null), reviewedAt: o.reviewedAt ?? null };
   }
   async reviewStats(p: Principal) {

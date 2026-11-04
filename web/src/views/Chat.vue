@@ -5,6 +5,10 @@ import { AlertTriangle, Bot, Check, CheckCircle2, Copy, EyeOff, Heart, Keyboard,
 import DictateButton from "../components/DictateButton.vue";
 import HistoryPanel from "../components/HistoryPanel.vue";
 import ProgressPanel from "../components/ProgressPanel.vue";
+import InsightsPanel from "../components/InsightsPanel.vue";
+import ProducerInfo from "../components/ProducerInfo.vue";
+import SharingStep from "../components/SharingStep.vue";
+import type { SharingChoice } from "../types";
 import { api, newRequestId } from "../lib/api";
 import { renderMarkdown } from "../lib/markdown";
 import { audioSupported, playMp3, stopAudio, unlockAudio } from "../lib/speech";
@@ -22,7 +26,8 @@ const loading = ref(true);
 const missing = ref(false);
 const error = ref<{ text: string; retry?: () => Promise<void> } | null>(null);
 const draft = ref("");
-const startLang = ref<Lang>(state.ui);
+// New conversations start in the producer's preferred language (from /me); picking another here is temporary and never changes the profile.
+const startLang = ref<Lang>(state.me?.preferred_language ?? "en");
 const correcting = ref(false);
 const corr = ref({ text: "", location: "", entity: "" });
 const confirmEnd = ref(false);
@@ -39,15 +44,16 @@ const box = ref<HTMLTextAreaElement | null>(null);
 
 const STAGE_OF: Record<ConversationDto["workflow"], Stage> = { intake: "intake", playback_pending: "playback", guidance_pending: "response", consent_pending: "consent", closed: "consent" };
 const closed = computed(() => conv.value?.workflow === "closed");
-const lang = computed(() => conv.value?.language ?? state.ui);
 const stage = computed<Stage>(() => STAGE_OF[conv.value?.workflow ?? "intake"]);
-const outcome = computed(() => (!closed.value ? null : conv.value?.consent === "granted" ? "saved" : "declined") as "saved" | "declined" | null);
+const outcome = computed(() => (!closed.value ? null : conv.value?.status === "completed" ? "saved" : "declined") as "saved" | "declined" | null);
+const stopped = computed(() => conv.value?.status === "stopped");
+const view = ref<ConversationView | null>(null);
 const reached = computed(() => [...new Set(messages.value.map((m) => m.stage).filter(Boolean))] as Stage[]);
 const showChips = computed(() => conv.value?.workflow === "intake" && !busy.value && !draft.value && messages.value.filter((m) => m.role === "user").length === 0);
 const heading = computed(() => (conv.value ? conv.value.title || s.value.untitled : s.value.newConversation));
 
 function scrollDown() { nextTick(() => log.value?.scrollTo({ top: log.value.scrollHeight })); }
-function apply(v: { conversation: ConversationDto | null; messages?: Message[] }) { conv.value = v.conversation; messages.value = v.messages ?? []; scrollDown(); }
+function apply(v: { conversation: ConversationDto | null; messages?: Message[] }) { conv.value = v.conversation; messages.value = v.messages ?? []; view.value = v.conversation ? (v as ConversationView) : null; scrollDown(); }
 const maxAgentSeq = () => Math.max(0, ...messages.value.filter((m) => m.role === "assistant").map((m) => m.seq));
 
 function setMode(m: "text" | "voice") {
@@ -117,7 +123,7 @@ async function run(action: (requestId: string) => Promise<ConversationView>, req
     scrollDown(); return false;
   } finally { busy.value = false; }
 }
-const start = () => run((rid) => api.create(startLang.value, rid));
+const start = () => run((rid) => api.create(startLang.value, rid, typeof route.query.case === "string" ? route.query.case : undefined));
 async function send() {
   const text = draft.value.trim(); if (!text || !conv.value || busy.value) return;
   const id = conv.value.conversationId;
@@ -139,7 +145,10 @@ async function sendCorrection() {
   if (!body.correction && !body.profileCorrection) return;
   if (await run((rid) => api.playback(conv.value!.conversationId, rid, body))) { correcting.value = false; corr.value = { text: "", location: "", entity: "" }; }
 }
+const finalize = (hash: string, sharing: SharingChoice, identity: boolean) => run((rid) => api.finalize(conv.value!.conversationId, rid, hash, sharing, identity));
 const decide = (store: boolean) => run((rid) => api.consent(conv.value!.conversationId, rid, store));
+const reload = async () => { if (conv.value) apply(await api.get(conv.value.conversationId)); };
+const askAbout = (caseId: string) => { conv.value = null; messages.value = []; void router.push({ path: "/chat", query: { new: "1", case: caseId } }); };
 async function endNow() { confirmEnd.value = false; await run((rid) => api.end(conv.value!.conversationId, rid)); }
 async function copy(m: Message) { try { await navigator.clipboard.writeText(m.text); copiedSeq.value = m.seq; setTimeout(() => (copiedSeq.value = null), 1800); } catch { /* clipboard unavailable */ } }
 
@@ -196,6 +205,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
           <div class="card feat"><span class="ic brand-gradient"><CheckCircle2 :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat2 }}</h3><p>{{ s.feat2d }}</p></div></div>
           <div class="card feat"><span class="ic brand-gradient"><EyeOff :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat3 }}</h3><p>{{ s.feat3d }}</p></div></div>
         </div>
+        <ProducerInfo />
         <details class="card"><summary><ShieldCheck :size="14" aria-hidden="true" style="vertical-align:-2px" /> {{ s.privacyTitle }}</summary><p>{{ s.privacy }}</p></details>
       </div>
 
@@ -248,11 +258,12 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
 
           <div v-if="conv.workflow === 'guidance_pending'" class="decision pop"><button class="btn primary" :disabled="busy" @click="confirm">{{ s.continue }}</button></div>
 
-          <div v-if="conv.workflow === 'consent_pending'" class="decision pop" role="group" :aria-label="s.consentTitle" data-stage="consent">
-            <p class="banner info" style="margin:0">{{ s.noEvidence }}</p>
+          <SharingStep v-if="conv.workflow === 'consent_pending' && view?.confirmation" :confirmation="view.confirmation" :busy="busy" @confirm="finalize" />
+          <!-- Fallback for a backend that predates V2 (no confirmation hash): the original store-or-not question, so the flow never dead-ends. -->
+          <div v-else-if="conv.workflow === 'consent_pending'" class="decision pop" role="group" :aria-label="s.consentTitle" data-stage="consent">
             <h2>{{ s.consentTitle }}</h2>
             <p style="margin:0;font-size:.875rem;color:var(--muted)">{{ s.consentText }}</p>
-            <blockquote class="quote" :lang="lang">{{ conv.summaryOriginal ?? conv.summaryEn }}</blockquote>
+            <blockquote class="quote" :lang="conv.language">{{ conv.summaryOriginal ?? conv.summaryEn }}</blockquote>
             <div class="row">
               <button class="btn primary" :disabled="busy" @click="decide(true)"><ShieldCheck :size="16" aria-hidden="true" />{{ s.storeYes }}</button>
               <button class="btn" :disabled="busy" @click="decide(false)">{{ s.storeNo }}</button>
@@ -261,10 +272,11 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
 
           <div v-if="closed" class="decision closed-note" role="status">
             <span class="done-ic"><Heart v-if="outcome === 'saved'" :size="18" aria-hidden="true" /><Check v-else :size="18" aria-hidden="true" /></span>
-            <p style="margin:0">{{ outcome === "saved" ? s.doneStored : s.doneDeclined }}</p>
-            <p v-if="outcome === 'saved'" class="hint" style="margin:0">{{ messages.length ? s.readOnly : s.transcriptGone }}</p>
+            <p style="margin:0">{{ outcome === "saved" ? "Thank you. Your confirmed summary was sent to Fair Trade USA for review." : stopped ? "This conversation was stopped. It is kept for now and you can still read it or ask for deletion." : s.doneDeclined }}</p>
+            <p v-if="outcome === 'saved' || stopped" class="hint" style="margin:0">{{ s.readOnly }}</p>
             <div><button type="button" class="btn primary" @click="newConversation"><Plus :size="16" aria-hidden="true" />{{ s.newConversation }}</button></div>
           </div>
+          <InsightsPanel v-if="closed && outcome === 'saved' && view" :view="view" @changed="reload" @ask="askAbout" />
         </div>
 
         <div v-if="conv.workflow === 'intake'" class="dock">

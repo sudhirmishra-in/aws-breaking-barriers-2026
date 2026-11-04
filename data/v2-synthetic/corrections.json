@@ -1,0 +1,101 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "corrections": [
+    {
+      "correctionId": "corr-PRD-ANA-seed01",
+      "organizationId": "ORG-AND-COL",
+      "requesterProducerId": "PRD-ANA",
+      "status": "pending",
+      "daysAgo": 18,
+      "changes": [
+        {
+          "field": "country_name",
+          "original": "Colombia",
+          "proposed": "Colombia (Huila)"
+        }
+      ],
+      "explanation": "Add the department",
+      "decidedBy": null
+    },
+    {
+      "correctionId": "corr-PRD-MATEO-seed02",
+      "organizationId": "ORG-AND-COL",
+      "requesterProducerId": "PRD-MATEO",
+      "status": "pending",
+      "daysAgo": 16,
+      "changes": [
+        {
+          "field": "product_category_name",
+          "original": "Coffee",
+          "proposed": "Coffee; Plantain"
+        }
+      ],
+      "explanation": null,
+      "decidedBy": null
+    },
+    {
+      "correctionId": "corr-PRD-LUCIA-seed03",
+      "organizationId": "ORG-COP-HON",
+      "requesterProducerId": "PRD-LUCIA",
+      "status": "accepted_awaiting_source_update",
+      "daysAgo": 14,
+      "changes": [
+        {
+          "field": "structure_txt",
+          "original": null,
+          "proposed": "Association of 40 member farms"
+        }
+      ],
+      "explanation": null,
+      "decidedBy": "Reviewer One"
+    },
+    {
+      "correctionId": "corr-PRD-DIEGO-seed04",
+      "organizationId": "ORG-COP-HON",
+      "requesterProducerId": "PRD-DIEGO",
+      "status": "applied",
+      "daysAgo": 12,
+      "changes": [
+        {
+          "field": "certification_status_name",
+          "original": "Certified",
+          "proposed": "Certified (renewed)"
+        }
+      ],
+      "explanation": null,
+      "decidedBy": "Reviewer One"
+    },
+    {
+      "correctionId": "corr-PRD-AWA-seed05",
+      "organizationId": "ORG-NAW-CIV",
+      "requesterProducerId": "PRD-AWA",
+      "status": "rejected",
+      "daysAgo": 10,
+      "changes": [
+        {
+          "field": "raw_supply_chain_role_txt",
+          "original": "Grower; Aggregator",
+          "proposed": "Grower; Aggregator; Processor"
+        }
+      ],
+      "explanation": "We also dry beans",
+      "decidedBy": "Reviewer One"
+    },
+    {
+      "correctionId": "corr-PRD-KOFFI-seed06",
+      "organizationId": "ORG-NAW-CIV",
+      "requesterProducerId": "PRD-KOFFI",
+      "status": "pending",
+      "daysAgo": 8,
+      "changes": [
+        {
+          "field": "account_type_name",
+          "original": "Producer organization",
+          "proposed": "Producer group"
+        }
+      ],
+      "explanation": null,
+      "decidedBy": null
+    }
+  ]
+}

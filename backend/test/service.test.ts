@@ -2,7 +2,8 @@
 import { describe, expect, it } from "vitest";
 import type { AgentClient, AgentTurnRequest, AgentTurnResponse } from "../src/agent";
 import { MemoryStore } from "../src/store";
-import { Service, type Principal } from "../src/service";
+import { type Principal } from "../src/service";
+import { ServiceV2 as Service } from "../src/serviceV2";
 import { principalFromEvent, route } from "../src/handler";
 import { ApiError } from "../src/errors";
 
@@ -270,14 +271,16 @@ describe("history and multiple conversations", () => {
     expect(list[1]).toMatchObject({ title: "Late rain and lower yield", status: "in_progress", summary: "late rain hurt yield" });
     expect(list[0].summary).toBeNull(); // still at intake
     await svc.end(alice, second, rid());
+    // V2 override: stopping is not deleting. The stopped conversation stays in "My conversations", read-only, with its transcript.
     list = (await svc.listConversations(alice)).items;
-    expect(list.map((i) => i.conversationId)).toEqual([first]);
-    expect((await store.getConversation(second))!.title).toBeUndefined();
+    expect(list.map((i) => i.conversationId)).toEqual([second, first]);
+    expect(list[0]).toMatchObject({ status: "completed", stopped: true, group: "today" });
+    expect((await store.listMessages(second)).length).toBeGreaterThan(0);
     expect(await code(svc.listConversations(rev))).toBe("forbidden");
   });
   it("a saved conversation is listed as saved and its transcript stays readable but read-only", async () => {
     const { svc } = setup(); const id = await toConsent(svc); await svc.consent(alice, id, rid(), true);
-    expect((await svc.listConversations(alice)).items[0]).toMatchObject({ conversationId: id, status: "saved", summary: "EN summary" });
+    expect((await svc.listConversations(alice)).items[0]).toMatchObject({ conversationId: id, status: "completed", summary: "EN summary" });
     const v = await svc.getConversation(alice, id);
     expect(v.messages.length).toBeGreaterThan(3); expect(v.conversation.status).toBe("completed");
     expect(await code(svc.message(alice, id, rid(), "more"))).toBe("conversation_closed");
@@ -310,10 +313,13 @@ describe("decline keeps no summary", () => {
 });
 
 describe("saved summaries are kept until deleted", () => {
-  it("a saved conversation has no expiry; its summary stays in the list", async () => {
+  it("V2: no indefinite retention by default; a saved conversation expires after the sandbox retention period", async () => {
     const { svc, store } = setup(); const id = await toConsent(svc); await svc.consent(alice, id, rid(), true);
-    expect((await store.getConversation(id))!.expiresAt).toBe(0);
-    expect((await svc.getConversation(alice, id)).conversation.expiresAt).toBeNull();
+    const exp = (await store.getConversation(id))!.expiresAt;
+    expect(exp).toBeGreaterThan(0);
+    expect(exp - Math.floor(Date.now() / 1000)).toBeGreaterThan(89 * 86400);
+    expect(exp - Math.floor(Date.now() / 1000)).toBeLessThanOrEqual(90 * 86400);
+    expect((await svc.getConversation(alice, id)).conversation.expiresAt).not.toBeNull();
   });
   it("the owner can delete a saved conversation; it leaves the history and its transcript and snapshots are gone", async () => {
     const { svc, store } = setup(); const id = await toConsent(svc); await svc.consent(alice, id, rid(), true);
@@ -332,11 +338,20 @@ describe("saved summaries are kept until deleted", () => {
     const { svc } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
     expect(await code(svc.deleteConversation(alice, id))).toBe("wrong_state");
   });
-  it("declining also removes idempotency snapshots that could hold narrative", async () => {
+  it("declining storage (legacy consent route) still removes idempotency snapshots that could hold narrative", async () => {
+    const { svc, store } = setup(); const id = await toConsent(svc);
+    await svc.consent(alice, id, rid(), false);
+    const snaps = [...store.idem.entries()].filter(([k]) => k.startsWith(id)).map(([, v]) => JSON.stringify(v));
+    expect(snaps.some((x) => x.includes("EN summary"))).toBe(false);
+    expect(await store.listMessages(id)).toHaveLength(0);
+  });
+  it("V2: stopping keeps the transcript, and the producer can still delete it explicitly", async () => {
     const { svc, store } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
     await svc.message(alice, id, rid(), "my story"); await svc.end(alice, id, rid());
-    const snaps = [...store.idem.entries()].filter(([k]) => k.startsWith(id)).map(([, v]) => JSON.stringify(v));
-    expect(snaps.some((x) => x.includes("my story"))).toBe(false);
+    expect((await store.listMessages(id)).some((m) => m.text === "my story")).toBe(true);
+    expect((await svc.getConversation(alice, id)).conversation.status).toBe("stopped");
+    await svc.deleteConversation(alice, id);
+    expect(await store.listMessages(id)).toHaveLength(0);
   });
 });
 

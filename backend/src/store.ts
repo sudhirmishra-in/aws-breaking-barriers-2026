@@ -1,4 +1,4 @@
-import type { Conversation, Message, Outcome, ProducerProfile } from "./contracts";
+import type { Conversation, CorrectionRecord, Message, Organization, Outcome, ProducerProfile, PublicationStatus } from "./contracts";
 
 /** Persistence port. DynamoDB in production; in-memory in unit tests (LOCAL MOCK). */
 export interface Store {
@@ -36,6 +36,20 @@ export interface Store {
   listOutcomes(): Promise<Outcome[]>;
   /** Review update only if current reviewStatus === 'pending' (prevents double review). */
   reviewOutcome(id: string, patch: Partial<Outcome>): Promise<Outcome | undefined>;
+  // ---- V2 ----
+  getOrganization(id: string): Promise<Organization | undefined>;
+  /** Idempotent: false when a correction with this id already exists. */
+  putCorrection(c: CorrectionRecord): Promise<boolean>;
+  getCorrection(id: string): Promise<CorrectionRecord | undefined>;
+  listCorrections(filter: { organizationId?: string }): Promise<CorrectionRecord[]>;
+  /** Succeeds only while the stored status is in `from` (prevents double decisions). */
+  updateCorrection(id: string, from: CorrectionRecord["status"][], patch: Partial<CorrectionRecord>): Promise<CorrectionRecord | undefined>;
+  /** Records (not corrections or declined outcomes) of one organization. */
+  listRecordsByOrganization(organizationId: string): Promise<Outcome[]>;
+  /** All records whose publication is currently "published". */
+  listPublishedRecords(): Promise<Outcome[]>;
+  /** Conditional patch: applies only while publicationStatus is in `from` (null = any). Returns the new item. */
+  updateOutcome(id: string, from: PublicationStatus[] | null, patch: Partial<Outcome>): Promise<Outcome | undefined>;
 }
 
 export class MemoryStore implements Store {
@@ -98,6 +112,24 @@ export class MemoryStore implements Store {
   async getOutcome(id: string) { const o = this.outcomes.get(id); return o && structuredClone(o); }
   async listRecords() { return [...this.outcomes.values()].filter((o) => o.kind === "record"); }
   async listOutcomes() { return [...this.outcomes.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((o) => structuredClone(o)); }
+  orgs = new Map<string, Organization>();
+  corrections = new Map<string, CorrectionRecord>();
+  async getOrganization(id: string) { const o = this.orgs.get(id); return o && structuredClone(o); }
+  async putCorrection(c: CorrectionRecord) { if (this.corrections.has(c.correctionId)) return false; this.corrections.set(c.correctionId, structuredClone(c)); return true; }
+  async getCorrection(id: string) { const c = this.corrections.get(id); return c && structuredClone(c); }
+  async listCorrections(f: { organizationId?: string }) {
+    return [...this.corrections.values()].filter((c) => !f.organizationId || c.organizationId === f.organizationId).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((c) => structuredClone(c));
+  }
+  async updateCorrection(id: string, from: CorrectionRecord["status"][], patch: Partial<CorrectionRecord>) {
+    const c = this.corrections.get(id); if (!c || !from.includes(c.status)) return undefined;
+    const n = { ...c, ...patch }; this.corrections.set(id, n); return structuredClone(n);
+  }
+  async listRecordsByOrganization(orgId: string) { return [...this.outcomes.values()].filter((o) => o.kind === "record" && o.organizationId === orgId).map((o) => structuredClone(o)); }
+  async listPublishedRecords() { return [...this.outcomes.values()].filter((o) => o.kind === "record" && o.publicationStatus === "published").map((o) => structuredClone(o)); }
+  async updateOutcome(id: string, from: PublicationStatus[] | null, patch: Partial<Outcome>) {
+    const o = this.outcomes.get(id); if (!o || (from && !from.includes(o.publicationStatus ?? "not_shared"))) return undefined;
+    const n = { ...o, ...patch }; this.outcomes.set(id, n); return structuredClone(n);
+  }
   async reviewOutcome(id: string, patch: Partial<Outcome>) {
     const o = this.outcomes.get(id);
     if (!o || o.kind !== "record" || o.reviewStatus !== "pending") return undefined;

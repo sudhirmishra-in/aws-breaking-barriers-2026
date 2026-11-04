@@ -1,0 +1,65 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "organizations": [
+    {
+      "organizationId": "ORG-AND-COL",
+      "name": "Andean Coffee Cooperative",
+      "info": {
+        "accountSk": "ACC-COL-0000412873",
+        "accountCategoryName": "Cooperative",
+        "productCategoryName": [
+          "Coffee"
+        ],
+        "accountTypeName": "Producer organization",
+        "certificationScopeName": "Small producer organization",
+        "certificationStatusName": "Certified",
+        "countryName": "Colombia",
+        "rawSupplyChainRoleTxt": [
+          "Grower",
+          "Cooperative mill"
+        ],
+        "structureTxt": "Cooperative with member farms"
+      }
+    },
+    {
+      "organizationId": "ORG-COP-HON",
+      "name": "Copán Coffee Association",
+      "info": {
+        "accountSk": "ACC-HND-0000377120",
+        "accountCategoryName": "Association",
+        "productCategoryName": [
+          "Coffee"
+        ],
+        "accountTypeName": "Producer organization",
+        "certificationScopeName": "Small producer organization",
+        "certificationStatusName": "Certified",
+        "countryName": "Honduras",
+        "rawSupplyChainRoleTxt": [
+          "Grower"
+        ],
+        "structureTxt": null
+      }
+    },
+    {
+      "organizationId": "ORG-NAW-CIV",
+      "name": "Nawa Cocoa Cooperative",
+      "info": {
+        "accountSk": "ACC-CIV-0000559004",
+        "accountCategoryName": "Cooperative",
+        "productCategoryName": [
+          "Cocoa",
+          "Plantain"
+        ],
+        "accountTypeName": "Producer organization",
+        "certificationScopeName": "Small producer organization",
+        "certificationStatusName": "Certification suspended",
+        "countryName": "Côte d'Ivoire",
+        "rawSupplyChainRoleTxt": [
+          "Grower",
+          "Aggregator"
+        ],
+        "structureTxt": "Cooperative with village sections"
+      }
+    }
+  ]
+}
