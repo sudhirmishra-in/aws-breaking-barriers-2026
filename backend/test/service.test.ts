@@ -31,10 +31,12 @@ class StubAgent implements AgentClient {
   }
 }
 
+class StubTranscriber { calls = 0; fail = false; last?: { len: number; language: string };
+  async transcribe(pcm: Uint8Array, language: string) { this.calls++; this.last = { len: pcm.length, language }; if (this.fail) throw new Error("boom"); return "late rains hurt the harvest"; } }
 function setup() {
-  const store = new MemoryStore(); const agent = new StubAgent();
+  const store = new MemoryStore(); const agent = new StubAgent(); const transcriber = new StubTranscriber(); const logs: unknown[] = [];
   store.profiles.set("sub-alice", profile("SYN-A")); store.profiles.set("sub-bob", profile("SYN-B"));
-  return { store, agent, svc: new Service({ store, agent }) };
+  return { store, agent, transcriber, logs, svc: new Service({ store, agent, transcriber, log: (e) => logs.push(e) }) };
 }
 let n = 0; const rid = () => `req-${++n}-xxxxxxxx`;
 const code = async (p: Promise<unknown>) => { try { await p; return "ok"; } catch (e) { return (e as ApiError).code; } };
@@ -214,5 +216,34 @@ describe("ask and overview", () => {
     expect(await svc.overview(rev)).toMatchObject({ reviewer: { pending: 1, approved: 0 } });
     expect(await svc.overview(rev)).not.toHaveProperty("producer");
     const o = await svc.overview(alice) as any; expect(o.reviewer).toBeUndefined(); expect(o.producer.activeConversation).toBeNull();
+  });
+});
+
+describe("dictation", () => {
+  const pcm = (seconds: number) => Buffer.alloc(32000 * seconds).toString("base64");
+  it("returns text for a producer, stores nothing and never logs the transcript", async () => {
+    const { svc, transcriber, store, logs } = setup();
+    const r = await svc.transcribe(alice, "es", pcm(2));
+    expect(r.text).toBe("late rains hurt the harvest"); expect(transcriber.last).toEqual({ len: 64000, language: "es" });
+    expect(store.convs.size + store.outcomes.size).toBe(0);
+    expect(JSON.stringify(logs)).not.toContain("late rains");
+  });
+  it("is producer-only", async () => { const { svc } = setup(); expect(await code(svc.transcribe(rev, "en", pcm(1)))).toBe("forbidden"); });
+  it("rejects invalid, odd-length, too short and too long audio before calling the service", async () => {
+    const { svc, transcriber } = setup();
+    expect(await code(svc.transcribe(alice, "en", "not base64!!"))).toBe("audio_invalid");
+    expect(await code(svc.transcribe(alice, "en", Buffer.alloc(32001).toString("base64")))).toBe("audio_too_short");
+    expect(await code(svc.transcribe(alice, "en", Buffer.alloc(100).toString("base64")))).toBe("audio_too_short");
+    expect(await code(svc.transcribe(alice, "en", pcm(61)))).toBe("audio_too_long");
+    expect(transcriber.calls).toBe(0);
+  });
+  it("transcription failure is a retryable 502", async () => {
+    const { svc, transcriber } = setup(); transcriber.fail = true;
+    await expect(svc.transcribe(alice, "en", pcm(1))).rejects.toMatchObject({ status: 502, code: "transcription_unavailable", retryable: true });
+  });
+  it("route rejects unknown fields and bad language", async () => {
+    const { svc } = setup();
+    await expect(route(svc, alice, "POST", "/transcribe", { requestId: rid(), language: "en", audio: pcm(1), producerId: "x" })).rejects.toThrow();
+    await expect(route(svc, alice, "POST", "/transcribe", { requestId: rid(), language: "fr", audio: pcm(1) })).rejects.toThrow();
   });
 });

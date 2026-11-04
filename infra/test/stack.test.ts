@@ -26,6 +26,10 @@ describe("stack", () => {
     t.hasResourceProperties("AWS::BedrockAgentCore::Runtime", { ProtocolConfiguration: "HTTP", AgentRuntimeArtifact: { CodeConfiguration: Match.objectLike({ Runtime: "PYTHON_3_13" }) } });
     expect(JSON.stringify(Object.values(t.findResources("AWS::BedrockAgentCore::Runtime"))[0])).not.toContain("AuthorizerConfiguration");
   });
+  it("API role can start Transcribe streaming and nothing broader on Transcribe", () => {
+    const pol = JSON.stringify(Object.values(t.findResources("AWS::IAM::Policy")));
+    expect(pol).toContain("transcribe:StartStreamTranscription"); expect(pol).not.toContain("transcribe:*");
+  });
   it("tables are encrypted with a CMK and the web bucket blocks public access", () => {
     t.allResourcesProperties("AWS::DynamoDB::GlobalTable", { SSESpecification: Match.objectLike({ SSEEnabled: true, SSEType: "KMS" }) });
     t.hasResourceProperties("AWS::S3::Bucket", { PublicAccessBlockConfiguration: { BlockPublicAcls: true, RestrictPublicBuckets: true } });

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref } from "vue";
 import { AlertTriangle, Bot, RotateCw, SendHorizontal, Trash2 } from "lucide-vue-next";
+import DictateButton from "../components/DictateButton.vue";
 import { api, newRequestId } from "../lib/api";
 import { renderMarkdown } from "../lib/markdown";
 import { markExpired, state } from "../session";
@@ -17,6 +18,7 @@ async function ask(item: QA) {
   catch (e) { const f = e as ApiFailure; if (f.status === 401) { markExpired(); item.err = s.value.expired; } else { item.err = f.message; item.retryable = f.retryable; } }
   finally { busy.value = false; down(); }
 }
+function addDictation(text: string) { draft.value = (draft.value.trim() + " " + text).trim(); }
 function submit() { const q = draft.value.trim(); if (!q || busy.value) return; const item = reactive({ q, rid: newRequestId() } as QA); items.value.push(item); draft.value = ""; ask(items.value[items.value.length - 1]); }
 </script>
 <template>
@@ -34,9 +36,10 @@ function submit() { const q = draft.value.trim(); if (!q || busy.value) return; 
         <div v-else class="row-a fade-up" role="status"><span class="av brand-gradient"><span style="display:flex;gap:2px" aria-hidden="true"><i v-for="d in 3" :key="d" class="dot" :style="{ animationDelay: `${(d - 1) * 0.15}s` }" /></span></span><span style="font-size:.875rem;color:var(--muted);align-self:center">{{ s.asking }}</span></div>
       </template>
     </div>
-    <div class="dock"><p style="margin:0;font-size:.75rem;color:var(--muted)">{{ s.askNote }}</p>
+    <div class="dock"><p style="margin:0;font-size:.75rem;color:var(--muted)">{{ s.askNote }} {{ s.micNote }}</p>
       <form class="composer" @submit.prevent="submit"><label for="q" class="sr">{{ s.askPlaceholder }}</label>
         <textarea id="q" v-model="draft" rows="1" maxlength="1000" :placeholder="s.askPlaceholder" :disabled="busy" @keydown.enter.exact.prevent="submit" />
+        <DictateButton :language="state.ui" :disabled="busy" @text="addDictation" />
         <button class="send" type="submit" :disabled="busy || !draft.trim()" :aria-label="s.askSend"><SendHorizontal :size="18" aria-hidden="true" /></button></form></div>
   </section>
 </template>

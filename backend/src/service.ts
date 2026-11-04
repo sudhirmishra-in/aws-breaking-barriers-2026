@@ -5,16 +5,21 @@ import type { Conversation, Language, Message, Outcome, ProducerProfile } from "
 import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, forbidden, notFound } from "./errors";
 import type { Store } from "./store";
+import type { Transcriber } from "./transcribe";
 
 export interface Principal { sub: string; groups: string[] }
 export interface Deps {
   store: Store;
   agent: AgentClient;
+  transcriber?: Transcriber;
   now?: () => number;
   log?: (event: Record<string, unknown>) => void;
 }
 
 export const MIN_USER_TURNS_BEFORE_PLAYBACK = 2;
+export const AUDIO_BYTES_PER_SECOND = 32000; // 16 kHz x 2 bytes, mono
+export const AUDIO_MIN_BYTES = Math.round(AUDIO_BYTES_PER_SECOND * 0.3);
+export const AUDIO_MAX_BYTES = AUDIO_BYTES_PER_SECOND * 60;
 export const ENTITY_TYPES = ["smallholder", "cooperative", "processor", "exporter", "other"];
 const LOCK_MS = 120_000;
 const ACTIVE_TTL_S = 7 * 86400; // sandbox retention: active conversations expire 7 days after last activity
@@ -273,6 +278,24 @@ export class Service {
   }
 
   private assertActive(c: Conversation) { if (c.status !== "active") throw conflict("conversation_closed", "This conversation has ended."); }
+
+  // ---- dictation (stateless: audio is never stored, transcript is returned to the browser only) -------
+  async transcribe(p: Principal, language: Language, audioBase64: string) {
+    requireProducer(p);
+    if (!this.d.transcriber) throw new ApiError(501, "not_configured", "Dictation is not available.");
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(audioBase64)) throw new ApiError(400, "audio_invalid", "The recording could not be read.");
+    const pcm = Buffer.from(audioBase64, "base64");
+    if (pcm.length % 2 !== 0 || pcm.length < AUDIO_MIN_BYTES) throw new ApiError(400, "audio_too_short", "The recording was too short.");
+    if (pcm.length > AUDIO_MAX_BYTES) throw new ApiError(400, "audio_too_long", "The recording was too long. The limit is 60 seconds.");
+    let text: string;
+    try { text = await this.d.transcriber.transcribe(pcm, language); }
+    catch (e) {
+      this.log({ event: "transcribe_failure", errorName: (e as Error).name });
+      throw new ApiError(502, "transcription_unavailable", "We could not turn that into text just now. Please try again or type.", true);
+    }
+    this.log({ event: "transcribed", seconds: Math.round(pcm.length / AUDIO_BYTES_PER_SECOND), chars: text.length }); // never the text
+    return { text, language, syntheticDemo: true };
+  }
 
   // ---- ask (stateless Q&A: nothing is stored) ------------------------------
   async ask(p: Principal, text: string, language: Language) {

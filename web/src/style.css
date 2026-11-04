@@ -87,3 +87,13 @@ details.card summary { cursor:pointer; font-weight:600; font-size:.9rem; } detai
 @media (max-width:760px) { .hero { grid-template-columns:1fr; } .hero-art { display:none; } }
 
 .login { align-self:center; } .login .hint, .hint { font-size:.8rem; color:var(--muted); margin:.25rem 0; }
+
+.dictate { display:inline-flex; align-items:center; gap:.35rem; }
+.mic { flex:none; width:2.5rem; height:2.5rem; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--accent); display:grid; place-items:center; cursor:pointer; }
+.mic:hover:not(:disabled) { background:var(--surface-2); } .mic:disabled { opacity:.5; cursor:not-allowed; }
+.mic.rec { background:var(--err); border-color:var(--err); color:#fff; animation:pulse 1.4s infinite; }
+.mic-status { font-size:.75rem; color:var(--muted); white-space:nowrap; }
+.mic-msg { margin:.25rem .5rem 0; font-size:.8rem; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; } .mic-msg.error { color:var(--err); } .mic-msg.info { color:var(--muted); }
+.spin { animation:spin 1s linear infinite; } @keyframes spin { to { transform:rotate(360deg); } } @keyframes pulse { 50% { box-shadow:0 0 0 .4rem color-mix(in srgb,var(--err) 25%,transparent); } }
+@media (prefers-reduced-motion:reduce) { .mic.rec, .spin { animation:none; } }
+.composer { flex-wrap:wrap; } .composer textarea { min-width:0; flex:1 1 12rem; } .mic-msg { flex-basis:100%; order:5; margin:.1rem .5rem .25rem; }

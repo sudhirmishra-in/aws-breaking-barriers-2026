@@ -156,6 +156,8 @@ export class ExchangeStack extends cdk.Stack {
       projectRoot: path.join(__dirname, "../.."),
     });
     conversations.grantReadWriteData(fn); outcomes.grantReadWriteData(fn); key.grantEncryptDecrypt(fn);
+    // Dictation: Transcribe streaming has no resource-level permissions. Audio is not stored.
+    fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["transcribe:StartStreamTranscription"], resources: ["*"] }));
     fn.addToRolePolicy(new iam.PolicyStatement({
       actions: ["bedrock-agentcore:InvokeAgentRuntime", "bedrock-agentcore:InvokeAgentRuntimeForUser"],
       resources: [runtime.attrAgentRuntimeArn, `${runtime.attrAgentRuntimeArn}/*`],

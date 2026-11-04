@@ -18,6 +18,8 @@ export const PlaybackReq = z
   .strict()
   .refine((v) => v.decision === "confirm" || !!v.correction || !!v.profileCorrection, { message: "correction required" });
 export const AskReq = z.object({ requestId: RequestId, text: z.string().trim().min(1).max(1000), language: Language }).strict();
+// Raw 16 kHz, 16-bit, mono PCM, base64. 60 s is 1.92 MB, about 2.6 MB encoded.
+export const TranscribeReq = z.object({ requestId: RequestId, language: Language, audio: z.string().min(1).max(2_700_000) }).strict();
 export const ConsentReq = z.object({ requestId: RequestId, storeSummary: z.boolean() }).strict();
 export const EndReq = z.object({ requestId: RequestId }).strict();
 export const ReviewUpdateReq = z

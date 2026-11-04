@@ -26,6 +26,7 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
 
 export const api = {
   me: () => call<Me>("GET", "/me"),
+  transcribe: (requestId: string, language: Lang, audio: string) => call<{ text: string; language: Lang }>("POST", "/transcribe", { requestId, language, audio }),
   overview: () => call<Overview>("GET", "/overview"),
   ask: (requestId: string, text: string, language: Lang) => call<AskResponse>("POST", "/ask", { requestId, text, language }),
   current: () => call<CurrentView>("GET", "/conversations/current"),
