@@ -25,7 +25,7 @@ Raw files are found by suffix, so the random upload prefixes don't matter:
 | `tables/survey_choice_shares` | producer-record (citable detail) | multi-choice shares (harvest-change reasons, borrow sources, income sources, FT benefits) |
 | `tables/certifications` | join demo only | status is out of scope for the agent (Journey 4) |
 | `tables/regions` | regional-context | approximate centroids for priority countries (verify) |
-| `standards/standard_clauses.jsonl` | standards grounding | APS 322 + FPS 353 criteria; module/objective attached; ES/FR text for APS; `_v` amendment variants flagged |
+| `standards/standard_clauses.jsonl` | standards grounding (`c4`, `get_standards_clause`; see docs/COMPONENT_4_STANDARDS.md) | APS 322 + FPS 353 criteria; module/objective attached; ES/FR text for APS; `_v` amendment variants flagged |
 | `review/tag_labeling_sample.csv` | evaluation | fill `human_tags`, then `python -m ftusa_data.run --evaluate-tags review/tag_labeling_sample.csv` |
 | `review/scenario_candidates.csv` | demo design | priority producers ranked by data richness |
 | `review/scope_test_pairs.csv` | negative scope tests | same crop + region pairs (hardest leakage cases) |
