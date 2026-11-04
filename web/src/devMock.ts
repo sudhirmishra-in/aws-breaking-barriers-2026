@@ -26,6 +26,10 @@ export function installDevMock(role: "producer" | "reviewer") {
   const routes: Record<string, unknown> = {
     "GET /conversations": history,
     "GET /conversations/c-1": sample,
+    "POST /conversations": { ...sample, conversation: { ...sample.conversation, conversationId: "c-9", workflow: "intake", title: null }, messages: [sample.messages[0]] },
+    "POST /conversations/c-1/messages": { ...sample, conversation: { ...sample.conversation, workflow: "intake" }, messages: [...sample.messages,
+      { seq: 6, role: "user", text: "Sí, y también subieron los costos.", at: iso(0), stage: "intake" },
+      { seq: 7, role: "assistant", text: "Entiendo. ¿Qué tanto subieron los costos y desde cuándo?", at: iso(0), stage: "intake" }] },
     "DELETE /conversations/c-2": { deleted: true, conversationId: "c-2" },
     "GET /conversations/c-2": { ...sample, conversation: { ...sample.conversation, conversationId: "c-2", language: "en", workflow: "closed", status: "completed", consent: "granted", title: "Planning next year's Premium projects" },
       messages: [{ seq: 1, role: "assistant", text: "What has been difficult recently?", at: iso(5), stage: "intake" }, { seq: 2, role: "user", text: "We need to decide next year's Premium projects.", at: iso(5), stage: "intake" }] },
@@ -39,8 +43,19 @@ export function installDevMock(role: "producer" | "reviewer") {
   window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(String(input), location.href);
     if (url.pathname === "/config.json") return new Response(JSON.stringify({ apiBaseUrl: "http://mock.local", clientId: "x", authority: "x", issuer: "x", cognitoDomain: "x", redirectUri: "x", logoutUri: "x", region: "x" }));
+    if (url.pathname.endsWith("/speech")) { await new Promise((r) => setTimeout(r, 400)); return new Response(JSON.stringify({ contentType: "audio/wav", audio: toneWav(), voice: "mock" })); }
     const hit = routes[`${init?.method ?? "GET"} ${url.pathname}`];
     await new Promise((r) => setTimeout(r, 400));
     return hit ? new Response(JSON.stringify(hit)) : new Response(JSON.stringify({ error: { code: "not_found", message: "Mock has no such route.", retryable: false } }), { status: 404 });
   }) as typeof fetch;
+}
+
+/** Dev-only: a short 440 Hz tone as base64 WAV, standing in for synthesized speech. */
+function toneWav(seconds = 0.6, rate = 16000): string {
+  const n = Math.floor(seconds * rate), buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.sin((2 * Math.PI * 440 * i) / rate) * 6000, true);
+  let bin = ""; new Uint8Array(buf).forEach((b) => (bin += String.fromCharCode(b))); return btoa(bin);
 }

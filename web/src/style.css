@@ -221,3 +221,18 @@ a { color:var(--link); }
 .dark .card p, .dark .privacy, .dark .info-note, .dark .decision p, .dark .hero p { color:var(--fg); }
 .dark .nav a, .dark .nav a:hover, .dark .nav a.router-link-exact-active { color:var(--fg); }
 .btn { white-space:nowrap; }
+
+/* ---- Reply actions (copy, listen) and text/voice mode ---- */
+.msg-actions { display:flex; align-items:center; gap:.15rem; margin-top:.2rem; }
+.act-btn { width:2.25rem; height:2.25rem; display:grid; place-items:center; border:0; border-radius:8px; background:none; color:var(--muted); cursor:pointer; }
+.act-btn:hover { background:var(--surface-2); color:var(--fg); } .act-btn.on { color:var(--btn-dark, #203a16); background:color-mix(in srgb,var(--lime) 30%,transparent); }
+.act-btn:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.act-note { font-size:.8125rem; color:var(--muted); margin-left:.25rem; } .act-note.err { color:var(--err); }
+.mode-seg { display:inline-flex; border:2px solid var(--lime); border-radius:999px; padding:2px; gap:2px; flex:none; }
+.mode-seg button { display:inline-flex; align-items:center; gap:.3rem; border:0; background:none; border-radius:999px; padding:.25rem .7rem; font:inherit; font-size:.8125rem; font-weight:500; color:var(--fg); cursor:pointer; min-height:2rem; }
+.mode-seg button[aria-pressed="true"] { background:var(--lime); color:#39373a; }
+@media (max-width:640px) { .mode-seg button { padding:.25rem .5rem; } }
+/* Header: actions on the first row, conversation title and status on their own row. */
+.chat-hd { flex-wrap:wrap; row-gap:.4rem; }
+.chat-titlebar { order:10; flex-basis:100%; display:flex; align-items:center; gap:.5rem; min-width:0; }
+.chat-titlebar .chat-title { white-space:normal; flex:0 1 auto; }

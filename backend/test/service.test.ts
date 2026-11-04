@@ -33,10 +33,12 @@ class StubAgent implements AgentClient {
 
 class StubTranscriber { calls = 0; fail = false; last?: { len: number; language: string };
   async transcribe(pcm: Uint8Array, language: string) { this.calls++; this.last = { len: pcm.length, language }; if (this.fail) throw new Error("boom"); return "late rains hurt the harvest"; } }
+class StubSpeaker { calls: { text: string; language: string }[] = []; fail = false;
+  async speak(text: string, language: string) { this.calls.push({ text, language }); if (this.fail) throw new Error("boom"); return { audio: new Uint8Array([73, 68, 51, 4]), voice: "Lea" }; } }
 function setup() {
-  const store = new MemoryStore(); const agent = new StubAgent(); const transcriber = new StubTranscriber(); const logs: unknown[] = [];
+  const store = new MemoryStore(); const agent = new StubAgent(); const transcriber = new StubTranscriber(); const speaker = new StubSpeaker(); const logs: unknown[] = [];
   store.profiles.set("sub-alice", profile("SYN-A")); store.profiles.set("sub-bob", profile("SYN-B"));
-  return { store, agent, transcriber, logs, svc: new Service({ store, agent, transcriber, log: (e) => logs.push(e) }) };
+  return { store, agent, transcriber, speaker, logs, svc: new Service({ store, agent, transcriber, speaker, log: (e) => logs.push(e) }) };
 }
 let n = 0; const rid = () => `req-${++n}-xxxxxxxx`;
 const code = async (p: Promise<unknown>) => { try { await p; return "ok"; } catch (e) { return (e as ApiError).code; } };
@@ -361,5 +363,42 @@ describe("French", () => {
   it("rejects unsupported languages", async () => {
     const { svc } = setup();
     await expect(route(svc, alice, "POST", "/conversations", { requestId: rid(), language: "de" })).rejects.toThrow();
+  });
+});
+
+describe("read aloud", () => {
+  it("speaks the owner's agent reply in the conversation language, from server-held text, and never logs it", async () => {
+    const { svc, speaker, logs, store } = setup(); const id = (await svc.create(alice, "fr", rid())).conversation.conversationId;
+    await store.addMessages(id, [{ seq: 2, role: "assistant", text: "**Bonjour** et `merci`", at: "", stage: "intake" }]);
+    const r = await svc.speech(alice, id, 2);
+    expect(r).toMatchObject({ contentType: "audio/mpeg", voice: "Lea", language: "fr" });
+    expect(Buffer.from(r.audio, "base64")).toEqual(Buffer.from([73, 68, 51, 4]));
+    expect(speaker.calls.at(-1)).toEqual({ text: "Bonjour et merci", language: "fr" });
+    expect(JSON.stringify(logs)).not.toContain("Bonjour");
+  });
+  it("refuses other producers, reviewers, producer messages and unknown messages", async () => {
+    const { svc, store } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
+    await svc.message(alice, id, rid(), "my words");
+    const userSeq = (await store.listMessages(id)).find((m) => m.role === "user")!.seq;
+    expect(await code(svc.speech(bob, id, 1))).toBe("not_found");
+    expect(await code(svc.speech(rev, id, 1))).toBe("forbidden");
+    expect(await code(svc.speech(alice, id, userSeq))).toBe("not_found");
+    expect(await code(svc.speech(alice, id, 99))).toBe("not_found");
+  });
+  it("speech failure is a retryable 502", async () => {
+    const { svc, speaker } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId; speaker.fail = true;
+    await expect(svc.speech(alice, id, 1)).rejects.toMatchObject({ status: 502, code: "speech_unavailable", retryable: true });
+  });
+  it("route validates the message number and does not confuse speech with sending a message", async () => {
+    const { svc, agent } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId; const calls = agent.calls.length;
+    await expect(route(svc, alice, "POST", `/conversations/${id}/messages/abc/speech`, {})).rejects.toThrow();
+    const r = await route(svc, alice, "POST", `/conversations/${id}/messages/1/speech`, {}) as { contentType: string };
+    expect(r.contentType).toBe("audio/mpeg"); expect(agent.calls.length).toBe(calls);
+  });
+  it("turns markdown into plain speech and splits long text at sentences", async () => {
+    const { toSpokenText, chunkText } = await import("../src/speech");
+    expect(toSpokenText("- **One** item\n- *two* `x`")).toBe("One item\ntwo x");
+    const parts = chunkText("A sentence. ".repeat(400), 100);
+    expect(parts.every((p) => p.length <= 100)).toBe(true); expect(parts.join(" ").length).toBeGreaterThan(4000);
   });
 });

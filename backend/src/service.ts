@@ -6,12 +6,14 @@ import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, forbidden, notFound } from "./errors";
 import type { Store } from "./store";
 import type { Transcriber } from "./transcribe";
+import { toSpokenText, type Speaker } from "./speech";
 
 export interface Principal { sub: string; groups: string[] }
 export interface Deps {
   store: Store;
   agent: AgentClient;
   transcriber?: Transcriber;
+  speaker?: Speaker;
   now?: () => number;
   log?: (event: Record<string, unknown>) => void;
 }
@@ -333,6 +335,24 @@ export class Service {
   }
 
   private assertActive(c: Conversation) { if (c.status !== "active") throw conflict("conversation_closed", "This conversation has ended."); }
+
+  // ---- read aloud: speech for one of the caller's own agent replies (nothing is stored) -----------------
+  async speech(p: Principal, id: string, seq: number) {
+    const c = await this.owned(p, id); // ownership: another producer's conversation is a 404
+    if (!this.d.speaker) throw new ApiError(501, "not_configured", "Read aloud is not available.");
+    const m = (await this.d.store.listMessages(id)).find((x) => x.seq === seq);
+    if (!m || m.role !== "assistant") throw notFound(); // only the agent's own replies are spoken
+    const text = toSpokenText(m.text);
+    if (!text) throw new ApiError(400, "nothing_to_say", "This message has no text to read.");
+    let out: { audio: Uint8Array; voice: string };
+    try { out = await this.d.speaker.speak(text, c.language); }
+    catch (e) {
+      this.log({ event: "speech_failure", errorName: (e as Error).name });
+      throw new ApiError(502, "speech_unavailable", "We could not read this aloud just now. Please try again.", true);
+    }
+    this.log({ event: "speech", chars: text.length, bytes: out.audio.length }); // never the text
+    return { contentType: "audio/mpeg", audio: Buffer.from(out.audio).toString("base64"), voice: out.voice, language: c.language };
+  }
 
   // ---- dictation (stateless: audio is never stored, transcript is returned to the browser only) -------
   async transcribe(p: Principal, language: Language, audioBase64: string) {

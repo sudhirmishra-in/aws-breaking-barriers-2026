@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { AgentCoreClient } from "./agent";
 import { AskReq, TranscribeReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
 import { DdbStore } from "./ddbStore";
+import { PollySpeaker } from "./speech";
 import { TranscribeStreamingTranscriber } from "./transcribe";
 import { ApiError, invalid, notFound, unauthorized } from "./errors";
 import { Service, type Principal } from "./service";
@@ -39,7 +40,11 @@ export async function route(svc: Service, p: Principal, method: string, path: st
     if (method === "GET" && r1 === "current") return svc.getCurrent(p);
     if (r1 && method === "GET" && !r2) return svc.getConversation(p, r1);
     if (r1 && method === "DELETE" && !r2) return svc.deleteConversation(p, r1);
-    if (r1 && method === "POST" && r2 === "messages") { const q = SubmitMessageReq.parse(body); return svc.message(p, r1, q.requestId, q.text); }
+    if (r1 && method === "POST" && r2 === "messages" && seg[3] && seg[4] === "speech" && !seg[5]) {
+      const seq = Number(seg[3]); if (!Number.isInteger(seq) || seq < 1) throw invalid("Invalid message number.");
+      return svc.speech(p, r1, seq);
+    }
+    if (r1 && method === "POST" && r2 === "messages" && !seg[3]) { const q = SubmitMessageReq.parse(body); return svc.message(p, r1, q.requestId, q.text); }
     if (r1 && method === "POST" && r2 === "playback") { return svc.playback(p, r1, PlaybackReq.parse(body)); }
     if (r1 && method === "POST" && r2 === "consent") { const q = ConsentReq.parse(body); return svc.consent(p, r1, q.requestId, q.storeSummary); }
     if (r1 && method === "POST" && r2 === "end") { const q = EndReq.parse(body); return svc.end(p, r1, q.requestId); }
@@ -57,6 +62,7 @@ const getSvc = () => (svc ??= new Service({
   store: new DdbStore(process.env.CONVERSATIONS_TABLE!, process.env.OUTCOMES_TABLE!),
   agent: new AgentCoreClient(process.env.AGENT_RUNTIME_ARN!),
   transcriber: new TranscribeStreamingTranscriber(),
+  speaker: new PollySpeaker(),
   log: (e) => console.log(JSON.stringify({ level: "info", ...e })), // structured; never message text
 }));
 

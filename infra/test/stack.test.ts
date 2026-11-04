@@ -32,6 +32,7 @@ describe("stack", () => {
   it("API role can start Transcribe streaming and nothing broader on Transcribe", () => {
     const pol = JSON.stringify(Object.values(t.findResources("AWS::IAM::Policy")));
     expect(pol).toContain("transcribe:StartStreamTranscription"); expect(pol).not.toContain("transcribe:*");
+    expect(pol).toContain("polly:SynthesizeSpeech"); expect(pol).not.toContain("polly:*");
   });
   it("tables are encrypted with a CMK and the web bucket blocks public access", () => {
     t.allResourcesProperties("AWS::DynamoDB::GlobalTable", { SSESpecification: Match.objectLike({ SSEEnabled: true, SSEType: "KMS" }) });
