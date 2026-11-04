@@ -1,0 +1,101 @@
+{
+  "warnings": [
+    "52 accounts have no structure_txt -> entity_type=unknown",
+    "APS: duplicate code 3.1.1.c_vEUDR (identical text) - kept first",
+    "APS: duplicate code 3.1.1.c_vEUDRUS (identical text) - kept first",
+    "APS: duplicate code 3.1.1.d_vEUDR (identical text) - kept first",
+    "APS: duplicate code 3.1.1.d_vEUDRUS (identical text) - kept first",
+    "APS: duplicate code 3.6.1.c_vEUDR (identical text) - kept first",
+    "APS: duplicate code 3.6.1.c_vEUDRUS (identical text) - kept first",
+    "APS: duplicate code 4.3.2.f_vEUDR (identical text) - kept first"
+  ],
+  "surveys": {
+    "responses_in": 33153,
+    "with_header": 16617,
+    "dropped_quality": 51,
+    "kept": 33102,
+    "summary_rows": 264,
+    "survey_accounts": 192,
+    "survey_accounts_in_producer_accounts": 22
+  },
+  "standards": {
+    "aps_clauses": 322,
+    "aps_base": 210,
+    "fps_clauses": 353,
+    "fps_base": 289,
+    "aps_objectives": 72,
+    "fps_objectives": 78
+  },
+  "rows": {
+    "producers": 146,
+    "certifications": 146,
+    "regions": 93,
+    "premium_projects": 349,
+    "survey_summary": 264,
+    "survey_choice_shares": 707
+  },
+  "producers": {
+    "total": 146,
+    "priority": 67,
+    "priority_by_country_crop": {
+      "Colombia / banana": 2,
+      "Colombia / coffee": 28,
+      "Côte d'Ivoire / cocoa": 3,
+      "Honduras / coffee": 12,
+      "Mexico / coffee": 4,
+      "Peru / coffee": 18
+    },
+    "entity_types": {
+      "cooperative": 67,
+      "unknown": 52,
+      "estate": 11,
+      "processing_operation": 10,
+      "smallholder": 6
+    },
+    "with_survey": 22
+  },
+  "projects": {
+    "tag_source": {
+      "subcategory_rule": 172,
+      "keyword": 134,
+      "none": 43
+    },
+    "primary_tag": {
+      "biodiversity_conservation": 99,
+      "climate_weather": 71,
+      "None": 43,
+      "soil_land": 36,
+      "market_price": 31,
+      "water": 27,
+      "education": 19,
+      "social_community": 14,
+      "infrastructure": 5,
+      "health": 3,
+      "financial_capital": 1
+    },
+    "pending_confirmation": 90,
+    "peer_eligible": 275,
+    "pii_flagged": 0,
+    "test_records": 4,
+    "merge_ambiguous": 32,
+    "country_mismatch": 6
+  },
+  "regions_with_centroid": 31,
+  "config": {
+    "priority_countries": [
+      "Colombia",
+      "Peru",
+      "Honduras",
+      "Mexico",
+      "Côte d'Ivoire"
+    ],
+    "priority_crops": [
+      "coffee",
+      "cocoa",
+      "banana"
+    ],
+    "min_n": 10,
+    "llm_tagging": false,
+    "comprehend": false
+  }
+}

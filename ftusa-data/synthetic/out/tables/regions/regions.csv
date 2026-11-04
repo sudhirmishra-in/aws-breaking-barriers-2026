@@ -1,0 +1,10 @@
+region_id,country,country_iso3,region,n_projects,n_accounts,latitude,longitude,centroid_source,is_priority_country,data_origin
+COL-CAUCA,Colombia,COL,Cauca,1,1,2.4,-76.8,"approximate, manual - verify",True,synthetic
+COL-HUILA,Colombia,COL,Huila,3,2,2.5,-75.5,"approximate, manual - verify",True,synthetic
+CIV-BAS-SASSANDRA,Côte d'Ivoire,CIV,Bas-Sassandra,2,2,5.3,-6.6,"approximate, manual - verify",True,synthetic
+CIV-GOH-DJIBOUA,Côte d'Ivoire,CIV,Goh-Djiboua,1,1,6.0,-5.6,"approximate, manual - verify",True,synthetic
+HND-COPAN,Honduras,HND,Copan,2,2,14.9,-88.9,"approximate, manual - verify",True,synthetic
+HND-OCOTEPEQUE,Honduras,HND,Ocotepeque,1,1,14.5,-89.0,"approximate, manual - verify",True,synthetic
+MEX-CHIAPAS,Mexico,MEX,Chiapas,7,6,16.5,-92.5,"approximate, manual - verify",True,synthetic
+PER-CAJAMARCA,Peru,PER,Cajamarca,3,2,-6.4,-78.7,"approximate, manual - verify",True,synthetic
+PER-SAN-MARTIN,Peru,PER,San Martin,1,1,-7.0,-76.7,"approximate, manual - verify",True,synthetic

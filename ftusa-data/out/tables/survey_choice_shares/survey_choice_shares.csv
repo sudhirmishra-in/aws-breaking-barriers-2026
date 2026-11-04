@@ -1,0 +1,708 @@
+account_sk,survey_year,question,metric,choice,n_selected,n_respondents,share
+021A577173389F4054248756F26FA0A0,2021,ft_benefits_ms_core,ft_benefits,EMERGENCY PREMIUM USAGE FUND POLICY,1,1,
+021A577173389F4054248756F26FA0A0,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+02571C45B6B1F65077C72E239408DC5A,2023,borrow_source_ms_core,borrow_sources,Bank,132,228,0.579
+02571C45B6B1F65077C72E239408DC5A,2023,borrow_source_ms_core,borrow_sources,Friends/Family,124,228,0.544
+02571C45B6B1F65077C72E239408DC5A,2023,borrow_source_ms_core,borrow_sources,Informal lender,14,228,0.061
+02571C45B6B1F65077C72E239408DC5A,2023,borrow_source_ms_core,borrow_sources,Other,8,228,0.035
+02571C45B6B1F65077C72E239408DC5A,2023,borrow_source_ms_core,borrow_sources,Don't know,1,228,0.004
+02571C45B6B1F65077C72E239408DC5A,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,1,228,0.004
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Premium fund,253,378,0.669
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,246,378,0.651
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,157,378,0.415
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Training,128,378,0.339
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Sense of community,106,378,0.28
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,39,378,0.103
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Placeholder,36,378,0.095
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Other,32,378,0.085
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Refused,4,378,0.011
+02571C45B6B1F65077C72E239408DC5A,2023,ft_benefits_ms_core,ft_benefits,Don't know,3,378,0.008
+02B9CD51DA8106AAE0CC9C3A8D547207,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+0B0D0896BC67431E22C6B1540C8FCD99,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+0ED902E1CCA4E0C75898A39309D448AE,2024,borrow_source_ms_core,borrow_sources,Cooperative,111,119,0.933
+0ED902E1CCA4E0C75898A39309D448AE,2024,borrow_source_ms_core,borrow_sources,Bank,20,119,0.168
+0ED902E1CCA4E0C75898A39309D448AE,2024,borrow_source_ms_core,borrow_sources,Micro-finance institution,8,119,0.067
+0ED902E1CCA4E0C75898A39309D448AE,2024,borrow_source_ms_core,borrow_sources,Friends/Family,5,119,0.042
+0ED902E1CCA4E0C75898A39309D448AE,2024,borrow_source_ms_core,borrow_sources,Informal lender,1,119,0.008
+0ED902E1CCA4E0C75898A39309D448AE,2024,borrow_source_ms_core,borrow_sources,Other,1,119,0.008
+0ED902E1CCA4E0C75898A39309D448AE,2024,ft_benefits_ms_core,ft_benefits,Premium fund,135,150,0.9
+0ED902E1CCA4E0C75898A39309D448AE,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,50,150,0.333
+0ED902E1CCA4E0C75898A39309D448AE,2024,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,41,150,0.273
+0ED902E1CCA4E0C75898A39309D448AE,2024,ft_benefits_ms_core,ft_benefits,Sense of community,40,150,0.267
+0ED902E1CCA4E0C75898A39309D448AE,2024,ft_benefits_ms_core,ft_benefits,Steady wages/hours,40,150,0.267
+0ED902E1CCA4E0C75898A39309D448AE,2024,harvest_change_reason_core,harvest_change_reasons,Other,75,88,0.852
+0ED902E1CCA4E0C75898A39309D448AE,2024,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,7,88,0.08
+0ED902E1CCA4E0C75898A39309D448AE,2024,harvest_change_reason_core,harvest_change_reasons,More land area under production,5,88,0.057
+0ED902E1CCA4E0C75898A39309D448AE,2024,harvest_change_reason_core,harvest_change_reasons,Climate change,1,88,0.011
+0ED902E1CCA4E0C75898A39309D448AE,2024,harvest_change_reason_core,harvest_change_reasons,Less land area under production,1,88,0.011
+0ED902E1CCA4E0C75898A39309D448AE,2024,income_sources_ms_core,income_sources,Small family business (intercrops),61,78,0.782
+0ED902E1CCA4E0C75898A39309D448AE,2024,income_sources_ms_core,income_sources,Other,18,78,0.231
+0ED902E1CCA4E0C75898A39309D448AE,2024,income_sources_ms_core,income_sources,Remittances,2,78,0.026
+0ED902E1CCA4E0C75898A39309D448AE,2024,income_sources_ms_core,income_sources,Government Assistance,1,78,0.013
+110CDBEE30D58283D18B76437DD0B183,2023,borrow_source_ms_core,borrow_sources,Trader,55,117,0.47
+110CDBEE30D58283D18B76437DD0B183,2023,borrow_source_ms_core,borrow_sources,Friends/Family,52,117,0.444
+110CDBEE30D58283D18B76437DD0B183,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,28,117,0.239
+110CDBEE30D58283D18B76437DD0B183,2023,borrow_source_ms_core,borrow_sources,Bank,13,117,0.111
+110CDBEE30D58283D18B76437DD0B183,2023,borrow_source_ms_core,borrow_sources,FT Premium Fund,6,117,0.051
+110CDBEE30D58283D18B76437DD0B183,2023,borrow_source_ms_core,borrow_sources,Organization,3,117,0.026
+110CDBEE30D58283D18B76437DD0B183,2023,borrow_source_ms_core,borrow_sources,Informal lender,1,117,0.009
+110CDBEE30D58283D18B76437DD0B183,2023,ft_benefits_ms_core,ft_benefits,More sustainable farm practices,114,134,0.851
+110CDBEE30D58283D18B76437DD0B183,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,108,134,0.806
+110CDBEE30D58283D18B76437DD0B183,2023,ft_benefits_ms_core,ft_benefits,Training,94,134,0.701
+110CDBEE30D58283D18B76437DD0B183,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,84,134,0.627
+110CDBEE30D58283D18B76437DD0B183,2023,ft_benefits_ms_core,ft_benefits,Sense of community,79,134,0.59
+110CDBEE30D58283D18B76437DD0B183,2023,ft_benefits_ms_core,ft_benefits,Premium fund,52,134,0.388
+110CDBEE30D58283D18B76437DD0B183,2023,ft_benefits_ms_core,ft_benefits,Regular Income,19,134,0.142
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,Damaged by natural disasters,32,92,0.348
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,Other,20,92,0.217
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,Young trees,19,92,0.207
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,Old trees,16,92,0.174
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,12,92,0.13
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,More land area under production,12,92,0.13
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,No pest,12,92,0.13
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,Sufficient rainfall,12,92,0.13
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,Less land area under production,9,92,0.098
+110CDBEE30D58283D18B76437DD0B183,2023,harvest_change_reason_core,harvest_change_reasons,Pest and plant diseases,8,92,0.087
+110CDBEE30D58283D18B76437DD0B183,2023,income_sources_ms_core,income_sources,"Business/Micro Business(such as hog/animals, sari-sari store, vegetable selling, etc.)",93,119,0.782
+110CDBEE30D58283D18B76437DD0B183,2023,income_sources_ms_core,income_sources,Other,82,119,0.689
+110CDBEE30D58283D18B76437DD0B183,2023,income_sources_ms_core,income_sources,Remittances,18,119,0.151
+110CDBEE30D58283D18B76437DD0B183,2023,income_sources_ms_core,income_sources,Tricycle/Tuktuk,8,119,0.067
+14150EB20325700792A3808FE26E237C,2021,ft_benefits_ms_core,ft_benefits,Don't know,1,1,
+14B8B231B2F921AB0A7A0007D1B61F0D,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+2BB007C8A0FACD6E6DAEC8A90C4636EE,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+2E972F175ADE0895F2998FEA12B9C624,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+2E972F175ADE0895F2998FEA12B9C624,2021,ft_benefits_ms_core,ft_benefits,la compra de alimento para los trabajadores,1,1,
+30BA6F7059E8D88521E43CB78C49D642,2021,ft_benefits_ms_core,ft_benefits,NA,1,1,
+30BA6F7059E8D88521E43CB78C49D642,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+34FE210C672E2CAB8D7674B91AA51BA2,2021,ft_benefits_ms_core,ft_benefits,HGRDR,1,1,
+34FE210C672E2CAB8D7674B91AA51BA2,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+38485A3EF4209C8D71C0B87024745F84,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+385F0B1FB3379EC443284D708AA23681,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+4015245D84285294C65828F2AE4699C7,2021,ft_benefits_ms_core,ft_benefits,"Cash disbursement to workers during Covid-19 for their daily needs, Workers get benefited by taking the cash benefits for their day to day needs",1,1,
+4015245D84285294C65828F2AE4699C7,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+40FEDBF1F0A56C1A542D9CD00CE9CC83,2021,ft_benefits_ms_core,ft_benefits,Alimentación al personal durante la pandemia.,1,1,
+40FEDBF1F0A56C1A542D9CD00CE9CC83,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+441663EF67AD2F896B354D1A11E295EB,2021,ft_benefits_ms_core,ft_benefits,EMERGENCY PREMIUM PLAN WAS OF A GREAT HELP DURING 100% LOCKDOWN TIMES,1,1,
+441663EF67AD2F896B354D1A11E295EB,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+451DEEBA2517819D32D690ED8C5776F1,2024,borrow_source_ms_core,borrow_sources,Cooperative,14,31,0.452
+451DEEBA2517819D32D690ED8C5776F1,2024,borrow_source_ms_core,borrow_sources,Friends/Family,10,31,0.323
+451DEEBA2517819D32D690ED8C5776F1,2024,borrow_source_ms_core,borrow_sources,FT Premium Fund,8,31,0.258
+451DEEBA2517819D32D690ED8C5776F1,2024,borrow_source_ms_core,borrow_sources,Micro-finance institution,3,31,0.097
+451DEEBA2517819D32D690ED8C5776F1,2024,borrow_source_ms_core,borrow_sources,Informal lender,2,31,0.065
+451DEEBA2517819D32D690ED8C5776F1,2024,borrow_source_ms_core,borrow_sources,Other,1,31,0.032
+451DEEBA2517819D32D690ED8C5776F1,2024,ft_benefits_ms_core,ft_benefits,Premium fund,45,46,0.978
+451DEEBA2517819D32D690ED8C5776F1,2024,ft_benefits_ms_core,ft_benefits,Training,36,46,0.783
+451DEEBA2517819D32D690ED8C5776F1,2024,ft_benefits_ms_core,ft_benefits,Sense of community,24,46,0.522
+451DEEBA2517819D32D690ED8C5776F1,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,21,46,0.457
+451DEEBA2517819D32D690ED8C5776F1,2024,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,20,46,0.435
+451DEEBA2517819D32D690ED8C5776F1,2024,ft_benefits_ms_core,ft_benefits,Steady income,1,46,0.022
+451DEEBA2517819D32D690ED8C5776F1,2024,harvest_change_reason_core,harvest_change_reasons,Climate change,33,46,0.717
+451DEEBA2517819D32D690ED8C5776F1,2024,harvest_change_reason_core,harvest_change_reasons,Other,10,46,0.217
+451DEEBA2517819D32D690ED8C5776F1,2024,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,8,46,0.174
+451DEEBA2517819D32D690ED8C5776F1,2024,harvest_change_reason_core,harvest_change_reasons,Diseases (Swollen shoot etc.),4,46,0.087
+451DEEBA2517819D32D690ED8C5776F1,2024,harvest_change_reason_core,harvest_change_reasons,Refused,1,46,0.022
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Vegetables / produces for local consumption,34,42,0.81
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Banana plantation,32,42,0.762
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Corn plantation,27,42,0.643
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Other,17,42,0.405
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Rice plantation,16,42,0.381
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Cashew nut plantation,8,42,0.19
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Coffee plantation,6,42,0.143
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Palm oil plantation,3,42,0.071
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Rubber plantation,2,42,0.048
+451DEEBA2517819D32D690ED8C5776F1,2024,income_sources_ms_core,income_sources,Timber (teak …),1,42,0.024
+4BA662D13B595703BDB3A4BE525210FD,2023,borrow_source_ms_core,borrow_sources,Trader,137,196,0.699
+4BA662D13B595703BDB3A4BE525210FD,2023,borrow_source_ms_core,borrow_sources,Friends/Family,95,196,0.485
+4BA662D13B595703BDB3A4BE525210FD,2023,borrow_source_ms_core,borrow_sources,FT Premium Fund,75,196,0.383
+4BA662D13B595703BDB3A4BE525210FD,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,30,196,0.153
+4BA662D13B595703BDB3A4BE525210FD,2023,borrow_source_ms_core,borrow_sources,Organization,6,196,0.031
+4BA662D13B595703BDB3A4BE525210FD,2023,borrow_source_ms_core,borrow_sources,Bank,4,196,0.02
+4BA662D13B595703BDB3A4BE525210FD,2023,borrow_source_ms_core,borrow_sources,Informal lender,1,196,0.005
+4BA662D13B595703BDB3A4BE525210FD,2023,ft_benefits_ms_core,ft_benefits,Premium fund,214,224,0.955
+4BA662D13B595703BDB3A4BE525210FD,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,182,224,0.812
+4BA662D13B595703BDB3A4BE525210FD,2023,ft_benefits_ms_core,ft_benefits,More sustainable farm practices,162,224,0.723
+4BA662D13B595703BDB3A4BE525210FD,2023,ft_benefits_ms_core,ft_benefits,Sense of community,139,224,0.621
+4BA662D13B595703BDB3A4BE525210FD,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,134,224,0.598
+4BA662D13B595703BDB3A4BE525210FD,2023,ft_benefits_ms_core,ft_benefits,Training,125,224,0.558
+4BA662D13B595703BDB3A4BE525210FD,2023,ft_benefits_ms_core,ft_benefits,Regular Income,65,224,0.29
+4BA662D13B595703BDB3A4BE525210FD,2023,ft_benefits_ms_core,ft_benefits,Other,26,224,0.116
+4BA662D13B595703BDB3A4BE525210FD,2023,ft_benefits_ms_core,ft_benefits,Don't know,2,224,0.009
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Damaged by natural disasters,67,180,0.372
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Other,60,180,0.333
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Old trees,44,180,0.244
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Sufficient rainfall,38,180,0.211
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,No pest,31,180,0.172
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Young trees,26,180,0.144
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,More land area under production,20,180,0.111
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Climate change,16,180,0.089
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Less land area under production,10,180,0.056
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,7,180,0.039
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Pest and plant diseases,6,180,0.033
+4BA662D13B595703BDB3A4BE525210FD,2023,harvest_change_reason_core,harvest_change_reasons,Better care of the farm,1,180,0.006
+4BA662D13B595703BDB3A4BE525210FD,2023,income_sources_ms_core,income_sources,"Business/Micro Business(such as hog/animals, sari-sari store, vegetable selling, etc.)",127,182,0.698
+4BA662D13B595703BDB3A4BE525210FD,2023,income_sources_ms_core,income_sources,Other,121,182,0.665
+4BA662D13B595703BDB3A4BE525210FD,2023,income_sources_ms_core,income_sources,Remittances,20,182,0.11
+4BA662D13B595703BDB3A4BE525210FD,2023,income_sources_ms_core,income_sources,Tricycle/Tuktuk,18,182,0.099
+4F1B02F500688B4000E500124362AD81,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+56B144806C79471477CDABB485A067EA,2021,ft_benefits_ms_core,ft_benefits,CHILDREN OF WORKERS ARE ATTNDING ONLINE CLASSES THAT IS EMPOWERING THEIR CHILD FUTURE.,1,1,
+56B144806C79471477CDABB485A067EA,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+5ACA414618700015053A548FB018BE94,2021,ft_benefits_ms_core,ft_benefits,Don't know,1,1,
+5B0D5B61806DF3595A6A3E710AA1F6E1,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+5B0D5B61806DF3595A6A3E710AA1F6E1,2021,ft_benefits_ms_core,ft_benefits,support partly fee of Covid-19 vaccine,1,1,
+5CD623C8273EA4A264707789FFE209D3,2022,borrow_source_ms_core,borrow_sources,Friends/Family,1,1,
+5CD623C8273EA4A264707789FFE209D3,2022,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,1,1,
+5CD623C8273EA4A264707789FFE209D3,2022,ft_benefits_ms_core,ft_benefits,Training,1,1,
+614769B3EDDB5C99197FFD3F0271F421,2021,ft_benefits_ms_core,ft_benefits,"ENTREGA DE EQUIPOS DE PROTECCION, VALES ESCOLARES , ENTREGA DE VÍVERES",1,1,
+614769B3EDDB5C99197FFD3F0271F421,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+691F055F8DA798187584F41E6871D1AF,2022,borrow_source_ms_core,borrow_sources,Micro-finance institution,1,1,
+691F055F8DA798187584F41E6871D1AF,2022,ft_benefits_ms_core,ft_benefits,Premium fund,1,1,
+691F055F8DA798187584F41E6871D1AF,2022,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,1,1,
+691F055F8DA798187584F41E6871D1AF,2022,income_sources_ms_core,income_sources,Small family business,1,1,
+691F055F8DA798187584F41E6871D1AF,2023,borrow_source_ms_core,borrow_sources,Bank,308,360,0.856
+691F055F8DA798187584F41E6871D1AF,2023,borrow_source_ms_core,borrow_sources,Cooperative,254,360,0.706
+691F055F8DA798187584F41E6871D1AF,2023,borrow_source_ms_core,borrow_sources,Friends/Family,83,360,0.231
+691F055F8DA798187584F41E6871D1AF,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,17,360,0.047
+691F055F8DA798187584F41E6871D1AF,2023,borrow_source_ms_core,borrow_sources,Informal lender,11,360,0.031
+691F055F8DA798187584F41E6871D1AF,2023,borrow_source_ms_core,borrow_sources,FT Premium Fund,5,360,0.014
+691F055F8DA798187584F41E6871D1AF,2023,borrow_source_ms_core,borrow_sources,Refused,1,360,0.003
+691F055F8DA798187584F41E6871D1AF,2023,ft_benefits_ms_core,ft_benefits,Training,273,401,0.681
+691F055F8DA798187584F41E6871D1AF,2023,ft_benefits_ms_core,ft_benefits,Premium fund,251,401,0.626
+691F055F8DA798187584F41E6871D1AF,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,234,401,0.584
+691F055F8DA798187584F41E6871D1AF,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,226,401,0.564
+691F055F8DA798187584F41E6871D1AF,2023,ft_benefits_ms_core,ft_benefits,Sense of community,166,401,0.414
+691F055F8DA798187584F41E6871D1AF,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,158,401,0.394
+691F055F8DA798187584F41E6871D1AF,2023,ft_benefits_ms_core,ft_benefits,Don't know,31,401,0.077
+691F055F8DA798187584F41E6871D1AF,2023,ft_benefits_ms_core,ft_benefits,Refused,3,401,0.007
+691F055F8DA798187584F41E6871D1AF,2023,harvest_change_reason_core,harvest_change_reasons,Other,161,299,0.538
+691F055F8DA798187584F41E6871D1AF,2023,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,53,299,0.177
+691F055F8DA798187584F41E6871D1AF,2023,harvest_change_reason_core,harvest_change_reasons,Less land area under production,45,299,0.151
+691F055F8DA798187584F41E6871D1AF,2023,harvest_change_reason_core,harvest_change_reasons,Climate change,42,299,0.14
+691F055F8DA798187584F41E6871D1AF,2023,harvest_change_reason_core,harvest_change_reasons,More land area under production,39,299,0.13
+691F055F8DA798187584F41E6871D1AF,2023,harvest_change_reason_core,harvest_change_reasons,Pest and plant diseases,2,299,0.007
+691F055F8DA798187584F41E6871D1AF,2023,harvest_change_reason_core,harvest_change_reasons,Refused,1,299,0.003
+691F055F8DA798187584F41E6871D1AF,2023,income_sources_ms_core,income_sources,Small family business,40,77,0.519
+691F055F8DA798187584F41E6871D1AF,2023,income_sources_ms_core,income_sources,Other,36,77,0.468
+691F055F8DA798187584F41E6871D1AF,2023,income_sources_ms_core,income_sources,Refused,2,77,0.026
+691F055F8DA798187584F41E6871D1AF,2023,income_sources_ms_core,income_sources,Remittances,1,77,0.013
+6AF3AEE7DC4A0B525AEF739476D9EE2A,2021,ft_benefits_ms_core,ft_benefits,Don't know,1,1,
+6BBB0B29DF49C5B4519C63EDB1C64088,2022,borrow_source_ms_core,borrow_sources,Friends/Family,1,1,
+6BBB0B29DF49C5B4519C63EDB1C64088,2022,ft_benefits_ms_core,ft_benefits,Other,1,3,
+6BBB0B29DF49C5B4519C63EDB1C64088,2022,ft_benefits_ms_core,ft_benefits,Premium fund,1,3,
+6BBB0B29DF49C5B4519C63EDB1C64088,2022,ft_benefits_ms_core,ft_benefits,Steady wages/hours,1,3,
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,borrow_source_ms_core,borrow_sources,Bank,27,56,0.482
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,borrow_source_ms_core,borrow_sources,Friends/Family,24,56,0.429
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,borrow_source_ms_core,borrow_sources,Employer,7,56,0.125
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,borrow_source_ms_core,borrow_sources,Micro-finance institution,4,56,0.071
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,borrow_source_ms_core,borrow_sources,Informal lender,2,56,0.036
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,ft_benefits_ms_core,ft_benefits,Increased benefits,43,92,0.467
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,40,92,0.435
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,ft_benefits_ms_core,ft_benefits,Premium fund,32,92,0.348
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,ft_benefits_ms_core,ft_benefits,Sense of community,30,92,0.326
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,ft_benefits_ms_core,ft_benefits,Steady wages/hours,26,92,0.283
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,ft_benefits_ms_core,ft_benefits,Other,20,92,0.217
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,ft_benefits_ms_core,ft_benefits,Training,16,92,0.174
+6C9CC9D62AFC0EA78C27C1D5F2D0B47E,2022,ft_benefits_ms_core,ft_benefits,Refused,8,92,0.087
+6FBF1FA5000A4F51F55ACF0A9D78A389,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,borrow_source_ms_core,borrow_sources,Friends/Family,111,225,0.493
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,borrow_source_ms_core,borrow_sources,Bank,78,225,0.347
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,69,225,0.307
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,borrow_source_ms_core,borrow_sources,FT Premium Fund,46,225,0.204
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,borrow_source_ms_core,borrow_sources,Informal lender,22,225,0.098
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,borrow_source_ms_core,borrow_sources,Employer,12,225,0.053
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,borrow_source_ms_core,borrow_sources,Other,6,225,0.027
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,borrow_source_ms_core,borrow_sources,Don't know,1,225,0.004
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Premium fund,206,449,0.459
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,200,449,0.445
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,150,449,0.334
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,144,449,0.321
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Training,137,449,0.305
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Don't know,85,449,0.189
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Sense of community,63,449,0.14
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Other,18,449,0.04
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Placeholder,12,449,0.027
+6FF9DD37155679ABBF1EFFB3F94D2438,2023,ft_benefits_ms_core,ft_benefits,Refused,8,449,0.018
+718506F0977EB8E39505546C9D7BE84E,2021,borrow_source_ms_core,borrow_sources,Friends/Family,1,1,
+718506F0977EB8E39505546C9D7BE84E,2021,ft_benefits_ms_core,ft_benefits,Sense of community,1,1,
+718506F0977EB8E39505546C9D7BE84E,2023,borrow_source_ms_core,borrow_sources,Friends/Family,98,109,0.899
+718506F0977EB8E39505546C9D7BE84E,2023,borrow_source_ms_core,borrow_sources,Bank,7,109,0.064
+718506F0977EB8E39505546C9D7BE84E,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,3,109,0.028
+718506F0977EB8E39505546C9D7BE84E,2023,borrow_source_ms_core,borrow_sources,Informal lender,2,109,0.018
+718506F0977EB8E39505546C9D7BE84E,2023,borrow_source_ms_core,borrow_sources,Other,2,109,0.018
+718506F0977EB8E39505546C9D7BE84E,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,178,398,0.447
+718506F0977EB8E39505546C9D7BE84E,2023,ft_benefits_ms_core,ft_benefits,Other,148,398,0.372
+718506F0977EB8E39505546C9D7BE84E,2023,ft_benefits_ms_core,ft_benefits,Premium fund,67,398,0.168
+718506F0977EB8E39505546C9D7BE84E,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,36,398,0.09
+718506F0977EB8E39505546C9D7BE84E,2023,ft_benefits_ms_core,ft_benefits,Sense of community,32,398,0.08
+718506F0977EB8E39505546C9D7BE84E,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,16,398,0.04
+718506F0977EB8E39505546C9D7BE84E,2023,ft_benefits_ms_core,ft_benefits,Training,16,398,0.04
+718506F0977EB8E39505546C9D7BE84E,2023,ft_benefits_ms_core,ft_benefits,Don't know,10,398,0.025
+718506F0977EB8E39505546C9D7BE84E,2023,ft_benefits_ms_core,ft_benefits,Refused,3,398,0.008
+766DC22E09D9FC95378E64E01BEB35CA,2021,ft_benefits_ms_core,ft_benefits,In 2020 we gave cash benefits to employees from the 2019 premium funds. Which was beneficial for the employees during the pandemic,1,1,
+766DC22E09D9FC95378E64E01BEB35CA,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+79DAED784A6105F5CB19FD4F2DC155FD,2022,borrow_source_ms_core,borrow_sources,Other,1,1,
+7B4150EB0D246F4947E71394E5DCF817,2021,ft_benefits_ms_core,ft_benefits,We are able to support workers with their Basic needs of Food items and medical support for them and their families,1,1,
+7B4150EB0D246F4947E71394E5DCF817,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+85A3BCC3B1AA0AFAAB2B39B1F0E3D070,2021,ft_benefits_ms_core,ft_benefits,Worker and their family feels safe financially and mentally,1,1,
+85A3BCC3B1AA0AFAAB2B39B1F0E3D070,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+87BE3D6E2672BCF6BE3CF2E8839AEA96,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,borrow_source_ms_core,borrow_sources,Friends/Family,48,59,0.814
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,borrow_source_ms_core,borrow_sources,Bank,6,59,0.102
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,borrow_source_ms_core,borrow_sources,Employer,4,59,0.068
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,3,59,0.051
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,borrow_source_ms_core,borrow_sources,Informal lender,2,59,0.034
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,borrow_source_ms_core,borrow_sources,Other,1,59,0.017
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,ft_benefits_ms_core,ft_benefits,Premium fund,122,175,0.697
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,121,175,0.691
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,ft_benefits_ms_core,ft_benefits,Sense of community,113,175,0.646
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,ft_benefits_ms_core,ft_benefits,Training,100,175,0.571
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,98,175,0.56
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,12,175,0.069
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,ft_benefits_ms_core,ft_benefits,Other,8,175,0.046
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,ft_benefits_ms_core,ft_benefits,Don't know,4,175,0.023
+8835E52FFA9F4C35328C0C1888D5EB1D,2023,ft_benefits_ms_core,ft_benefits,Refused,2,175,0.011
+8948F0FAF766DB01F99746D19E8C5F9B,2021,ft_benefits_ms_core,ft_benefits,Uso de la prima para trabajadores sin empleo,1,1,
+8948F0FAF766DB01F99746D19E8C5F9B,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+8D6AACA33E2FDA751F51F4E4240BA17F,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+8FFEB8459EE1BE0A3E96A88EE2DE555B,2021,ft_benefits_ms_core,ft_benefits,Sense of community,1,1,
+903DBA1DD65D59B8225F3339774F1BB0,2022,borrow_source_ms_core,borrow_sources,Friends/Family,1,1,
+903DBA1DD65D59B8225F3339774F1BB0,2024,borrow_source_ms_core,borrow_sources,Friends/Family,46,88,0.523
+903DBA1DD65D59B8225F3339774F1BB0,2024,borrow_source_ms_core,borrow_sources,Bank,23,88,0.261
+903DBA1DD65D59B8225F3339774F1BB0,2024,borrow_source_ms_core,borrow_sources,Micro-finance institution,10,88,0.114
+903DBA1DD65D59B8225F3339774F1BB0,2024,borrow_source_ms_core,borrow_sources,Informal lender,8,88,0.091
+903DBA1DD65D59B8225F3339774F1BB0,2024,borrow_source_ms_core,borrow_sources,Don't know,2,88,0.023
+903DBA1DD65D59B8225F3339774F1BB0,2024,borrow_source_ms_core,borrow_sources,Other,2,88,0.023
+903DBA1DD65D59B8225F3339774F1BB0,2024,borrow_source_ms_core,borrow_sources,Employer,1,88,0.011
+903DBA1DD65D59B8225F3339774F1BB0,2024,ft_benefits_ms_core,ft_benefits,Other,109,167,0.653
+903DBA1DD65D59B8225F3339774F1BB0,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,30,167,0.18
+903DBA1DD65D59B8225F3339774F1BB0,2024,ft_benefits_ms_core,ft_benefits,Premium fund,22,167,0.132
+903DBA1DD65D59B8225F3339774F1BB0,2024,ft_benefits_ms_core,ft_benefits,Steady wages/hours,14,167,0.084
+903DBA1DD65D59B8225F3339774F1BB0,2024,ft_benefits_ms_core,ft_benefits,Sense of community,12,167,0.072
+903DBA1DD65D59B8225F3339774F1BB0,2024,ft_benefits_ms_core,ft_benefits,Training,12,167,0.072
+903DBA1DD65D59B8225F3339774F1BB0,2024,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,10,167,0.06
+903DBA1DD65D59B8225F3339774F1BB0,2024,ft_benefits_ms_core,ft_benefits,Refused,5,167,0.03
+903DBA1DD65D59B8225F3339774F1BB0,2024,ft_benefits_ms_core,ft_benefits,Don't know,3,167,0.018
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,borrow_source_ms_core,borrow_sources,Cooperative,22,44,0.5
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,borrow_source_ms_core,borrow_sources,FT Premium Fund,11,44,0.25
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,borrow_source_ms_core,borrow_sources,Friends/Family,11,44,0.25
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,borrow_source_ms_core,borrow_sources,Other,3,44,0.068
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,borrow_source_ms_core,borrow_sources,Informal lender,1,44,0.023
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,Premium fund,61,62,0.984
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,Training,41,62,0.661
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,Sense of community,39,62,0.629
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,26,62,0.419
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,25,62,0.403
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,Other,4,62,0.065
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,Apporte de l'aide,1,62,0.016
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,ENGRAIS,1,62,0.016
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,Realisation de projet,1,62,0.016
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,SCOLARISATION DES ENFANTS,1,62,0.016
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,ft_benefits_ms_core,ft_benefits,Steady income,1,62,0.016
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,harvest_change_reason_core,harvest_change_reasons,Climate change,43,61,0.705
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,harvest_change_reason_core,harvest_change_reasons,Other,17,61,0.279
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,10,61,0.164
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,harvest_change_reason_core,harvest_change_reasons,Diseases (Swollen shoot etc.),6,61,0.098
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,harvest_change_reason_core,harvest_change_reasons,More land area under production,1,61,0.016
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,income_sources_ms_core,income_sources,Vegetables / produces for local consumption,41,56,0.732
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,income_sources_ms_core,income_sources,Banana plantation,37,56,0.661
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,income_sources_ms_core,income_sources,Corn plantation,35,56,0.625
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,income_sources_ms_core,income_sources,Rice plantation,26,56,0.464
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,income_sources_ms_core,income_sources,Coffee plantation,16,56,0.286
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,income_sources_ms_core,income_sources,Cashew nut plantation,10,56,0.179
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,income_sources_ms_core,income_sources,Other,9,56,0.161
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,income_sources_ms_core,income_sources,Palm oil plantation,2,56,0.036
+9D79CF4ED3FBE4CFBD3640576B74642A,2024,income_sources_ms_core,income_sources,Rubber plantation,1,56,0.018
+A296000137C775F542FCF4E6F026F445,2024,borrow_source_ms_core,borrow_sources,Cooperative,56,111,0.505
+A296000137C775F542FCF4E6F026F445,2024,borrow_source_ms_core,borrow_sources,Friends/Family,33,111,0.297
+A296000137C775F542FCF4E6F026F445,2024,borrow_source_ms_core,borrow_sources,FT Premium Fund,20,111,0.18
+A296000137C775F542FCF4E6F026F445,2024,borrow_source_ms_core,borrow_sources,Other,7,111,0.063
+A296000137C775F542FCF4E6F026F445,2024,borrow_source_ms_core,borrow_sources,Bank,4,111,0.036
+A296000137C775F542FCF4E6F026F445,2024,borrow_source_ms_core,borrow_sources,Informal lender,4,111,0.036
+A296000137C775F542FCF4E6F026F445,2024,borrow_source_ms_core,borrow_sources,Micro-finance institution,4,111,0.036
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Premium fund,178,180,0.989
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Training,114,180,0.633
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Sense of community,76,180,0.422
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,68,180,0.378
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,60,180,0.333
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Steady income,9,180,0.05
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Other,7,180,0.039
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,ENGRAIS,2,180,0.011
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,MATERIEL,2,180,0.011
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Oeuvre sociale,1,180,0.006
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Realisation de beaucoup de projets,1,180,0.006
+A296000137C775F542FCF4E6F026F445,2024,ft_benefits_ms_core,ft_benefits,Rien,1,180,0.006
+A296000137C775F542FCF4E6F026F445,2024,harvest_change_reason_core,harvest_change_reasons,Climate change,124,178,0.697
+A296000137C775F542FCF4E6F026F445,2024,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,37,178,0.208
+A296000137C775F542FCF4E6F026F445,2024,harvest_change_reason_core,harvest_change_reasons,Other,23,178,0.129
+A296000137C775F542FCF4E6F026F445,2024,harvest_change_reason_core,harvest_change_reasons,Diseases (Swollen shoot etc.),17,178,0.096
+A296000137C775F542FCF4E6F026F445,2024,harvest_change_reason_core,harvest_change_reasons,Less land area under production,5,178,0.028
+A296000137C775F542FCF4E6F026F445,2024,harvest_change_reason_core,harvest_change_reasons,More land area under production,3,178,0.017
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Vegetables / produces for local consumption,123,163,0.755
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Banana plantation,105,163,0.644
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Corn plantation,85,163,0.521
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Rice plantation,68,163,0.417
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Cashew nut plantation,38,163,0.233
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Other,37,163,0.227
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Coffee plantation,36,163,0.221
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Palm oil plantation,11,163,0.067
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Rubber plantation,10,163,0.061
+A296000137C775F542FCF4E6F026F445,2024,income_sources_ms_core,income_sources,Timber (teak …),3,163,0.018
+A2D9B2A8FEAC674B58233C626DCA7663,2021,ft_benefits_ms_core,ft_benefits,"COMPRAS DE VIVERES, MASCARILLAS, GEL, VITAMINAS",1,1,
+A2D9B2A8FEAC674B58233C626DCA7663,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+A7F700B04BCE55512CB026A71121426C,2021,borrow_source_ms_core,borrow_sources,Cooperative,4,6,
+A7F700B04BCE55512CB026A71121426C,2021,borrow_source_ms_core,borrow_sources,Friends/Family,2,6,
+A7F700B04BCE55512CB026A71121426C,2021,borrow_source_ms_core,borrow_sources,Bank,1,6,
+A7F700B04BCE55512CB026A71121426C,2021,borrow_source_ms_core,borrow_sources,Micro-finance institution,1,6,
+A7F700B04BCE55512CB026A71121426C,2021,ft_benefits_ms_core,ft_benefits,Training,9,9,
+A7F700B04BCE55512CB026A71121426C,2021,ft_benefits_ms_core,ft_benefits,Increased benefits,6,9,
+A7F700B04BCE55512CB026A71121426C,2021,ft_benefits_ms_core,ft_benefits,Steady wages/hours,6,9,
+A7F700B04BCE55512CB026A71121426C,2021,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,5,9,
+A7F700B04BCE55512CB026A71121426C,2021,ft_benefits_ms_core,ft_benefits,Premium fund,5,9,
+A7F700B04BCE55512CB026A71121426C,2021,ft_benefits_ms_core,ft_benefits,Sense of community,1,9,
+A7F700B04BCE55512CB026A71121426C,2021,harvest_change_reason_core,harvest_change_reasons,Other,5,9,
+A7F700B04BCE55512CB026A71121426C,2021,harvest_change_reason_core,harvest_change_reasons,More land area under production,3,9,
+A7F700B04BCE55512CB026A71121426C,2021,harvest_change_reason_core,harvest_change_reasons,Better care of the farm,1,9,
+A7F700B04BCE55512CB026A71121426C,2021,harvest_change_reason_core,harvest_change_reasons,Old trees,1,9,
+A7F700B04BCE55512CB026A71121426C,2021,harvest_change_reason_core,harvest_change_reasons,Pest and plant diseases,1,9,
+A7F700B04BCE55512CB026A71121426C,2021,harvest_change_reason_core,harvest_change_reasons,Refused,1,9,
+A7F700B04BCE55512CB026A71121426C,2021,income_sources_ms_core,income_sources,Other,2,5,
+A7F700B04BCE55512CB026A71121426C,2021,income_sources_ms_core,income_sources,Government Assistance,1,5,
+A7F700B04BCE55512CB026A71121426C,2021,income_sources_ms_core,income_sources,Refused,1,5,
+A7F700B04BCE55512CB026A71121426C,2021,income_sources_ms_core,income_sources,Small family business,1,5,
+A7F700B04BCE55512CB026A71121426C,2023,borrow_source_ms_core,borrow_sources,Cooperative,148,171,0.865
+A7F700B04BCE55512CB026A71121426C,2023,borrow_source_ms_core,borrow_sources,Bank,90,171,0.526
+A7F700B04BCE55512CB026A71121426C,2023,borrow_source_ms_core,borrow_sources,Friends/Family,48,171,0.281
+A7F700B04BCE55512CB026A71121426C,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,6,171,0.035
+A7F700B04BCE55512CB026A71121426C,2023,borrow_source_ms_core,borrow_sources,Informal lender,2,171,0.012
+A7F700B04BCE55512CB026A71121426C,2023,ft_benefits_ms_core,ft_benefits,Premium fund,221,246,0.898
+A7F700B04BCE55512CB026A71121426C,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,140,246,0.569
+A7F700B04BCE55512CB026A71121426C,2023,ft_benefits_ms_core,ft_benefits,Training,133,246,0.541
+A7F700B04BCE55512CB026A71121426C,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,102,246,0.415
+A7F700B04BCE55512CB026A71121426C,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,27,246,0.11
+A7F700B04BCE55512CB026A71121426C,2023,ft_benefits_ms_core,ft_benefits,Sense of community,4,246,0.016
+A7F700B04BCE55512CB026A71121426C,2023,ft_benefits_ms_core,ft_benefits,Other,1,246,0.004
+A7F700B04BCE55512CB026A71121426C,2023,harvest_change_reason_core,harvest_change_reasons,Less land area under production,86,194,0.443
+A7F700B04BCE55512CB026A71121426C,2023,harvest_change_reason_core,harvest_change_reasons,Other,84,194,0.433
+A7F700B04BCE55512CB026A71121426C,2023,harvest_change_reason_core,harvest_change_reasons,Climate change,29,194,0.149
+A7F700B04BCE55512CB026A71121426C,2023,harvest_change_reason_core,harvest_change_reasons,Lack of fertilizer,26,194,0.134
+A7F700B04BCE55512CB026A71121426C,2023,harvest_change_reason_core,harvest_change_reasons,More land area under production,25,194,0.129
+A7F700B04BCE55512CB026A71121426C,2023,harvest_change_reason_core,harvest_change_reasons,Better care of the farm,6,194,0.031
+A7F700B04BCE55512CB026A71121426C,2023,harvest_change_reason_core,harvest_change_reasons,Pest and plant diseases,6,194,0.031
+A7F700B04BCE55512CB026A71121426C,2023,harvest_change_reason_core,harvest_change_reasons,Old trees,1,194,0.005
+A7F700B04BCE55512CB026A71121426C,2023,income_sources_ms_core,income_sources,Small family business,81,96,0.844
+A7F700B04BCE55512CB026A71121426C,2023,income_sources_ms_core,income_sources,Other,16,96,0.167
+A7F700B04BCE55512CB026A71121426C,2023,income_sources_ms_core,income_sources,Alimony,5,96,0.052
+A7F700B04BCE55512CB026A71121426C,2023,income_sources_ms_core,income_sources,Government Assistance,2,96,0.021
+A7F700B04BCE55512CB026A71121426C,2023,income_sources_ms_core,income_sources,Refused,2,96,0.021
+A7F700B04BCE55512CB026A71121426C,2023,income_sources_ms_core,income_sources,Remittances,1,96,0.01
+A7F700B04BCE55512CB026A71121426C,2026,borrow_source_ms_core,borrow_sources,Cooperative,75,81,0.926
+A7F700B04BCE55512CB026A71121426C,2026,borrow_source_ms_core,borrow_sources,Friends/Family,21,81,0.259
+A7F700B04BCE55512CB026A71121426C,2026,borrow_source_ms_core,borrow_sources,Bank,14,81,0.173
+A7F700B04BCE55512CB026A71121426C,2026,borrow_source_ms_core,borrow_sources,Informal lender,1,81,0.012
+A7F700B04BCE55512CB026A71121426C,2026,ft_benefits_ms_core,ft_benefits,Steady wages/hours,199,248,0.802
+A7F700B04BCE55512CB026A71121426C,2026,ft_benefits_ms_core,ft_benefits,Increased benefits,178,248,0.718
+A7F700B04BCE55512CB026A71121426C,2026,ft_benefits_ms_core,ft_benefits,Premium fund,92,248,0.371
+A7F700B04BCE55512CB026A71121426C,2026,ft_benefits_ms_core,ft_benefits,Training,42,248,0.169
+A7F700B04BCE55512CB026A71121426C,2026,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,36,248,0.145
+A7F700B04BCE55512CB026A71121426C,2026,ft_benefits_ms_core,ft_benefits,Sense of community,13,248,0.052
+A7F700B04BCE55512CB026A71121426C,2026,ft_benefits_ms_core,ft_benefits,Don't know,12,248,0.048
+A7F700B04BCE55512CB026A71121426C,2026,harvest_change_reason_core,harvest_change_reasons,Less land area under production,90,171,0.526
+A7F700B04BCE55512CB026A71121426C,2026,harvest_change_reason_core,harvest_change_reasons,More land area under production,61,171,0.357
+A7F700B04BCE55512CB026A71121426C,2026,harvest_change_reason_core,harvest_change_reasons,Other,11,171,0.064
+A7F700B04BCE55512CB026A71121426C,2026,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,8,171,0.047
+A7F700B04BCE55512CB026A71121426C,2026,harvest_change_reason_core,harvest_change_reasons,Refused,1,171,0.006
+A7F700B04BCE55512CB026A71121426C,2026,income_sources_ms_core,income_sources,"Small animal farming (Guinea pigs, pigs, ducks etc)",178,199,0.894
+A7F700B04BCE55512CB026A71121426C,2026,income_sources_ms_core,income_sources,Other,65,199,0.327
+A7F700B04BCE55512CB026A71121426C,2026,income_sources_ms_core,income_sources,Small family business (intercrops),41,199,0.206
+A7F700B04BCE55512CB026A71121426C,2026,income_sources_ms_core,income_sources,Alimony,1,199,0.005
+A7F700B04BCE55512CB026A71121426C,2026,income_sources_ms_core,income_sources,Remittances,1,199,0.005
+B546D84A7D7403494D2391D6B4B460AC,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+B7208E89C31091B6BEC86DADF5C29112,2021,ft_benefits_ms_core,ft_benefits,Improve Health Care and Welfare,1,1,
+B7208E89C31091B6BEC86DADF5C29112,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+B8AC7F392329D004EE6E7667C7399436,2025,borrow_source_ms_core,borrow_sources,Cooperative,143,155,0.923
+B8AC7F392329D004EE6E7667C7399436,2025,borrow_source_ms_core,borrow_sources,Bank,30,155,0.194
+B8AC7F392329D004EE6E7667C7399436,2025,borrow_source_ms_core,borrow_sources,Friends/Family,8,155,0.052
+B8AC7F392329D004EE6E7667C7399436,2025,borrow_source_ms_core,borrow_sources,Micro-finance institution,3,155,0.019
+B8AC7F392329D004EE6E7667C7399436,2025,borrow_source_ms_core,borrow_sources,Other,2,155,0.013
+B8AC7F392329D004EE6E7667C7399436,2025,borrow_source_ms_core,borrow_sources,Informal lender,1,155,0.006
+B8AC7F392329D004EE6E7667C7399436,2025,ft_benefits_ms_core,ft_benefits,Steady wages/hours,184,205,0.898
+B8AC7F392329D004EE6E7667C7399436,2025,ft_benefits_ms_core,ft_benefits,Increased benefits,182,205,0.888
+B8AC7F392329D004EE6E7667C7399436,2025,ft_benefits_ms_core,ft_benefits,Premium fund,164,205,0.8
+B8AC7F392329D004EE6E7667C7399436,2025,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,159,205,0.776
+B8AC7F392329D004EE6E7667C7399436,2025,ft_benefits_ms_core,ft_benefits,Training,122,205,0.595
+B8AC7F392329D004EE6E7667C7399436,2025,ft_benefits_ms_core,ft_benefits,Sense of community,71,205,0.346
+B8AC7F392329D004EE6E7667C7399436,2025,ft_benefits_ms_core,ft_benefits,Don't know,1,205,0.005
+B8AC7F392329D004EE6E7667C7399436,2025,harvest_change_reason_core,harvest_change_reasons,Other,76,118,0.644
+B8AC7F392329D004EE6E7667C7399436,2025,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,29,118,0.246
+B8AC7F392329D004EE6E7667C7399436,2025,harvest_change_reason_core,harvest_change_reasons,More land area under production,10,118,0.085
+B8AC7F392329D004EE6E7667C7399436,2025,harvest_change_reason_core,harvest_change_reasons,Less land area under production,3,118,0.025
+B8AC7F392329D004EE6E7667C7399436,2025,harvest_change_reason_core,harvest_change_reasons,Climate change,1,118,0.008
+B8AC7F392329D004EE6E7667C7399436,2025,income_sources_ms_core,income_sources,Other,64,101,0.634
+B8AC7F392329D004EE6E7667C7399436,2025,income_sources_ms_core,income_sources,Small family business (intercrops),40,101,0.396
+B8AC7F392329D004EE6E7667C7399436,2025,income_sources_ms_core,income_sources,Refused,2,101,0.02
+B8AC7F392329D004EE6E7667C7399436,2025,income_sources_ms_core,income_sources,Alimony,1,101,0.01
+B8AC7F392329D004EE6E7667C7399436,2025,income_sources_ms_core,income_sources,Remittances,1,101,0.01
+BA13D26340EB2D1AABAFA07D6C8FE052,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+BA2CD2A3EB53D9C2FD95A49B0D6D11B8,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+BBBF119CBDA5A2E369850E2B735B38A1,2023,borrow_source_ms_core,borrow_sources,Friends/Family,88,122,0.721
+BBBF119CBDA5A2E369850E2B735B38A1,2023,borrow_source_ms_core,borrow_sources,Bank,29,122,0.238
+BBBF119CBDA5A2E369850E2B735B38A1,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,22,122,0.18
+BBBF119CBDA5A2E369850E2B735B38A1,2023,borrow_source_ms_core,borrow_sources,Employer,10,122,0.082
+BBBF119CBDA5A2E369850E2B735B38A1,2023,borrow_source_ms_core,borrow_sources,Informal lender,10,122,0.082
+BBBF119CBDA5A2E369850E2B735B38A1,2023,borrow_source_ms_core,borrow_sources,FT Premium Fund,7,122,0.057
+BBBF119CBDA5A2E369850E2B735B38A1,2023,borrow_source_ms_core,borrow_sources,Refused,3,122,0.025
+BBBF119CBDA5A2E369850E2B735B38A1,2023,borrow_source_ms_core,borrow_sources,Don't know,2,122,0.016
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,310,487,0.637
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Premium fund,204,487,0.419
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,201,487,0.413
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,196,487,0.402
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Training,166,487,0.341
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Sense of community,117,487,0.24
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Don't know,88,487,0.181
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Refused,16,487,0.033
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Placeholder,15,487,0.031
+BBBF119CBDA5A2E369850E2B735B38A1,2023,ft_benefits_ms_core,ft_benefits,Other,3,487,0.006
+BF8D5AA4E7AC406E50478EB03135531B,2024,borrow_source_ms_core,borrow_sources,Friends/Family,110,170,0.647
+BF8D5AA4E7AC406E50478EB03135531B,2024,borrow_source_ms_core,borrow_sources,Bank,34,170,0.2
+BF8D5AA4E7AC406E50478EB03135531B,2024,borrow_source_ms_core,borrow_sources,Micro-finance institution,27,170,0.159
+BF8D5AA4E7AC406E50478EB03135531B,2024,borrow_source_ms_core,borrow_sources,Informal lender,13,170,0.076
+BF8D5AA4E7AC406E50478EB03135531B,2024,borrow_source_ms_core,borrow_sources,Refused,1,170,0.006
+BF8D5AA4E7AC406E50478EB03135531B,2024,ft_benefits_ms_core,ft_benefits,Premium fund,228,306,0.745
+BF8D5AA4E7AC406E50478EB03135531B,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,74,306,0.242
+BF8D5AA4E7AC406E50478EB03135531B,2024,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,37,306,0.121
+BF8D5AA4E7AC406E50478EB03135531B,2024,ft_benefits_ms_core,ft_benefits,Other,15,306,0.049
+BF8D5AA4E7AC406E50478EB03135531B,2024,ft_benefits_ms_core,ft_benefits,Sense of community,14,306,0.046
+BF8D5AA4E7AC406E50478EB03135531B,2024,ft_benefits_ms_core,ft_benefits,Don't know,11,306,0.036
+BF8D5AA4E7AC406E50478EB03135531B,2024,ft_benefits_ms_core,ft_benefits,Training,1,306,0.003
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,borrow_source_ms_core,borrow_sources,Cooperative,2,2,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,borrow_source_ms_core,borrow_sources,Friends/Family,1,2,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,ft_benefits_ms_core,ft_benefits,Training,3,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,2,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,ft_benefits_ms_core,ft_benefits,Increased benefits,2,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,ft_benefits_ms_core,ft_benefits,Premium fund,2,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,ft_benefits_ms_core,ft_benefits,Sense of community,2,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,ft_benefits_ms_core,ft_benefits,Steady wages/hours,2,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,harvest_change_reason_core,harvest_change_reasons,Climate change,2,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,harvest_change_reason_core,harvest_change_reasons,Non adult shrimp fishing,1,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,harvest_change_reason_core,harvest_change_reasons,Other,1,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,harvest_change_reason_core,harvest_change_reasons,Overfishing,1,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,harvest_change_reason_core,harvest_change_reasons,Water pollution,1,3,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,income_sources_ms_core,income_sources,Other,1,1,
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,2022,income_sources_ms_core,income_sources,Tourism,1,1,
+C22F10611026ABACF5A96B969EE39025,2021,ft_benefits_ms_core,ft_benefits,The premium projects carried our helped employees to manage their living expenses to certain extent,1,1,
+C22F10611026ABACF5A96B969EE39025,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+C30C47FF7CE08DFFB98059EC49159431,2021,ft_benefits_ms_core,ft_benefits,"Fondo de alivio en alimentos, salud y certificación por parte de Fairtrade Intentational a través de la Clac",1,1,
+C30C47FF7CE08DFFB98059EC49159431,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,borrow_source_ms_core,borrow_sources,Bank,270,323,0.836
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,borrow_source_ms_core,borrow_sources,Friends/Family,101,323,0.313
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,borrow_source_ms_core,borrow_sources,Cooperative,10,323,0.031
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,borrow_source_ms_core,borrow_sources,Micro-finance institution,6,323,0.019
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,borrow_source_ms_core,borrow_sources,Informal lender,5,323,0.015
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,borrow_source_ms_core,borrow_sources,Other,4,323,0.012
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,borrow_source_ms_core,borrow_sources,Don't know,1,323,0.003
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,borrow_source_ms_core,borrow_sources,Refused,1,323,0.003
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,ft_benefits_ms_core,ft_benefits,Training,295,391,0.754
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,ft_benefits_ms_core,ft_benefits,Premium fund,269,391,0.688
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,ft_benefits_ms_core,ft_benefits,Steady wages/hours,174,391,0.445
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,170,391,0.435
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,70,391,0.179
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,ft_benefits_ms_core,ft_benefits,Sense of community,45,391,0.115
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,ft_benefits_ms_core,ft_benefits,Don't know,39,391,0.1
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,ft_benefits_ms_core,ft_benefits,Other,5,391,0.013
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,ft_benefits_ms_core,ft_benefits,Refused,1,391,0.003
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,harvest_change_reason_core,harvest_change_reasons,Other,195,357,0.546
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,harvest_change_reason_core,harvest_change_reasons,Less land area under production,70,357,0.196
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,54,357,0.151
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,harvest_change_reason_core,harvest_change_reasons,Climate change,44,357,0.123
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,harvest_change_reason_core,harvest_change_reasons,More land area under production,33,357,0.092
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2024,harvest_change_reason_core,harvest_change_reasons,Refused,5,357,0.014
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,borrow_source_ms_core,borrow_sources,Bank,240,282,0.851
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,borrow_source_ms_core,borrow_sources,Friends/Family,67,282,0.238
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,borrow_source_ms_core,borrow_sources,Cooperative,5,282,0.018
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,borrow_source_ms_core,borrow_sources,Micro-finance institution,3,282,0.011
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,borrow_source_ms_core,borrow_sources,Informal lender,2,282,0.007
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,borrow_source_ms_core,borrow_sources,FT Premium Fund,1,282,0.004
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,ft_benefits_ms_core,ft_benefits,Premium fund,304,368,0.826
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,ft_benefits_ms_core,ft_benefits,Increased benefits,195,368,0.53
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,176,368,0.478
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,ft_benefits_ms_core,ft_benefits,Sense of community,133,368,0.361
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,ft_benefits_ms_core,ft_benefits,Steady wages/hours,110,368,0.299
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,ft_benefits_ms_core,ft_benefits,Training,102,368,0.277
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,ft_benefits_ms_core,ft_benefits,Don't know,19,368,0.052
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,ft_benefits_ms_core,ft_benefits,Refused,2,368,0.005
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,harvest_change_reason_core,harvest_change_reasons,Other,120,246,0.488
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,harvest_change_reason_core,harvest_change_reasons,Less land area under production,44,246,0.179
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,43,246,0.175
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,harvest_change_reason_core,harvest_change_reasons,More land area under production,33,246,0.134
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,harvest_change_reason_core,harvest_change_reasons,Refused,6,246,0.024
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,harvest_change_reason_core,harvest_change_reasons,Better care of the farm,3,246,0.012
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,harvest_change_reason_core,harvest_change_reasons,Climate change,3,246,0.012
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,income_sources_ms_core,income_sources,Small family business,104,162,0.642
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,income_sources_ms_core,income_sources,Other,71,162,0.438
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,income_sources_ms_core,income_sources,Government Assistance,16,162,0.099
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,income_sources_ms_core,income_sources,Alimony,9,162,0.056
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,income_sources_ms_core,income_sources,Refused,1,162,0.006
+C6E4FBD66393359CFD7FCA7DF4A7C68F,2026,income_sources_ms_core,income_sources,Remittances,1,162,0.006
+C7BD0F724ECABB787F18AAF23F1E5050,2023,borrow_source_ms_core,borrow_sources,Friends/Family,34,48,0.708
+C7BD0F724ECABB787F18AAF23F1E5050,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,9,48,0.188
+C7BD0F724ECABB787F18AAF23F1E5050,2023,borrow_source_ms_core,borrow_sources,Bank,8,48,0.167
+C7BD0F724ECABB787F18AAF23F1E5050,2023,borrow_source_ms_core,borrow_sources,Informal lender,7,48,0.146
+C7BD0F724ECABB787F18AAF23F1E5050,2023,borrow_source_ms_core,borrow_sources,Employer,5,48,0.104
+C7BD0F724ECABB787F18AAF23F1E5050,2023,borrow_source_ms_core,borrow_sources,FT Premium Fund,3,48,0.062
+C7BD0F724ECABB787F18AAF23F1E5050,2023,borrow_source_ms_core,borrow_sources,Other,2,48,0.042
+C7BD0F724ECABB787F18AAF23F1E5050,2023,borrow_source_ms_core,borrow_sources,Refused,2,48,0.042
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,91,156,0.583
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,64,156,0.41
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Premium fund,60,156,0.385
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,56,156,0.359
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Training,50,156,0.321
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Sense of community,39,156,0.25
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Don't know,34,156,0.218
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Placeholder,5,156,0.032
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Refused,2,156,0.013
+C7BD0F724ECABB787F18AAF23F1E5050,2023,ft_benefits_ms_core,ft_benefits,Other,1,156,0.006
+C8809EC1D86940E51E9F6A5F0E132342,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+CCA4DB1ABA4AA83C248F6CFF2C3D55F5,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+CCE31464110FFC0F7F8B88F1FFFA680B,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,borrow_source_ms_core,borrow_sources,Cooperative,106,224,0.473
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,borrow_source_ms_core,borrow_sources,Bank,100,224,0.446
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,borrow_source_ms_core,borrow_sources,Friends/Family,63,224,0.281
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,47,224,0.21
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,borrow_source_ms_core,borrow_sources,Informal lender,6,224,0.027
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,borrow_source_ms_core,borrow_sources,FT Premium Fund,2,224,0.009
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,borrow_source_ms_core,borrow_sources,Other,1,224,0.004
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,ft_benefits_ms_core,ft_benefits,Training,233,314,0.742
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,196,314,0.624
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,164,314,0.522
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,ft_benefits_ms_core,ft_benefits,Premium fund,128,314,0.408
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,89,314,0.283
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,ft_benefits_ms_core,ft_benefits,Sense of community,75,314,0.239
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,ft_benefits_ms_core,ft_benefits,Refused,40,314,0.127
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,ft_benefits_ms_core,ft_benefits,Other,16,314,0.051
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,ft_benefits_ms_core,ft_benefits,Don't know,11,314,0.035
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Damaged by natural disasters,77,229,0.336
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Other,50,229,0.218
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,34,229,0.148
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,More land area under production,31,229,0.135
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Pest and plant diseases,30,229,0.131
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Lack of resources,6,229,0.026
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Less land area under production,6,229,0.026
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Better care of the farm,5,229,0.022
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Increase in fertilizers cost,3,229,0.013
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Old trees,3,229,0.013
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,harvest_change_reason_core,harvest_change_reasons,Refused,1,229,0.004
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,income_sources_ms_core,income_sources,Small family business,113,272,0.415
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,income_sources_ms_core,income_sources,Formal work or employed,108,272,0.397
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,income_sources_ms_core,income_sources,Other,61,272,0.224
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,income_sources_ms_core,income_sources,Remittances,34,272,0.125
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,income_sources_ms_core,income_sources,Refused,8,272,0.029
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,income_sources_ms_core,income_sources,Government Assistance,6,272,0.022
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,income_sources_ms_core,income_sources,Alimony,3,272,0.011
+CED2DEE8ED99922FA5C6244DEF177AF3,2023,income_sources_ms_core,income_sources,Tourism,2,272,0.007
+D2D122BAEB84ED5E4D31140580CCD5F2,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+D37E96E69F4A2005138B34AF3238FC2D,2021,ft_benefits_ms_core,ft_benefits,Don't know,1,1,
+D3C977EE949B93EA786C50EBBB0B2131,2023,borrow_source_ms_core,borrow_sources,Friends/Family,38,53,0.717
+D3C977EE949B93EA786C50EBBB0B2131,2023,borrow_source_ms_core,borrow_sources,Bank,12,53,0.226
+D3C977EE949B93EA786C50EBBB0B2131,2023,borrow_source_ms_core,borrow_sources,Informal lender,8,53,0.151
+D3C977EE949B93EA786C50EBBB0B2131,2023,borrow_source_ms_core,borrow_sources,Employer,3,53,0.057
+D3C977EE949B93EA786C50EBBB0B2131,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,3,53,0.057
+D3C977EE949B93EA786C50EBBB0B2131,2023,borrow_source_ms_core,borrow_sources,FT Premium Fund,2,53,0.038
+D3C977EE949B93EA786C50EBBB0B2131,2023,borrow_source_ms_core,borrow_sources,Don't know,1,53,0.019
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,113,187,0.604
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,79,187,0.422
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Premium fund,74,187,0.396
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,74,187,0.396
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Training,62,187,0.332
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Sense of community,37,187,0.198
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Don't know,20,187,0.107
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Placeholder,9,187,0.048
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Other,5,187,0.027
+D3C977EE949B93EA786C50EBBB0B2131,2023,ft_benefits_ms_core,ft_benefits,Refused,3,187,0.016
+DA0CFCB5F118D2B17A528AACD5162171,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+DA0CFCB5F118D2B17A528AACD5162171,2021,ft_benefits_ms_core,ft_benefits,we have started inhouse pathalogical testing services to all worker and their families free of cost with the help of FT USA premium,1,1,
+E5443108B03CB3C26D8126B67ABE0AA3,2021,ft_benefits_ms_core,ft_benefits,"Fairtrade International a través de la Clac suministró apoyo económico para alimentos, pruebas pcr y costo de la certificación.",1,1,
+E5443108B03CB3C26D8126B67ABE0AA3,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+E55109AC5C19C97DA62A891CCEEEA63A,2023,borrow_source_ms_core,borrow_sources,Friends/Family,113,140,0.807
+E55109AC5C19C97DA62A891CCEEEA63A,2023,borrow_source_ms_core,borrow_sources,Bank,12,140,0.086
+E55109AC5C19C97DA62A891CCEEEA63A,2023,borrow_source_ms_core,borrow_sources,Other,7,140,0.05
+E55109AC5C19C97DA62A891CCEEEA63A,2023,borrow_source_ms_core,borrow_sources,Micro-finance institution,4,140,0.029
+E55109AC5C19C97DA62A891CCEEEA63A,2023,borrow_source_ms_core,borrow_sources,Informal lender,2,140,0.014
+E55109AC5C19C97DA62A891CCEEEA63A,2023,borrow_source_ms_core,borrow_sources,Refused,2,140,0.014
+E55109AC5C19C97DA62A891CCEEEA63A,2023,ft_benefits_ms_core,ft_benefits,Other,227,345,0.658
+E55109AC5C19C97DA62A891CCEEEA63A,2023,ft_benefits_ms_core,ft_benefits,Premium fund,73,345,0.212
+E55109AC5C19C97DA62A891CCEEEA63A,2023,ft_benefits_ms_core,ft_benefits,Don't know,27,345,0.078
+E55109AC5C19C97DA62A891CCEEEA63A,2023,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,26,345,0.075
+E55109AC5C19C97DA62A891CCEEEA63A,2023,ft_benefits_ms_core,ft_benefits,Steady wages/hours,20,345,0.058
+E55109AC5C19C97DA62A891CCEEEA63A,2023,ft_benefits_ms_core,ft_benefits,Increased benefits,19,345,0.055
+E55109AC5C19C97DA62A891CCEEEA63A,2023,ft_benefits_ms_core,ft_benefits,Sense of community,15,345,0.043
+E55109AC5C19C97DA62A891CCEEEA63A,2023,ft_benefits_ms_core,ft_benefits,Training,11,345,0.032
+E55109AC5C19C97DA62A891CCEEEA63A,2023,ft_benefits_ms_core,ft_benefits,Refused,4,345,0.012
+ECEA93B9D2201DA503D2C64E77306495,2021,ft_benefits_ms_core,ft_benefits,No,1,1,
+F1AEF1E6B503239F221BA0BC0B4AB41E,2021,ft_benefits_ms_core,ft_benefits,"En este momento de crisis económica, garantizando la consecución de certificaciones",1,1,
+F1AEF1E6B503239F221BA0BC0B4AB41E,2021,ft_benefits_ms_core,ft_benefits,Yes,1,1,
+F2B3A728DCF0C11DFADC264C0E13576B,2021,borrow_source_ms_core,borrow_sources,Friends/Family,8,13,0.615
+F2B3A728DCF0C11DFADC264C0E13576B,2021,borrow_source_ms_core,borrow_sources,Bank,7,13,0.538
+F2B3A728DCF0C11DFADC264C0E13576B,2021,borrow_source_ms_core,borrow_sources,Cooperative,1,13,0.077
+F2B3A728DCF0C11DFADC264C0E13576B,2021,ft_benefits_ms_core,ft_benefits,Premium fund,18,20,0.9
+F2B3A728DCF0C11DFADC264C0E13576B,2021,ft_benefits_ms_core,ft_benefits,Training,10,20,0.5
+F2B3A728DCF0C11DFADC264C0E13576B,2021,ft_benefits_ms_core,ft_benefits,Sense of community,5,20,0.25
+F2B3A728DCF0C11DFADC264C0E13576B,2021,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,2,20,0.1
+F2B3A728DCF0C11DFADC264C0E13576B,2021,ft_benefits_ms_core,ft_benefits,Increased benefits,2,20,0.1
+F2B3A728DCF0C11DFADC264C0E13576B,2021,harvest_change_reason_core,harvest_change_reasons,Fishing season(s) changing and unpredictable,11,19,0.579
+F2B3A728DCF0C11DFADC264C0E13576B,2021,harvest_change_reason_core,harvest_change_reasons,Changed number of fishers,5,19,0.263
+F2B3A728DCF0C11DFADC264C0E13576B,2021,harvest_change_reason_core,harvest_change_reasons,Refused,2,19,0.105
+F2B3A728DCF0C11DFADC264C0E13576B,2021,harvest_change_reason_core,harvest_change_reasons,Changed market demand,1,19,0.053
+F2B3A728DCF0C11DFADC264C0E13576B,2021,income_sources_ms_core,income_sources,Other,5,6,
+F2B3A728DCF0C11DFADC264C0E13576B,2021,income_sources_ms_core,income_sources,Small family business,1,6,
+F2B3A728DCF0C11DFADC264C0E13576B,2025,borrow_source_ms_core,borrow_sources,Bank,94,147,0.639
+F2B3A728DCF0C11DFADC264C0E13576B,2025,borrow_source_ms_core,borrow_sources,Friends/Family,51,147,0.347
+F2B3A728DCF0C11DFADC264C0E13576B,2025,borrow_source_ms_core,borrow_sources,Micro-finance institution,3,147,0.02
+F2B3A728DCF0C11DFADC264C0E13576B,2025,borrow_source_ms_core,borrow_sources,Cooperative,2,147,0.014
+F2B3A728DCF0C11DFADC264C0E13576B,2025,borrow_source_ms_core,borrow_sources,Other,2,147,0.014
+F2B3A728DCF0C11DFADC264C0E13576B,2025,borrow_source_ms_core,borrow_sources,Refused,2,147,0.014
+F2B3A728DCF0C11DFADC264C0E13576B,2025,borrow_source_ms_core,borrow_sources,FT Premium Fund,1,147,0.007
+F2B3A728DCF0C11DFADC264C0E13576B,2025,borrow_source_ms_core,borrow_sources,Informal lender,1,147,0.007
+F2B3A728DCF0C11DFADC264C0E13576B,2025,ft_benefits_ms_core,ft_benefits,Premium fund,205,240,0.854
+F2B3A728DCF0C11DFADC264C0E13576B,2025,ft_benefits_ms_core,ft_benefits,Sense of community,186,240,0.775
+F2B3A728DCF0C11DFADC264C0E13576B,2025,ft_benefits_ms_core,ft_benefits,Training,127,240,0.529
+F2B3A728DCF0C11DFADC264C0E13576B,2025,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,103,240,0.429
+F2B3A728DCF0C11DFADC264C0E13576B,2025,ft_benefits_ms_core,ft_benefits,Increased benefits,86,240,0.358
+F2B3A728DCF0C11DFADC264C0E13576B,2025,ft_benefits_ms_core,ft_benefits,Steady wages/hours,67,240,0.279
+F2B3A728DCF0C11DFADC264C0E13576B,2025,ft_benefits_ms_core,ft_benefits,Other,2,240,0.008
+F2B3A728DCF0C11DFADC264C0E13576B,2025,ft_benefits_ms_core,ft_benefits,Don't know,1,240,0.004
+F2B3A728DCF0C11DFADC264C0E13576B,2025,harvest_change_reason_core,harvest_change_reasons,Fishing season(s) changing and unpredictable,108,217,0.498
+F2B3A728DCF0C11DFADC264C0E13576B,2025,harvest_change_reason_core,harvest_change_reasons,Other,54,217,0.249
+F2B3A728DCF0C11DFADC264C0E13576B,2025,harvest_change_reason_core,harvest_change_reasons,Changed number of fishers,36,217,0.166
+F2B3A728DCF0C11DFADC264C0E13576B,2025,harvest_change_reason_core,harvest_change_reasons,Changed market demand,19,217,0.088
+F2B3A728DCF0C11DFADC264C0E13576B,2025,income_sources_ms_core,income_sources,Other,32,45,0.711
+F2B3A728DCF0C11DFADC264C0E13576B,2025,income_sources_ms_core,income_sources,Small family business,10,45,0.222
+F2B3A728DCF0C11DFADC264C0E13576B,2025,income_sources_ms_core,income_sources,Alimony,4,45,0.089
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,borrow_source_ms_core,borrow_sources,Cooperative,23,47,0.489
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,borrow_source_ms_core,borrow_sources,Friends/Family,12,47,0.255
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,borrow_source_ms_core,borrow_sources,Informal lender,9,47,0.191
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,borrow_source_ms_core,borrow_sources,FT Premium Fund,3,47,0.064
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,borrow_source_ms_core,borrow_sources,Micro-finance institution,3,47,0.064
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,borrow_source_ms_core,borrow_sources,Other,1,47,0.021
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,ft_benefits_ms_core,ft_benefits,Premium fund,83,86,0.965
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,ft_benefits_ms_core,ft_benefits,Training,49,86,0.57
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,ft_benefits_ms_core,ft_benefits,Sense of community,39,86,0.453
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,31,86,0.36
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,ft_benefits_ms_core,ft_benefits,Feeling valued by the farm/coop/factory,24,86,0.279
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,ft_benefits_ms_core,ft_benefits,Other,2,86,0.023
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,ft_benefits_ms_core,ft_benefits,Construction d ecole,1,86,0.012
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,ft_benefits_ms_core,ft_benefits,Don't know,1,86,0.012
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,ft_benefits_ms_core,ft_benefits,Je suis un nouveau adherant,1,86,0.012
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,harvest_change_reason_core,harvest_change_reasons,Climate change,38,85,0.447
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,harvest_change_reason_core,harvest_change_reasons,Other,30,85,0.353
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,harvest_change_reason_core,harvest_change_reasons,Diseases (Swollen shoot etc.),25,85,0.294
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,11,85,0.129
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,harvest_change_reason_core,harvest_change_reasons,Less land area under production,3,85,0.035
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,harvest_change_reason_core,harvest_change_reasons,More land area under production,1,85,0.012
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,income_sources_ms_core,income_sources,Vegetables / produces for local consumption,27,51,0.529
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,income_sources_ms_core,income_sources,Rubber plantation,21,51,0.412
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,income_sources_ms_core,income_sources,Banana plantation,16,51,0.314
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,income_sources_ms_core,income_sources,Other,15,51,0.294
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,income_sources_ms_core,income_sources,Rice plantation,14,51,0.275
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,income_sources_ms_core,income_sources,Corn plantation,4,51,0.078
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,income_sources_ms_core,income_sources,Cashew nut plantation,2,51,0.039
+FA9ADCCE1553D4FADD64C87CA6219F97,2024,income_sources_ms_core,income_sources,Coffee plantation,1,51,0.02

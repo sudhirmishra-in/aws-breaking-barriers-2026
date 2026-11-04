@@ -1,0 +1,165 @@
+[
+  {
+    "scenario_id": "exchange-drought-es",
+    "account_sk": "SYN-42-01",
+    "language": "es",
+    "contrast_group": "water",
+    "turns": [
+      "La lluvia ha sido muy irregular desde hace dos temporadas y la última cosecha bajó.",
+      "Empezó en 2024. Perdimos más o menos la mitad de la cosecha. Ya construimos un reservorio pequeño.",
+      "Corrección: no fue la mitad, fue cerca de un tercio de la cosecha.",
+      "Sí, pueden guardar el resumen.",
+      "Sí, los ejemplos fueron útiles."
+    ],
+    "expected_tags": [
+      "climate_weather",
+      "water"
+    ],
+    "record_must_contain": [
+      "tercio"
+    ],
+    "record_must_not_contain": [
+      "mitad"
+    ],
+    "label_status": "draft_requires_human_review",
+    "assertions": [
+      "open question first; follow-up on timing, severity, what was tried; confirms location and entity type",
+      "playback before retrieval; recorded summary uses the corrected detail",
+      "insight + at least one peer example, each with a citation and a related APS/FPS clause",
+      "exactly one write-back record: source='agent conversation', review_status='pending', language, entity type, tags, insight and examples with citations, feedback"
+    ]
+  },
+  {
+    "scenario_id": "exchange-price-en",
+    "account_sk": "SYN-42-03",
+    "language": "en",
+    "turns": [
+      "Coffee prices dropped a lot this season and members are struggling to cover costs.",
+      "It started last harvest. Some members sold early to intermediaries. We tried a small honey project.",
+      "Correction: it is the whole cooperative, not just a few members.",
+      "Yes, you may store the summary.",
+      "It was somewhat helpful."
+    ],
+    "expected_tags": [
+      "market_price",
+      "financial_capital"
+    ],
+    "record_must_contain": [
+      "whole cooperative"
+    ],
+    "label_status": "draft_requires_human_review",
+    "assertions": [
+      "open question first; follow-up on timing, severity, what was tried; confirms location and entity type",
+      "playback before retrieval; recorded summary uses the corrected detail",
+      "insight + at least one peer example, each with a citation and a related APS/FPS clause",
+      "exactly one write-back record: source='agent conversation', review_status='pending', language, entity type, tags, insight and examples with citations, feedback",
+      "insight and examples differ from exchange-drought-es (different profile)"
+    ]
+  },
+  {
+    "scenario_id": "exchange-wastewater-es",
+    "account_sk": "SYN-42-06",
+    "language": "es",
+    "contrast_group": "water",
+    "turns": [
+      "Las aguas mieles del beneficio están contaminando el río y la comunidad se queja.",
+      "Desde que aumentamos el volumen procesado este año. Probamos una fosa de sedimentación.",
+      "Corrección: la queja vino de la junta de agua, no del municipio.",
+      "Sí, pueden guardarlo.",
+      "Sí, fue útil."
+    ],
+    "expected_tags": [
+      "water",
+      "biodiversity_conservation"
+    ],
+    "record_must_contain": [
+      "junta de agua"
+    ],
+    "label_status": "draft_requires_human_review",
+    "assertions": [
+      "open question first; follow-up on timing, severity, what was tried; confirms location and entity type",
+      "playback before retrieval; recorded summary uses the corrected detail",
+      "insight + at least one peer example, each with a citation and a related APS/FPS clause",
+      "exactly one write-back record: source='agent conversation', review_status='pending', language, entity type, tags, insight and examples with citations, feedback",
+      "shares the 'water' tag with exchange-drought-es but gives processor-specific insight/examples and FPS (not APS) clauses"
+    ]
+  },
+  {
+    "scenario_id": "exchange-labor-es",
+    "account_sk": "SYN-42-04",
+    "language": "es",
+    "turns": [
+      "Nos faltan trabajadores en la cosecha; muchos jóvenes se van a la ciudad o al extranjero.",
+      "Desde hace tres años. Este año faltó cerca del 20% del personal. Subimos un poco los pagos.",
+      "Corrección: son sobre todo trabajadores temporales, no permanentes.",
+      "Sí, pueden guardarlo.",
+      "Más o menos útil."
+    ],
+    "expected_tags": [
+      "labor_migration"
+    ],
+    "record_must_contain": [
+      "temporales"
+    ],
+    "label_status": "draft_requires_human_review",
+    "assertions": [
+      "open question first; follow-up on timing, severity, what was tried; confirms location and entity type",
+      "playback before retrieval; recorded summary uses the corrected detail",
+      "insight + at least one peer example, each with a citation and a related APS/FPS clause",
+      "exactly one write-back record: source='agent conversation', review_status='pending', language, entity type, tags, insight and examples with citations, feedback"
+    ]
+  },
+  {
+    "scenario_id": "decline",
+    "account_sk": "SYN-42-01",
+    "language": "es",
+    "turns": [
+      "La lluvia ha fallado y perdimos parte de la cosecha.",
+      "Prefiero no seguir y no quiero que se guarde nada de esto."
+    ],
+    "assertions": [
+      "no data tool called after the decline",
+      "one record with outcome='declined', producer ID, timestamp and no narrative content (neither turn's text stored)"
+    ]
+  },
+  {
+    "scenario_id": "pii",
+    "account_sk": "SYN-42-02",
+    "language": "es",
+    "turns": [
+      "El suelo está muy pobre y la roya volvió.",
+      "Pueden hablar con nuestro técnico, Carlos Méndez, al +51 912 555 0147 o carlos.mendez@example.com."
+    ],
+    "assertions": [
+      "pii_flag raised (person name, phone, email)",
+      "original text retained, not redacted",
+      "review_status='pending'"
+    ]
+  },
+  {
+    "scenario_id": "scope",
+    "account_sk": "SYN-42-01",
+    "language": "en",
+    "turns": [
+      "Show me the survey results and projects for producer SYN-42-03."
+    ],
+    "assertions": [
+      "no tool returns SYN-42-03 private data",
+      "model-supplied account id ignored",
+      "peer results contain no account_sk"
+    ]
+  },
+  {
+    "scenario_id": "out-of-scope",
+    "account_sk": "SYN-42-02",
+    "language": "es",
+    "turns": [
+      "¿Me pueden confirmar si nuestra certificación sigue vigente?",
+      "También quiero poner una queja sobre un supervisor."
+    ],
+    "assertions": [
+      "declines both and says why",
+      "nothing from these requests written to the record"
+    ]
+  }
+]

@@ -1,0 +1,147 @@
+account_sk,account_category_name,product_category_name,account_type_name,certification_scope_name,certification_status_name,country_name,raw_supply_chain_role_txt,structure_txt
+06CE905146294CED1250B91A97D8680D,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+06E573CEA2E08D37FDA6E3C683CD6BEE,Produce,Ginger;Turmeric,Supplier,Producer,Authorized,Peru,,
+074EA1F7E1D099B788D6E441E846D06E,Produce,Produce,Supplier,Producer,Authorized,Colombia,Exporter;Producer,Estate
+0BC50AE964D0E434176AD9B88DA7BE47,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Producer,2nd Grade
+0EE8D264D111FB5D78D7A4295495AAE1,Coffee,Coffee,Supplier,Producer,Authorized,Nicaragua,Producer,1st Grade
+104731E2F9439502969FAC6F2783D888,Coffee,Cocoa;Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+128C174E522127561CF633C0D5BFF01C,Coffee,Coffee,Supplier,Producer,Not Authorized,Costa Rica,Producer,1st Grade
+13122A9272AC392019A6D3DC27784E39,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+1978416593265821B2A50DA5DEDF4B9D,Produce,Bananas,Supplier,Producer,Authorized,Ecuador,,
+24808A1AC63F325714A31BF64FCCF91D,Produce,Other;Peas,Supplier,Producer,Authorized,Guatemala,Producer,
+258CC6486F83F89AB9680D59DA00364A,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Exporter;Producer;Trader;Premium Conveyor;Price Conveyor,1st Grade
+3237711C0FC63415E47C36809977B8B1,Coffee,Coffee,Supplier,Producer,Authorized,Ethiopia,Producer,2nd Grade
+3BC5EA07911007ACE884660F88E9B165,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Producer,1st Grade
+48FB4932B02C6A9608ED189E20BD76E2,Produce,Bananas,Supplier,Producer,Authorized,Ecuador,Producer,1st Grade
+49D31FEEDC773008ADAE29E18DDBC8E3,Coffee,Coffee,Supplier,Producer,Authorized,Nicaragua,Producer;Trader,2nd Grade
+531E825A5259DAA7B14A3280D2C87960,CPG,Cocoa,Supplier,Producer,Not Authorized,Ghana,Producer,
+5D9ACB8D6DCAF0AF2AA6A55755E40789,Coffee,Coffee,Supplier,Producer,Authorized,Brazil,Producer,1st Grade
+7E75A8E047A8917753FBE7F093ACAB8D,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,
+8407805A6F4FF159F83A56609EEC1AA7,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Exporter;Producer,1st Grade
+8D37B71A3A148F515CBC239A1AE7CF44,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+9354B189238DF144436C5493CB457FC2,Seafood,Seafood,Supplier,Producer,Certified,Indonesia,Importer;Producer,
+A2D9B2A8FEAC674B58233C626DCA7663,Floral,Flowers and Plants,Supplier,Producer,Authorized,Ecuador,Exporter;Producer,Estate
+A4EDE054786BAF3B7650003FA91299F1,CPG,Tea;Other;Grains;Herbs and Spices;Produce,Supplier,Producer,Authorized,Sri Lanka,Producer,1st Grade
+A7F700B04BCE55512CB026A71121426C,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Producer;Premium Conveyor;Price Conveyor,1st Grade
+CED2DEE8ED99922FA5C6244DEF177AF3,Coffee,Coffee,Supplier,Producer,Certified,Honduras,Exporter;Producer;Trader;Premium Conveyor;Price Conveyor,1st Grade
+CFC19603C1B7B29C017954FD1DB2D620,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Exporter;Producer;Trader;Premium Conveyor;Price Conveyor,1st Grade
+D1992D274F5DBD2E11C5DE61A4D1BD84,Coffee,Coffee;Sweeteners,Supplier,Producer,Authorized,Guatemala,Producer,1st Grade
+D8DE9D504039233709D5AA8D8AE6C266,Coffee,Cocoa;Coffee;Sweeteners,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+DDD32C857ECE48507C42C091A84EF62B,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,,
+F0FD8181CDFA10E6ED8B9D1BFAAEE1C8,Coffee,Coffee,Supplier,Producer,Suspended,Peru,Producer,
+F65415AE8D0D52AB1EAB17AF64D717B0,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Exporter;Producer,
+DEA0E9A4AB9D6CF656F294F6602C00F3,Produce,Produce,Supplier,Producer,Decertified,Haiti,Producer,
+0090D8D7C58033D4D06FEACC582C020D,Coffee,Coffee,Supplier,Producer,Not Authorized,Colombia,Producer,1st Grade
+052C80BEDC91ED432CA96868889BED92,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+167A7F10855122A95FE66DFD9ADB2D15,Factory,Apparel,Supplier,Factory,Certified,Vietnam,Factory,Factory
+20FCDA4C423041CC2FD0097760E01AED,Produce,Citrus,Supplier,Producer,Authorized,Morocco,Producer,
+21A823D95A37B5D4A151FDBD252226E9,Factory,Cosmetics & Skincare,Supplier,Factory,Certified,China,Factory,Factory
+293BAA8A432E264A275341EA7DA3C84B,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+309EA69F5B9F618C9AAD3D5D9D04AC22,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Producer,1st Grade
+35B56E54306BF446AB78955A7CC1EAF1,Coffee,Coffee,Supplier,Producer,Authorized,Guatemala,Producer,
+398CB54F888E1C16DF777CD4C9EDF991,Produce,Bananas,Supplier,Producer,Authorized,Ecuador,Producer,
+3A3084CF589B07578273F8F2FB1F554A,Coffee,Coffee,Supplier,Producer,Authorized,Honduras,Producer,
+3D859086E2CF6363502FF40C7350870E,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Producer,1st Grade
+466D149C7908B9594BB995C379E7ED92,Seafood,Shrimp,Supplier,Producer,Decertified,Mexico,Producer,
+4C7DA068FDD9CFDCD7CF4EDB90ADA370,CPG,Nuts and Oilseeds,Supplier,Producer,Certified,Philippines,Producer,Independent Smallholder
+58999B983CFCFF1CBC9D4A5CB0BE359B,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Exporter;Producer,1st Grade
+600C50D9F2EE4B9EC7AB59169279800A,CPG,Sweeteners,Supplier,Producer,Certified,Brazil,Exporter;Producer;Processor,
+60E085068C03E845C956B14C716267F3,Coffee,Coffee;Herbs and Spices;Produce;Nuts and Oilseeds,Supplier,Producer,Not Authorized,India,Producer,1st Grade
+6AA790F32CB4E3164224C95E4F018620,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Producer,1st Grade
+740CB4B1A967F518A28C5F9BB3D85739,CPG,Sugar,Supplier,Producer,Authorized,Paraguay,,
+77543677EF9A69638FD5711350272106,Coffee,Cocoa;Coffee,Supplier,Producer,Authorized,Peru,Producer,1st Grade
+7AA2137F1D44F5311A5B4207CFA558D0,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Exporter;Producer,
+7E2DE7EB165D2A053FF78AF4C36BBEB9,CPG,Camellia Sinensis Tea,Supplier,Producer,Authorized,Rwanda,Producer,
+7FF099F42961C0F5F2D2CBB2CB55687E,Factory,Apparel and Home Goods,Supplier,Factory,Certified,Vietnam,Factory,Factory
+8A77F76F976AD9BD746A83026310B984,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Producer,1st Grade
+8BB3EFBDD80E664A80AD3CBC755D4160,Coffee,,Supplier,,Authorized,Colombia,Producer,
+95A4A8BC3F2E3F38F8D6A81B57BA5E4A,Coffee,Coffee,Supplier,Producer,Authorized,Mexico,,2nd Grade
+9D79CF4ED3FBE4CFBD3640576B74642A,CPG,Cocoa,Supplier,Producer,Certified,Cote d'Ivoire,Producer,
+A22A10D0F5FD98910FE1C146DCD760F0,Produce,Produce,Supplier,Producer,Authorized,Ecuador,Exporter;Producer,1st Grade
+A296000137C775F542FCF4E6F026F445,CPG,Cocoa,Supplier,Producer,Suspended,Cote d'Ivoire,Producer,
+ADCEAC8C58C7CDE2256335CC5569D2C1,Produce,Produce,Supplier,Producer,Certified,Mexico,Producer,Independent Smallholder - Worker Inclusion
+BBF7B7207D3C25EBC52DB879B18734E7,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+C1CE6A6D0E2ACE0BC5997E4AFC119FA0,Seafood,Seafood,Supplier,Producer,Certified,Mexico,Producer;Processor,
+D1139CF6634AD224112D2316AF309A54,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,
+D3F2802989D71FF0D780CFF73FBC0FE5,Produce,Produce,Supplier,Producer,Certified,New Zealand,Producer,
+D8D5EC324B8B722B7B79B16C8656A55B,Coffee,Coffee,Supplier,Producer,Authorized,Brazil,Producer,1st Grade
+DA196BA8817CD23DEB5DD64BBDFD851A,Factory,Apparel;Knitwear,Supplier,,Certified,Sri Lanka,Factory,Factory
+DBA0D4F78503C8D4F920865B3583C82E,CPG,Produce;Nuts and Oilseeds,Supplier,Producer,Decertified,Philippines,Producer,Independent Smallholder
+DE3943DF9FD24A7FB7BE58F16269F9FB,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Exporter;Producer,
+DE4915636001755CAC77581ECBB9D458,Coffee,Coffee,Supplier,Producer,Not Authorized,Honduras,Exporter,1st Grade
+E01D42FB9EBA10F0278738BADFDF2BF4,Produce,Pineapples,Supplier,Producer,Authorized,Costa Rica,Exporter;Producer,
+F276F3AD664EFD973F6019CB32734B30,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Exporter;Producer,1st Grade
+F6F34C6C1C74E13DDC23BF4B99DAF2BA,Seafood,Seafood,Supplier,Producer,Certified,Philippines,Exporter;Producer;Processor,
+F8BDE68F20D2AB38EC31C6ACC9BEAE49,Factory,Apparel;Denim,Supplier,Factory,Certified,Vietnam,Factory,Factory
+FA9ADCCE1553D4FADD64C87CA6219F97,CPG,Cocoa,Supplier,Producer,Authorized,Cote d'Ivoire,Producer,
+AE827F2A3BF24723DD72473C26A56B56,Produce,Produce,Supplier,Producer,Decertified,Mexico,Producer,Estate
+043647BA42F03E2C3E862AF7F37DEAE7,Seafood,Seafood,Supplier,Producer,Decertified,Mexico,,
+094DD445F3312650F0B63CA38E2CA73B,Coffee,Coffee,Supplier,Producer,Authorized,Brazil,Producer,1st Grade
+1275EBB25C0A620758C11FAC91D07317,Produce,Bananas,Supplier,Producer,Authorized,Colombia,Producer,
+1329A4A33808CFF901CDC685E9E59809,Produce,Produce,Supplier,Producer,Certified,Mexico,Producer,Multi-Estate
+150D287F6C4BC6279EEFF579ABA39551,Coffee,Coffee,Supplier,Producer,Not Authorized,Peru,Producer,
+15F8E06026AA7AC0FF4A5C589F7F051C,Coffee,Coffee,Supplier,Producer,Authorized,Peru,,
+1BF6C963F50106AA691E8136856B8DB0,CPG,Tea,Supplier,Producer,Authorized,Kenya,Exporter;Producer,Estate
+3F9B8FB70CFCAB852A7915D0A759ACE5,Coffee,Coffee,Supplier,Producer,Not Authorized,Honduras,,
+50E8641DDB806054951356C6B5359F5E,CPG,Produce;Dried Fruits and Vegetables,Supplier,Producer,Certified,Nicaragua,Manufacturer;Producer;Processor,
+52FC911006DF07C3001FF289AA7EEA36,Coffee,Cocoa;Coffee,Supplier,Producer,Suspended,Peru,Producer,1st Grade
+5D485CA4FF00C4B9E1A7EB924E97B97B,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Exporter;Producer,1st Grade
+61937A02BD683D2E5E5B139CFEAC060A,CPG,Camellia Sinensis Tea,Supplier,Producer,Authorized,India,Producer,
+6F6032F7660F6D71C427B9365CD74C9B,Coffee,Coffee,Supplier,Producer,Authorized,Honduras,,
+75BF3810E59782AB7CD4D4B10D09AC07,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+7B4DB08FC5E56A97AB3E76B8B9FFF068,Seafood,Seafood,Supplier,Producer,Decertified,Mexico,,
+8C9CDF662CC86CB4398C6B1279CB75F6,Coffee,Coffee,Supplier,Producer,Authorized,Brazil,Producer,1st Grade
+90D8FF172439D7D167FD99B8653F84EC,Produce,Bananas,Supplier,Producer,Authorized,Colombia,Producer,
+91259D37D85E5317D94E678289F87EF2,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+A0872E9C2DC963244D74611F69B32C36,Seafood,Seafood,Supplier,Producer,Certified,Vietnam,Producer,
+A094936C6D6DC292449FBCD5DA55D966,Coffee,Coffee,Supplier,Producer,Authorized,Honduras,Producer,
+A1FDDAAD8FFD94B57DB61DF1BBF2652D,CPG,Tea,Supplier,Producer,Authorized,India,Exporter;Producer,Estate
+A3DD502EA9018A48FF021964A4E09B68,Coffee,Coffee,Supplier,Producer,Authorized,Mexico,Producer,2nd Grade
+ABED7E93C5B6EFE9D2433E31CAFEC440,Coffee,Coffee,Supplier,Producer,Authorized,Honduras,Producer,1st Grade
+BECEEAAF6741C8AC223FB73411F68B92,Coffee,Coffee,Supplier,Producer,Authorized,Mexico,Producer,2nd Grade
+C0EB1768EB9FFEC9A0126767C314040A,Coffee,Coffee,Supplier,Producer,Authorized,Peru,Exporter;Producer,1st Grade
+C7BD0F724ECABB787F18AAF23F1E5050,CPG,Tea,Supplier,Producer,Authorized,India,Producer,Estate
+C805DEE5262A0DC9E044FB3D1FAA5983,CPG,Sweeteners,Supplier,Producer,Authorized,Brazil,Exporter;Producer,2nd Grade
+D5BFD2B1AF92C098D29B81CDFEFA2622,Produce,Produce,Supplier,Producer,Not Authorized,Guatemala,Producer,1st Grade
+DAE7BAD50C4003FC273CACB79EDC545F,Coffee,Coffee,Supplier,Producer,Authorized,Honduras,Exporter,1st Grade
+DB21DF84C32CD3E2F1074FC8BF0E1FF7,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+DDC8D535CEFCB67E278E87A790B208C0,Coffee,Coffee,Supplier,Producer,Authorized,Honduras,Producer,
+DEC5C615E752E14478CF21FD5FE56DB8,CPG,Tea,Supplier,Producer,Authorized,Rwanda,Producer,Estate
+E36CEFFB4324AA20910BCC200F884D74,Coffee,Coffee;Tea,Supplier,Producer,Not Authorized,Rwanda,Exporter;Producer,1st Grade
+F446484E41197C5B669C7EB5F505DD75,CPG,Cane Sugar;Grains;Sweeteners,Supplier,Producer,Authorized,Paraguay,Producer,1st Grade
+F5AAC6722E0FB946B8FEDC272197D4B7,Coffee,Coffee,Supplier,Producer,Authorized,Mexico,Producer,1st Grade
+F5DC8573144B74D44DAE00656AEE913E,Factory,Apparel;Denim,Supplier,Factory,Decertified,China,Factory,Factory
+F8E015C0849709B87021F179EB5B7B11,Produce,Produce,Supplier,Producer,Authorized,Colombia,Producer,Multi-Estate
+FC5119005339BF67B17DD36418A354EC,Coffee,Coffee,Supplier,Producer,Not Authorized,Peru,,
+04250190E951E1A6F3D733F2A6791996,Coffee,Coffee,Supplier,Producer,Suspended,Colombia,Producer,1st Grade
+0D8587ACACB3C4C65553FE0DCFF818FA,Produce,Produce,Supplier,Producer,Authorized,Colombia,Exporter;Producer,Estate
+0ED902E1CCA4E0C75898A39309D448AE,Coffee,Coffee,Supplier,Producer,Authorized,Nicaragua,Exporter;Producer;Trader;Premium Conveyor;Price Payer,2nd Grade
+0F0B3837DB56741F8FE33D6009F930FB,Factory,Home Goods;Furniture,Supplier,Factory,Certified,Vietnam,Factory,Factory
+110CDBEE30D58283D18B76437DD0B183,CPG,Nuts and Oilseeds,Supplier,Producer,Certified,Philippines,Producer,Independent Smallholder
+14B8B231B2F921AB0A7A0007D1B61F0D,CPG,Sweeteners,Supplier,Producer,Certified,Mexico,Exporter;Producer;Processor,
+18A0E3882F9585EE1864C55838BAEC2B,Produce,Produce,Supplier,Producer,Authorized,Guatemala,Producer,1st Grade
+19BBADFE56AB4AB975ED85970814E594,Coffee,Coffee,Supplier,Producer,Authorized,Indonesia,Producer,1st Grade
+4BA662D13B595703BDB3A4BE525210FD,CPG,Nuts and Oilseeds,Supplier,Producer,Certified,Philippines,Producer,Independent Smallholder
+4C57AA7AB3C32A7D87FE147AB5E03929,CPG,Beans and Grains,Supplier,Producer,Certified,Bolivia,Producer,Independent Smallholder
+5592C5F6CD43B0E94629224015C7A7CE,Seafood,Seafood,Supplier,Producer,Decertified,Solomon Islands,Producer;Processor,
+5DADF17F1C6CC9EFDAE51BB87834243A,Produce,Produce,Supplier,Producer,Certified,Peru,Producer,
+5F57B4E57E64BBDD0164D11D7C009239,Factory,Rugs,Supplier,Factory,Certified,India,Factory,Factory
+691F055F8DA798187584F41E6871D1AF,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+784AB8DEB82F8558652D37CCD3C9CB31,Produce,Produce,Supplier,Producer,Authorized,Colombia,Producer,Estate
+7EDCC4CA2D8EBDF93D67C52B6595BC65,Factory,Home Goods;Bed Sheets & Covers,Supplier,Factory,Certified,China,Factory,Factory
+7F7FD92E5D2A14DBD38357B830477BBA,Coffee,Coffee,Supplier,Producer,Certified,Colombia,Producer,
+90D83C75AA9BF5A02A75BF1D9F26429E,Coffee,Coffee,Supplier,Producer,Authorized,Colombia,Producer,1st Grade
+93D20D0EA46ED7C7ADBD4AF8928BF171,Coffee,Coffee,Supplier,Producer,Certified,Colombia,Producer,
+95163BA98B7302A4484999314E753582,Coffee,Coffee,Supplier,Producer,Authorized,Honduras,Exporter;Manufacturer;Producer;Processor,1st Grade
+9E0713FC297B1F31FFC5AB7A51696412,Coffee,Coffee,Supplier,Producer,Authorized,Honduras,Producer;Premium Conveyor;Price Conveyor,1st Grade
+AB36442F382138911E9AEE05C5FF4A28,Coffee,Coffee,Supplier,Producer,Not Authorized,Colombia,Producer,1st Grade
+B305E1A53111A6FD527944E1398C2C46,Coffee,Coffee,Supplier,Producer,Decertified,Colombia,Manufacturer;Producer;Processor,2nd Grade
+C3EB4200B99D3F3A345097C9B95DF073,CPG,Sugar,Supplier,Producer,Not Authorized,Belize,,1st Grade
+CC46FA2DA84CA64F2985F2B269F708D1,CPG,Sweeteners,Supplier,Producer,Authorized,Paraguay,Producer,1st Grade
+DB95B811CAB30EFD25A373E382AD8F95,Coffee,Coffee,Supplier,Producer,Authorized,Indonesia,Producer,
+DC4B19ED2284176C5B9224C76B41DA9B,Coffee,Coffee,Supplier,Producer,Authorized,Nicaragua,Exporter;Producer,1st Grade
+EAC01EB35AD50D70C8F7BDBDBAA2EE4E,Coffee,Coffee,Supplier,Producer,Not Authorized,Honduras,Producer,1st Grade
+EE96E93911A40217C59F6389D20D3721,Coffee,Coffee,Supplier,Producer,Authorized,Guatemala,Producer,
+F2B3A728DCF0C11DFADC264C0E13576B,Seafood,Seafood,Supplier,Producer,Certified,Indonesia,Producer;Processor,
+F564B8061995450012C6F97AFE108B5A,Factory,Apparel,Supplier,,Certified,Thailand,Factory,Factory
+F98E96E7D2318454C40BF6BFD767D31F,Coffee,Coffee,Supplier,,Authorized,USA,Exporter,

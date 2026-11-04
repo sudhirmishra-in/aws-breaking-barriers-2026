@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "seed": 42,
+  "source": "synthetic",
+  "standard_source": "FTUSA supplied reference; not synthetic",
+  "files_sha256": {
+    "APS_reference.xlsm": "8e185419d354d803b82739cc016eb6e579f651475d9c8af48ddffa190304dc72",
+    "FPS_reference.xlsm": "80b299d0f72ebe5400a222b20925691081a905d7a9b0c33ed651f0922c8ff388",
+    "Household_Survey_Header.csv": "e8dd29969b1a7c79497a3fa2667f041f0010bff47ce8cd5b6a4eb4ff89a4ac72",
+    "Premium_Projects_Environmental.csv": "0152f0bd4be1428e03fdfee76fe1dcb7012a814dc39016b63bf26e2114aec6a9",
+    "Producer_Accounts.csv": "73563f0a6c60f8a566eb1cc8dfc3d9e7431cef94e1a5b8b50ff1539c45f72280",
+    "Survey_Response_Header.csv": "dc7e1074129b41bd767a907bec09120a091443338080497e5274c9ff52cd36ba",
+    "Survey_Response_Questions_Multiple_Choice.csv": "3b0071a680a3e529947b113a4bdf48a6347a3080a8a6cc3b7419fba717992ca4",
+    "Survey_Response_Questions_Single_Choice.csv": "9080db7b021bf2dc2ff3eefba16df1c75863a5910646036531903c0acf3df424",
+    "expected.json": "7fa014d4d0840794897df89c14b6398129ef2777f5f144fa85a2940772fa9010",
+    "pprojects-full-environmental-with-acct-detail.csv": "40debed2406b757ec702c91db59aca08af7815c158f398f15bc1cf1eb3dab9a3",
+    "scenarios.json": "b0bf1ebf5613efbd000f6a350492ab5dc53cd4b1f446d9350725667bc8489b47"
+  },
+  "limitations": [
+    "Regional evidence (CHIRPS, Aqueduct, World Bank prices) is not generated; load pre-extracted open data or a hand-curated fact table labeled as a stand-in.",
+    "Scenario tags are drafts; 80% agreement has not been measured.",
+    "Conversation write-back, consent, grounding and review must be tested by the full agent."
+  ]
+}
