@@ -47,6 +47,7 @@ const en = {
     others: "What others have done", helpful: "Was this helpful?", partly: "Partly", thanksFb: "Thank you. You answered: {a}. You can change your answer.", noEvidence: "No prepared evidence matches this topic and location.",
     noClose: "No close match yet for this problem.", loadFail: "Evidence could not be loaded just now.", thanksDone: "Thank you. Your confirmed summary was sent to Fair Trade USA for review.",
     stoppedDone: "This conversation was stopped. It is kept for now and you can still read it or ask for deletion." },
+  landing: { choice: "You decide who can see your case. Fair Trade USA can keep and review the conversation." },
   ev: { external: "EXTERNAL", ftusa: "FAIR TRADE USA", certified: "FAIR TRADE CERTIFIED DATA", illustrative: "Illustrative data", illTip: "This value is a placeholder for testing. It is not real data.", older: "Older data",
     status: "Recorded status", result: "Result", topic: "Topic", outcomeNot: "Outcome not reported" },
 };
@@ -94,6 +95,7 @@ const es: Dict = {
     others: "Lo que otros han hecho", helpful: "¿Le fue útil?", partly: "En parte", thanksFb: "Gracias. Respondió: {a}. Puede cambiar su respuesta.", noEvidence: "No hay evidencia preparada que coincida con este tema y ubicación.",
     noClose: "Todavía no hay una coincidencia cercana para este problema.", loadFail: "No se pudo cargar la evidencia en este momento.", thanksDone: "Gracias. Su resumen confirmado se envió a Fair Trade USA para revisión.",
     stoppedDone: "Esta conversación se detuvo. Se conserva por ahora y puede leerla o pedir su eliminación." },
+  landing: { choice: "Usted decide quién puede ver su caso. Fair Trade USA puede conservar y revisar la conversación." },
   ev: { external: "EXTERNO", ftusa: "FAIR TRADE USA", certified: "DATOS CERTIFICADOS FAIR TRADE", illustrative: "Datos ilustrativos", illTip: "Este valor es un marcador de prueba. No son datos reales.", older: "Datos antiguos",
     status: "Estado registrado", result: "Resultado", topic: "Tema", outcomeNot: "Resultado no informado" },
 };
@@ -140,6 +142,7 @@ const fr: Dict = {
     others: "Ce que d'autres ont fait", helpful: "Cela vous a-t-il aidé ?", partly: "En partie", thanksFb: "Merci. Vous avez répondu : {a}. Vous pouvez modifier votre réponse.", noEvidence: "Aucune donnée préparée ne correspond à ce sujet et à ce lieu.",
     noClose: "Pas encore de correspondance proche pour ce problème.", loadFail: "Les données n'ont pas pu être chargées pour le moment.", thanksDone: "Merci. Votre résumé confirmé a été envoyé à Fair Trade USA pour examen.",
     stoppedDone: "Cette conversation a été arrêtée. Elle est conservée pour l'instant ; vous pouvez la relire ou demander sa suppression." },
+  landing: { choice: "Vous décidez qui peut voir votre cas. Fair Trade USA peut conserver et examiner la conversation." },
   ev: { external: "EXTERNE", ftusa: "FAIR TRADE USA", certified: "DONNÉES CERTIFIÉES FAIR TRADE", illustrative: "Données illustratives", illTip: "Cette valeur est un espace réservé pour les tests. Ce ne sont pas des données réelles.", older: "Données anciennes",
     status: "Statut enregistré", result: "Résultat", topic: "Sujet", outcomeNot: "Résultat non communiqué" },
 };

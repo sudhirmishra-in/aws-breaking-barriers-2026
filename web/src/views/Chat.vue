@@ -15,7 +15,7 @@ import { renderMarkdown } from "../lib/markdown";
 import { audioSupported, playMp3, stopAudio, unlockAudio } from "../lib/speech";
 import { markExpired, state } from "../session";
 import { t } from "../lib/i18n";
-import { ApiFailure, LANGS, type ConversationDto, type ConversationView, type Lang, type Message, type Stage } from "../types";
+import { ApiFailure, type ConversationDto, type ConversationView, type Lang, type Message, type Stage } from "../types";
 
 const s = computed(() => t(state.ui));
 const route = useRoute();
@@ -173,7 +173,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
     <section class="chat-main" aria-label="Conversation">
       <header class="chat-hd">
         <div class="chat-actions">
-          <button type="button" class="btn primary sm" @click="newConversation"><Plus :size="14" aria-hidden="true" />{{ s.newConversation }}</button>
+          <button v-if="conv" type="button" class="btn primary sm" @click="newConversation"><Plus :size="14" aria-hidden="true" />{{ s.newConversation }}</button>
           <HistoryPanel :current-id="conv?.conversationId" @open="openConversation" @deleted="onDeleted" />
         </div>
         <div class="chat-titlebar">
@@ -203,9 +203,6 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
             <h1>{{ s.welcome }}</h1>
             <span class="bar" aria-hidden="true" />
             <p>{{ s.about }}</p>
-            <div class="seg" role="group" :aria-label="s.language">
-              <button v-for="l in LANGS" :key="l.code" :aria-pressed="startLang === l.code" :lang="l.code" @click="startLang = l.code">{{ l.name }}</button>
-            </div>
             <div><button class="btn primary" :disabled="busy" @click="start"><MessageCircle :size="16" aria-hidden="true" />{{ busy ? s.sending : s.start }}</button></div>
             <div v-if="error" class="banner error" role="alert">{{ error.text }} <button v-if="error.retry" class="btn sm" @click="error.retry()">{{ s.retry }}</button></div>
           </div>
@@ -213,10 +210,10 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
         <div class="grid3">
           <div class="card feat"><span class="ic brand-gradient"><MessageCircle :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat1 }}</h3><p>{{ s.feat1d }}</p></div></div>
           <div class="card feat"><span class="ic brand-gradient"><CheckCircle2 :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat2 }}</h3><p>{{ s.feat2d }}</p></div></div>
-          <div class="card feat"><span class="ic brand-gradient"><EyeOff :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat3 }}</h3><p>{{ s.feat3d }}</p></div></div>
+          <div class="card feat"><span class="ic brand-gradient"><EyeOff :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat3 }}</h3><p>{{ L(state.ui).landing.choice }}</p></div></div>
         </div>
         <ProducerInfo />
-        <details class="card"><summary><ShieldCheck :size="14" aria-hidden="true" style="vertical-align:-2px" /> {{ s.privacyTitle }}</summary><p>{{ s.privacy }}</p></details>
+        <details class="card"><summary><ShieldCheck :size="14" aria-hidden="true" style="vertical-align:-2px" /> {{ s.privacyTitle }}</summary><p>{{ L(state.ui).share.retention }}</p></details>
       </div>
 
       <!-- A conversation: active or closed -->
