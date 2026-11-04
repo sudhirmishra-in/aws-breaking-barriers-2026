@@ -146,6 +146,7 @@ def handle_turn(
         title=(out.title or "").strip()[:80] or None if playback else None,
         summaryOriginal=(out.summary_original or (out.summary_en if req.context.language == "en" else None)) if phase == "guidance" else None,
         summaryEn=out.summary_en if phase == "guidance" else None,
+        challengeTags=list(dict.fromkeys(out.challenge_tags))[:3] if phase == "guidance" else [],
         piiFlag=bool(pii_types),
         piiTypes=pii_types,
         language=req.context.language,

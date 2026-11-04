@@ -1,6 +1,6 @@
 import { accessToken } from "./auth";
 import { loadConfig } from "./config";
-import { ApiFailure, type ConversationSummary, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me, type ReviewItem } from "../types";
+import { ApiFailure, type RelatedData, type ReviewProducer, type ReviewRecord, type ReviewStats, type ConversationSummary, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me } from "../types";
 
 export const newRequestId = () => crypto.randomUUID();
 
@@ -40,8 +40,11 @@ export const api = {
     call<ConversationView>("POST", `/conversations/${id}/playback`, { requestId, ...body }),
   consent: (id: string, requestId: string, storeSummary: boolean) => call<ConversationView>("POST", `/conversations/${id}/consent`, { requestId, storeSummary }),
   end: (id: string, requestId: string) => call<ConversationView>("POST", `/conversations/${id}/end`, { requestId }),
-  reviews: () => call<{ items: ReviewItem[] }>("GET", "/reviews"),
-  review: (id: string) => call<ReviewItem>("GET", `/reviews/${id}`),
-  updateReview: (id: string, body: { decision: "approve" | "correct"; correctedSummaryOriginal?: string; correctedSummaryEn?: string; piiHandled?: boolean }) =>
-    call<ReviewItem>("PUT", `/reviews/${id}`, { requestId: newRequestId(), ...body }),
+  reviewStats: () => call<ReviewStats>("GET", "/review/stats"),
+  reviewProducers: (f: Record<string, string>) => call<{ items: ReviewProducer[] }>("GET", `/review/producers?${new URLSearchParams(f).toString()}`),
+  producerRecords: (id: string) => call<{ items: ReviewRecord[] }>("GET", `/review/producers/${encodeURIComponent(id)}/records`),
+  related: (id: string) => call<RelatedData>("GET", `/review/producers/${encodeURIComponent(id)}/related`),
+  record: (id: string) => call<ReviewRecord>("GET", `/records/${encodeURIComponent(id)}`),
+  patchRecord: (id: string, body: { review_status: "approved" | "corrected"; summary_original?: string; summary_en?: string; challenge_tags?: string[]; reviewer_note?: string }) =>
+    call<ReviewRecord>("PATCH", `/records/${encodeURIComponent(id)}`, { requestId: newRequestId(), ...body }),
 };

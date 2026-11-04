@@ -19,6 +19,7 @@ export interface AgentTurnResponse {
   title?: string | null;
   summaryOriginal?: string | null;
   summaryEn?: string | null;
+  challengeTags?: string[];
   piiFlag: boolean;
   piiTypes: string[];
   evidence: { status: "unavailable"; note?: string };
