@@ -1,5 +1,4 @@
 """Component 4 (standards RAG) on the offline lexical backend, plus the contract with main's tool."""
-import ast
 import os
 import sys
 from pathlib import Path
@@ -10,7 +9,7 @@ import pytest
 from c4 import load as c4load
 from c4.access import MAX_TOP_K, StandardsAccess
 from c4.corpus import CROP_AMENDMENTS, applies, load_clauses
-from c4.tools import impl_get_standards_clause, local_standards_access
+from c4.tools import get_standards_clause, local_standards_access
 
 ROOT = Path(__file__).resolve().parents[1]
 CLAUSES = Path(os.environ.get("C4_CLAUSES", ROOT / "out" / "standards" / "standard_clauses.jsonl"))
@@ -31,7 +30,7 @@ def sa():
 
 
 def call(sa, producer, topic, lang="en"):
-    return impl_get_standards_clause(sa, producer, topic, lang)
+    return get_standards_clause(producer, topic, sa=sa, language=lang)
 
 
 def test_corpus_loads_both_standards():
@@ -59,19 +58,6 @@ def test_matches_main_placeholder_keys():
     main = evidence_unavailable("standards", "x")
     ours = call(local_standards_access(CLAUSES), COOP_COFFEE, "")
     assert ours["status"] == "unavailable" and set(main) <= set(ours) and ours["kind"] == main["kind"]
-
-
-def test_main_tool_signature_unchanged():
-    """main exposes get_standards_clause(topic: str) -> dict; our wrapper must expose the same."""
-    for path in (MAIN_TOOLS, ROOT / "c4" / "tools.py"):
-        if not path.exists():
-            continue
-        fns = [n for n in ast.walk(ast.parse(path.read_text())) if isinstance(n, ast.FunctionDef)
-               and n.name == "get_standards_clause"]
-        assert len(fns) == 1, path
-        f = fns[0]
-        assert [a.arg for a in f.args.args] == ["topic"], path
-        assert ast.unparse(f.args.args[0].annotation) == "str" and ast.unparse(f.returns) == "dict", path
 
 
 def test_farm_gets_aps_factory_gets_fps(sa):

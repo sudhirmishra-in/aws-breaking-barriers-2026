@@ -65,7 +65,7 @@ Implements `docs/COMPONENT_3_DATA.md` v2.0. It runs on the output of the pipelin
 python -m ftusa_data.run --raw <ftusa files> --out out    # Stage A
 python -m c3.smoke --backend memory                        # call all four tools locally
 python -m c3.load --tables out/tables --dry-run            # Stage B without AWS: build + validate payloads
-pytest -q                                                  # 38 checks (11 Stage A + 27 Component 3)
+pytest -q                                                  # 54 pass, 11 skip without FTUSA_RAW
 ```
 
 | File | Role | Tested here |
@@ -76,32 +76,44 @@ pytest -q                                                  # 38 checks (11 Stage
 | `store_base.py` | backend interface (fetch-only) | yes |
 | `store_memory.py` | in-memory backend; local TF-IDF embedder with a small ES/FR→EN term map | yes |
 | `store_aws.py` | DynamoDB + S3 Vectors + Titan backend (boto3) | **no** (no boto3/AWS in build env) |
-| `tools.py` | the 4 tools: `impl_*` (tested) + Strands wrappers `make_tools` / `make_session_tools` | `impl_*` yes, Strands wrappers **no** |
+| `tools.py` | agent-facing plain functions `get_my_history(producer)`, `get_peer_examples(producer, topic)` (names match main's agent tools) + internal `impl_*` | yes |
 | `load.py` | Stage B: create tables/index, upsert, embed, stale sweep, S3 + Athena; `--dry-run` | dry-run yes, AWS **no** |
 | `smoke.py` | one call per tool against `memory` or `aws` | memory yes |
 
 ## Wiring into the agent (C2)
 
+This branch ships plain functions whose names and model arguments match
+main's tools; the agent wraps them in `build_tools(producer)` and binds the trusted `ProducerRef` by closure.
+`agent/` is not changed on this branch. `tests/test_agent_contract.py` reads main's `build_tools` with AST and
+fails if a name, argument list or result key drifts.
+
+| main tool (model args) | function here |
+|---|---|
+| `get_my_history()` | `c3.tools.get_my_history(producer)` |
+| `get_peer_examples(topic: str)` | `c3.tools.get_peer_examples(producer, topic)` |
+| `get_standards_clause(topic: str)` | `c4.tools.get_standards_clause(producer, topic)` |
+| `get_regional_evidence(topic: str)` | not ours (Component 5) |
+
 ```python
-from strands import Agent
-from bedrock_agentcore.runtime import BedrockAgentCoreApp
-from c3.access import DataAccess
-from c3.catalog import Catalog
-from c3.store_aws import DynamoS3Store
-from c3.tools import make_tools
+# agent/app/exchange/tools.py, inside build_tools(producer) (to do in a separate agent PR)
+from c3.tools import get_my_history as _history, get_peer_examples as _peers
+from c4.tools import get_standards_clause as _standards
 
-da = DataAccess(DynamoS3Store("ftusa_c3_", "ftusa-c3-vectors"), Catalog.with_stats_file("catalog_stats.json"))
-agent = Agent(tools=make_tools(da), system_prompt=BASE_PROMPT + "\n\n" + da.catalog.prompt_summary())
-app = BedrockAgentCoreApp()
-
-@app.entrypoint
-def invoke(payload):
-    # account_sk comes from Lambda/UI (C1), never from the model -> lands in tool_context.invocation_state
-    return agent(payload["message"], account_sk=payload["account_sk"])
+@tool
+def get_peer_examples(topic: str) -> dict:
+    """<model-facing docstring>"""
+    return _peers(producer, topic)
 ```
 
-If your Strands version does not forward invocation kwargs to `ToolContext.invocation_state`, use
-`make_session_tools(da, account_sk)` and build one `Agent` per session.
+Also needed in that PR: `cp -R ../ftusa-data/{c3,c4,ftusa_data} build/pkg/` plus the data files in
+`scripts/build_agent.sh`, `"../ftusa-data"` in pytest `pythonpath`, env vars (`FTUSA_C3_BACKEND`,
+`FTUSA_C3_TABLE_PREFIX`, `FTUSA_C3_VECTOR_BUCKET`, `STANDARDS_CLAUSES`, `STANDARDS_VECTOR_BUCKET`, optional
+`FTUSA_PRODUCER_MAP`), read grants on the C3 tables / vector bucket, and the prompt rules that still call peer
+examples and standards "unavailable".
+
+`ProducerRef.producerId` is used as the FTUSA `account_sk` (or mapped through `FTUSA_PRODUCER_MAP`). The app's
+demo producers (`SYN-P-00x`) are not in the FTUSA data: they get an empty history and peer examples matched on
+crop / entity type.
 
 ## Before the first AWS run
 

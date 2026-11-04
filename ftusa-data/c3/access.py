@@ -48,7 +48,11 @@ QUERY_FILTERS = {
 
 @dataclass(frozen=True)
 class Session:
+    """The trusted session producer. `crop` / `entity_type` let a producer that is not in the FTUSA data
+    (e.g. an app demo account) still get peer examples; own-record reads need a real account_sk."""
     account_sk: str
+    crop: str | None = None
+    entity_type: str | None = None
 
 
 def err(code: str, message: str, **extra) -> dict:
@@ -131,6 +135,8 @@ class DataAccess:
         if session is None or not session.account_sk:
             return self._log("find_similar_projects", session, args, err("no_session_producer", "No producer in session."))
         me = self.store.get_producer(session.account_sk)
+        if me is None and (session.crop or session.entity_type):  # producer outside the FTUSA data
+            me = {"primary_crop": session.crop, "entity_type": session.entity_type or "unknown"}
         if me is None:
             return self._log("find_similar_projects", session, args, err("no_session_producer", "Session producer not found."))
         if not isinstance(top_k, int) or not 1 <= top_k <= MAX_TOP_K:

@@ -10,7 +10,7 @@ Grounds answers in Fair Trade USA APS / FPS criteria. Implements main's agent to
 |---|---|---|
 | Tool name | `get_standards_clause` | same |
 | Model-supplied args | `topic: str` | same (no producer, standard or location argument) |
-| Producer scope | closure over trusted `ProducerRef` in `build_tools(producer)` | same: `make_standards_tool(sa, producer, language)` |
+| Producer scope | closure over trusted `ProducerRef` in `build_tools(producer)` | same: the agent's wrapper calls `get_standards_clause(producer, topic)` |
 | Result keys | `kind, topic, status, note` | same, plus `standard`, and `clauses` when `status == "ok"` |
 | `status` | `"unavailable"` | `"ok"` / `"no_match"` / `"unavailable"` (empty topic or backend error) |
 
@@ -42,16 +42,10 @@ python -m c4.load --clauses out/standards/standard_clauses.jsonl --region us-eas
 
 ## Wiring into main (not done on this branch)
 
-```python
-# agent/app/exchange/tools.py
-from c4.tools import make_standards_tool, standards_access_from_env
-_STANDARDS = standards_access_from_env()   # STANDARDS_CLAUSES, optional STANDARDS_VECTOR_BUCKET / _INDEX
-...
-get_standards_clause = make_standards_tool(_STANDARDS, producer)   # replaces the placeholder
-```
-
-The build script must also ship `ftusa-data/c4`, `ftusa-data/ftusa_data/config.py` and
-`standard_clauses.jsonl`; the prompt line saying evidence tools always return unavailable must change.
+`c4.tools.get_standards_clause(producer, topic)` is a plain function. In
+`agent/app/exchange/tools.py::build_tools`, replace the placeholder body with
+`return _standards(producer, topic)` (import `get_standards_clause as _standards` from `c4.tools`). See the
+README "Wiring into the agent" section for packaging, env vars and prompt changes.
 
 ## Tests
 
