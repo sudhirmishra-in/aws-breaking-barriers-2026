@@ -48,14 +48,17 @@ export class CiRolesStack extends cdk.Stack {
     const smoke = new iam.Role(this, "SmokeRole", {
       roleName: `ftusa-gha-smoke-${p.envName}`, maxSessionDuration: cdk.Duration.hours(1),
       assumedBy: trust(`${prefix}:ref:refs/heads/${p.deployBranch}`),
-      description: "GitHub Actions: post-deploy smoke tests (synthetic identities only)",
+      description: "GitHub Actions: post-deploy smoke tests and scheduled environmental-data ingest (main branch only)",
     });
     smoke.addToPolicy(new iam.PolicyStatement({ actions: ["cloudformation:DescribeStacks"], resources: [`arn:${this.partition}:cloudformation:${r}:${a}:stack/${stackName}/*`] }));
     smoke.addToPolicy(new iam.PolicyStatement({
       actions: ["cognito-idp:AdminCreateUser", "cognito-idp:AdminSetUserPassword", "cognito-idp:AdminAddUserToGroup", "cognito-idp:AdminInitiateAuth", "cognito-idp:AdminDeleteUser", "cognito-idp:AdminGetUser"],
       resources: [`arn:${this.partition}:cognito-idp:${r}:${a}:userpool/*`],
     }));
-    const tables = [`ftusa-conversations-${p.envName}`, `ftusa-outcomes-${p.envName}`].map((t) => `arn:${this.partition}:dynamodb:${r}:${a}:table/${t}`);
+    // conversations + outcomes (smoke test data plane) and environmental-facts
+    // (the scheduled/post-deploy ingest writes and verifies rows here).
+    const tables = [`ftusa-conversations-${p.envName}`, `ftusa-outcomes-${p.envName}`, `ftusa-environmental-facts-${p.envName}`]
+      .map((t) => `arn:${this.partition}:dynamodb:${r}:${a}:table/${t}`);
     smoke.addToPolicy(new iam.PolicyStatement({ actions: ["dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:GetItem", "dynamodb:Query"], resources: tables }));
     smoke.addToPolicy(new iam.PolicyStatement({ actions: ["kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"], resources: [`arn:${this.partition}:kms:${r}:${a}:key/*`], conditions: { StringEquals: { "kms:ViaService": `dynamodb.${r}.amazonaws.com` } } }));
     smoke.addToPolicy(new iam.PolicyStatement({

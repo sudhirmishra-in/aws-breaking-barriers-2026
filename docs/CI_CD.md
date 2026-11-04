@@ -3,7 +3,7 @@
 Pattern reused from Stack of Dreams after inspecting it: SHA-pinned actions, `permissions: contents: read`, no secrets in PR checks, `npm ci` / `uv sync --locked`, `.nvmrc`, a `hygiene` secret scan, named required checks. Stack of Dreams had no automated AWS deploy (its backend is deployed manually, its frontend by Amplify); the deployment half here is new and uses GitHub OIDC, which its docs listed as the intended next step.
 
 ```
-PR --> CI (no AWS, no secrets) --merge--> main --CI green--> Deploy sandbox: approval (environment) -> cdk deploy -> smoke tests
+PR --> CI (no AWS, no secrets) --merge--> main --CI green--> Deploy sandbox: approval (environment) -> cdk deploy -> smoke tests -> Ingest environmental facts (also runs daily on a schedule)
 ```
 
 ## Workflows
@@ -11,6 +11,7 @@ PR --> CI (no AWS, no secrets) --merge--> main --CI green--> Deploy sandbox: app
 |---|---|---|
 | `.github/workflows/ci.yml` | `pull_request` to main, `push` to main | nothing (no secrets, no AWS, never `pull_request_target`) |
 | `.github/workflows/deploy.yml` | `workflow_run` of CI succeeded on a push to main, or manual from main | environment `sandbox`, repo variables below |
+| `.github/workflows/ingest.yml` | `schedule` (daily), `workflow_run` of a successful `Deploy sandbox`, or manual from main | the main-branch smoke role (no environment gate), repo variables below |
 
 ### Required status checks (branch protection on `main`)
 `Web (lint, typecheck, test, build)`, `Backend (typecheck, test, build)`, `Authorization, consent and idempotency tests`, `Agent (pytest)`, `Infrastructure (typecheck, tests, cdk synth)`, `Repository hygiene (no secrets)`.
@@ -21,7 +22,7 @@ Component jobs are skipped (reported as passing) when a pull request does not to
 | Role | Trusted `sub` | Can do |
 |---|---|---|
 | `ftusa-gha-deploy-sandbox` | `<sub prefix>:environment:sandbox` | assume the CDK bootstrap roles, read the stack and bootstrap version |
-| `ftusa-gha-smoke-sandbox` | `<sub prefix>:ref:refs/heads/main` | read stack outputs, manage disposable Cognito users, put/delete items in the two tables, invoke the runtime |
+| `ftusa-gha-smoke-sandbox` | `<sub prefix>:ref:refs/heads/main` | read stack outputs, manage disposable Cognito users, put/delete/query the three tables (conversations, outcomes, environmental-facts), invoke the runtime |
 Pull-request jobs have **no** AWS role. Trust uses exact `StringEquals` on `aud` and `sub`.
 
 ## One-time prerequisites (manual)
@@ -37,13 +38,7 @@ One-time per new account/region. An administrator runs these — or a Claude Cod
 
 ### Part B — make the deployed stack answer questions (after the first deploy lands)
 6. **Enable the Bedrock model (AWS Marketplace subscription).** The runtime's default model is the cross-region inference profile `us.anthropic.claude-haiku-4-5-20251001-v1:0` (override with `-c modelId=`). In a fresh account the model is not subscribed, so every call is a `ConverseStream` -> `AccessDeniedException` -> **502**, and the smoke test's "message reaches Bedrock, no fallback" assertion fails. Subscribe once (AWS Marketplace -> the Claude model -> subscribe, or enable it in the Bedrock console); it takes effect after a short propagation window (~5 min). Verify by invoking the model with the runtime role until the reply is not an `AccessDeniedException`.
-7. **Populate `ENVIRONMENTAL_FACTS_TABLE`.** The CDK creates the DynamoDB table (stack output `EnvironmentalFactsTable`, e.g. `ftusa-environmental-facts-sandbox`) **empty**; until facts exist the agent's `get_environmental_context` tool returns `[]` and answers "no external data". Run the Open-Meteo (ERA5) ingest once, pointed at that table:
-   ```
-   ENVIRONMENTAL_FACTS_TABLE=<EnvironmentalFactsTable output> \
-     AWS_PROFILE=<credentials that can write the table> \
-     python -m external_data.ingest.open_meteo
-   ```
-   It fetches current-year year-to-date rainfall at each country's centroid, computes the same-window 1981-2010 baseline, and writes one row per gazetteer country. The pilot set is five countries, so expect exactly **5 rows**:
+7. **Populate `ENVIRONMENTAL_FACTS_TABLE` — automatic via the `Ingest environmental facts` workflow.** The CDK creates the DynamoDB table (stack output `EnvironmentalFactsTable`, e.g. `ftusa-environmental-facts-sandbox`) **empty**; until facts exist the agent's `get_environmental_context` tool returns `[]` and answers "no external data". It is populated **automatically** by `.github/workflows/ingest.yml`, which runs the Open-Meteo (ERA5) ingest on a daily `schedule`, **after every successful `Deploy sandbox` run** (`workflow_run`, so a first deploy self-populates instead of waiting for the next cron), and on `workflow_dispatch`. The job assumes the main-branch smoke role (extended to write the facts table), reads the table name from the live stack outputs, and writes one row per gazetteer country. The pilot set is five countries, so expect exactly **5 rows**:
 
    | region_key | fact_key | dataset | indicator | horizon |
    |---|---|---|---|---|
@@ -53,7 +48,7 @@ One-time per new account/region. An administrator runs these — or a Claude Cod
    | peru#COUNTRY | open_meteo#ytd_rainfall_mm#current | open_meteo | ytd_rainfall_mm | current |
    | vietnam#COUNTRY | open_meteo#ytd_rainfall_mm#current | open_meteo | ytd_rainfall_mm | current |
 
-   Each row carries `value` (current-year YTD total, mm), `baseline_value` (same-window 1981-2010 total, mm), `baseline_delta_pct`, `baseline_period` = "1981-2010 (same window)", `theme` = climate, `is_projection` = false, and `is_stand_in` = false. A failed fetch writes a flagged stand-in (`value` = null, `is_stand_in` = true) instead of crashing — re-run once the network is back. Verify with `aws dynamodb scan --table <table>` (5 items, one per country) or by asking the agent a Colombia rainfall question and seeing a real figure with its baseline. (The smoke test passes even with an empty table — its `/ask` case uses a non-real region and asserts evidence is "unavailable" — so a green deploy can hide an unpopulated table; do this step deliberately.)
+   Each row carries `value` (current-year YTD total, mm), `baseline_value` (same-window 1981-2010 total, mm), `baseline_delta_pct`, `baseline_period` = "1981-2010 (same window)", `theme` = climate, `is_projection` = false, and `is_stand_in` = false. A failed fetch writes a flagged stand-in (`value` = null, `is_stand_in` = true) instead of crashing, so the agent says "no reliable data" for that country rather than a number. **Manual fallback** (only if the workflow is unavailable): `ENVIRONMENTAL_FACTS_TABLE=<table> python -m external_data.ingest.open_meteo`, run from the repo root with credentials that can write the table. Verify with `aws dynamodb scan --table <table>` (5 items, one per country) or by asking the agent a Colombia rainfall question and seeing a real figure with its baseline.
 8. **Mint Cognito users.** The pool has `selfSignUpEnabled: false`, so no one can self-register. The smoke test mints and deletes its own disposable producer, but any **standing** account must be created by an admin: `admin_create_user`, then `admin_set_user_password(Permanent=True)` (auto-confirms), then add to the `producer` or `reviewer` group.
 9. **(Demo) Write producer profiles.** The app builds each session's trusted context (country / entity type / crop) from a profile item in the conversations table (`pk = PROFILE#{sub}`, `sk = META`, `profile = {producerId, displayName, entityType, location, crop, preferredLanguage}`). Write one per demo producer, using a gazetteer country for `location` so the C5 tool has data to return.
 
