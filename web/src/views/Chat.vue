@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { AlertTriangle, Bot, Check, CheckCircle2, Copy, EyeOff, Heart, MessageCircle, Plus, RotateCw, SendHorizontal, ShieldCheck, Sprout } from "lucide-vue-next";
+import DictateButton from "../components/DictateButton.vue";
 import { api, newRequestId } from "../lib/api";
 import { renderMarkdown } from "../lib/markdown";
 import { markExpired, state } from "../session";
@@ -56,6 +57,7 @@ async function send() {
   const before = draft.value; draft.value = "";
   if (!(await run((rid) => api.message(id, rid, text)))) { messages.value = messages.value.filter((m) => m.seq !== -1); draft.value = before; }
 }
+function addDictation(text: string) { draft.value = (draft.value.trim() + " " + text).trim(); nextTick(() => box.value?.focus()); }
 function pick(text: string) { draft.value = text; nextTick(() => box.value?.focus()); }
 const confirm = () => run((rid) => api.playback(conv.value!.conversationId, rid, { decision: "confirm" }));
 async function sendCorrection() {
@@ -179,6 +181,7 @@ function reset() { conv.value = null; messages.value = []; error.value = null; }
       <form class="composer" @submit.prevent="send">
         <label for="msg" class="sr">{{ s.messageLabel }}</label>
         <textarea id="msg" ref="box" v-model="draft" rows="1" maxlength="2000" :placeholder="s.placeholder" :disabled="busy" @keydown.enter.exact.prevent="send" />
+        <DictateButton :language="conv.language" :disabled="busy" @text="addDictation" />
         <button class="send" type="submit" :disabled="busy || !draft.trim()" :aria-label="s.send"><SendHorizontal :size="18" aria-hidden="true" /></button>
       </form>
     </div>

@@ -10,6 +10,7 @@ export function installDevMock(role: "producer" | "reviewer") {
     "GET /overview": role === "producer" ? { producer: { activeConversation: null } } : { reviewer: { pending: 2, approved: 1, corrected: 1, piiFlagged: 1, recent: [item("rec-1", "pending", true), item("rec-2", "approved")] } },
     "GET /conversations/current": { conversation: null },
     "GET /reviews": { items: [item("rec-1", "pending", true), item("rec-2", "approved")] },
+    "POST /transcribe": { text: "The rains came late this year and our harvest was smaller than usual.", language: "en" },
     "POST /ask": { answer: "I'm sorry, **peer examples** are not available yet.\n\n- I can help you think it through.", evidence: { status: "unavailable" }, piiFlag: false, language: "en", syntheticDemo: true },
   };
   window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {

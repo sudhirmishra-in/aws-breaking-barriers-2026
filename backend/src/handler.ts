@@ -1,8 +1,9 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { ZodError } from "zod";
 import { AgentCoreClient } from "./agent";
-import { AskReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
+import { AskReq, TranscribeReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
 import { DdbStore } from "./ddbStore";
+import { TranscribeStreamingTranscriber } from "./transcribe";
 import { ApiError, invalid, notFound, unauthorized } from "./errors";
 import { Service, type Principal } from "./service";
 
@@ -30,6 +31,7 @@ export async function route(svc: Service, p: Principal, method: string, path: st
   const [r0, r1, r2] = seg;
   if (method === "GET" && r0 === "me") return svc.me(p);
   if (method === "GET" && r0 === "overview") return svc.overview(p);
+  if (method === "POST" && r0 === "transcribe") { const q = TranscribeReq.parse(body); return svc.transcribe(p, q.language, q.audio); }
   if (method === "POST" && r0 === "ask") { const q = AskReq.parse(body); return svc.ask(p, q.text, q.language); }
   if (r0 === "conversations") {
     if (method === "POST" && !r1) { const q = CreateConversationReq.parse(body); return svc.create(p, q.language); }
@@ -52,6 +54,7 @@ let svc: Service | undefined;
 const getSvc = () => (svc ??= new Service({
   store: new DdbStore(process.env.CONVERSATIONS_TABLE!, process.env.OUTCOMES_TABLE!),
   agent: new AgentCoreClient(process.env.AGENT_RUNTIME_ARN!),
+  transcriber: new TranscribeStreamingTranscriber(),
   log: (e) => console.log(JSON.stringify({ level: "info", ...e })), // structured; never message text
 }));
 

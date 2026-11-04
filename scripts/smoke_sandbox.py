@@ -6,7 +6,8 @@ Tokens and passwords are never printed. Everything created is deleted in `finall
 
 Usage: python scripts/smoke_sandbox.py --stack FtusaExchange-sandbox --expect-commit <sha>
 """
-import argparse, json, os, secrets, string, sys, time, urllib.error, urllib.request, uuid
+import argparse, base64, json, os, secrets, string, sys, time, urllib.error, urllib.request, uuid
+from pathlib import Path
 
 import boto3
 
@@ -68,6 +69,8 @@ def main() -> int:
     check("frontend config comes from deployment outputs", st == 200 and isinstance(cfg, dict) and cfg.get("apiBaseUrl") == out["ApiUrl"] and cfg.get("clientId") == out["UserPoolClientId"])
 
     # 2. unauthenticated rejection
+    st, _ = http("POST", api + "/transcribe", body={"requestId": uuid.uuid4().hex, "language": "en", "audio": "AAAA"})
+    check("unauthenticated POST /transcribe rejected", st == 401, f"status={st}")
     for path in ("/me", "/conversations/current", "/reviews"):
         st, _ = http("GET", api + path)
         check(f"unauthenticated GET {path} rejected", st == 401, f"status={st}")
@@ -121,6 +124,16 @@ def main() -> int:
         check("same conversation is restored", st == 200 and cur.get("conversation", {}).get("conversationId") == cid)
         st, ask = http("POST", api + "/ask", ta, {"requestId": uuid.uuid4().hex, "text": "Is there climate data for my region?", "language": "en"})
         check("ask returns a model answer and reports evidence as unavailable", st == 200 and len(ask.get("answer", "")) > 20 and ask.get("evidence", {}).get("status") == "unavailable", f"status={st}")
+
+        # 6b. dictation: real Amazon Transcribe through the deployed API (synthetic speech, not stored)
+        clip = base64.b64encode((Path(__file__).resolve().parent.parent / "fixtures" / "smoke-speech-en.pcm").read_bytes()).decode()
+        st, tr = http("POST", api + "/transcribe", ta, {"requestId": uuid.uuid4().hex, "language": "en", "audio": clip})
+        spoken = tr.get("text", "").lower() if st == 200 else ""
+        check("dictation turns synthetic speech into text", st == 200 and "rain" in spoken and "harvest" in spoken, f"status={st} chars={len(spoken)}")
+        st, _ = http("POST", api + "/transcribe", ta, {"requestId": uuid.uuid4().hex, "language": "en", "audio": "AAAA"})
+        check("too-short recording is rejected", st == 400, f"status={st}")
+        st, _ = http("POST", api + "/transcribe", ta, {"requestId": uuid.uuid4().hex, "language": "en", "audio": clip, "producerId": "SYN-CI-B"})
+        check("dictation rejects unknown fields", st == 400, f"status={st}")
 
         # 7. authorization boundaries
         st, _ = http("GET", f"{api}/conversations/{cid}", tb)

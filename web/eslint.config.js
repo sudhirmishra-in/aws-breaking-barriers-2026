@@ -12,6 +12,7 @@ export default tseslint.config(
     files: ["**/*.vue"],
     languageOptions: { parserOptions: { parser: tseslint.parser } },
   },
+  { files: ["public/pcm-worklet.js"], languageOptions: { globals: { AudioWorkletProcessor: "readonly", registerProcessor: "readonly" } } },
   { files: ["src/views/**/*.vue"], rules: { "vue/multi-word-component-names": "off" } }, // route views, not reusable components
   {
     languageOptions: { globals: { ...globals.browser } },
