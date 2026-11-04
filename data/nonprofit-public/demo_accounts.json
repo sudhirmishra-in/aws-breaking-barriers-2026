@@ -1,0 +1,1212 @@
+{
+  "accounts": {
+    "691F055F8DA798187584F41E6871D1AF": {
+      "account": {
+        "account_category_name": "Coffee",
+        "account_sk": "691F055F8DA798187584F41E6871D1AF",
+        "account_type_name": "Supplier",
+        "certification_scope_name": "Producer",
+        "certification_status_name": "Authorized",
+        "country": {
+          "iso2": "CO",
+          "normalized": "Colombia",
+          "raw": "Colombia",
+          "status": "exact"
+        },
+        "country_name": "Colombia",
+        "product_category_name": "Coffee",
+        "raw_supply_chain_role_txt": "Producer",
+        "structure_txt": "1st Grade"
+      },
+      "codebook": "unavailable: labels are coded identifiers; wording and applicability are provisional",
+      "consentToShare": "not_applicable_public_source",
+      "consistentMultipleChoiceOptionRows": 3615,
+      "consistentSingleChoiceResponses": 574,
+      "curationStatus": "not_curated",
+      "multipleChoiceSummaries": {
+        "borrow_source_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 361,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Bank": 308,
+            "Cooperative": 254,
+            "FT Premium Fund": 5,
+            "Friends/Family": 83,
+            "Informal lender": 11,
+            "Micro-finance institution": 18,
+            "Refused": 1
+          }
+        },
+        "child_not_enrolled_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 22,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Other": 10,
+            "Refused": 11,
+            "The child has a handicap": 3,
+            "The child is pregnant": 1
+          }
+        },
+        "committees_skills_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 102,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Business transaction skills": 23,
+            "Computer/Technical Skills": 12,
+            "Don't know": 1,
+            "Financial management/literacy": 40,
+            "I did not learn any skills": 2,
+            "Leadership": 92,
+            "Negotiate or remediation with leadership": 19,
+            "Public speaking": 39,
+            "Refused": 1
+          }
+        },
+        "committees_tf_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 99,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Yes": 99
+          }
+        },
+        "covid_challenges_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 1,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "lack of nutritious food": 1
+          }
+        },
+        "ft_benefits_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 402,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Don't know": 31,
+            "Feeling valued by the farm/coop/factory": 226,
+            "Increased benefits": 234,
+            "Premium fund": 252,
+            "Refused": 3,
+            "Sense of community": 166,
+            "Steady wages/hours": 158,
+            "Training": 273
+          }
+        },
+        "harvest_change_reason_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 300,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Better inputs from FT": 54,
+            "Climate change": 42,
+            "Less land area under production": 45,
+            "More land area under production": 39,
+            "Other": 161,
+            "Pest and plant diseases": 2,
+            "Refused": 1
+          }
+        },
+        "income_sources_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 78,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Other": 36,
+            "Refused": 2,
+            "Remittances": 1,
+            "Small family business": 41
+          }
+        },
+        "med_reasons_no_doc_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 403,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Cannot afford to pay the medical bill": 26,
+            "Don't know": 31,
+            "I don't have health insurance": 20,
+            "I will lose too much income if I take off work": 55,
+            "Medical services are too far": 32,
+            "Other": 17,
+            "Refused": 93,
+            "The medical service is poor": 83,
+            "There are no medical services available": 25,
+            "Wait is too long": 141
+          }
+        },
+        "no_leadership_feedback_reason_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 291,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Afraid to share my opinion": 8,
+            "Concerned about negative repercussions": 9,
+            "Did not care enough to share my opinion": 10,
+            "Did not think my opinion would make a difference": 15,
+            "Have been satisfied with operations": 176,
+            "Other": 15,
+            "Refused": 17,
+            "Wanted to understand better before complaing": 41
+          }
+        }
+      },
+      "origin": "public_source_data",
+      "projects": [
+        "PRJ-564412E68FEF",
+        "PRJ-87E9DED92CDC",
+        "PRJ-E1DF14BE5078",
+        "PRJ-0D6CE39654EA",
+        "PRJ-BFFFF44998B2"
+      ],
+      "quarantinedRowsForThisAccount": {
+        "multi": 0,
+        "single": 0
+      },
+      "responseHeaders": 574,
+      "singleChoiceSummaries": [
+        {
+          "answered": 571,
+          "column": "has_hired_labor_code",
+          "label": "Has hired labor",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 33,
+            "Yes": 538
+          },
+          "responsesInScope": 574,
+          "states": {
+            "missing": 3,
+            "value": 571
+          }
+        },
+        {
+          "answered": 566,
+          "column": "harvest_changed_code",
+          "label": "Harvest changed",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "It has decreased": 318,
+            "It has increased": 116,
+            "It has not changed": 132
+          },
+          "responsesInScope": 574,
+          "states": {
+            "dont_know": 3,
+            "missing": 4,
+            "refused": 1,
+            "value": 566
+          }
+        },
+        {
+          "answered": 569,
+          "column": "has_water_conservation_practices_code",
+          "label": "Has water conservation practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 152,
+            "Yes": 417
+          },
+          "responsesInScope": 574,
+          "states": {
+            "missing": 5,
+            "value": 569
+          }
+        },
+        {
+          "answered": 567,
+          "column": "has_soil_conservation_practices_code",
+          "label": "Has soil conservation practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 82,
+            "Yes": 485
+          },
+          "responsesInScope": 574,
+          "states": {
+            "dont_know": 1,
+            "missing": 5,
+            "refused": 1,
+            "value": 567
+          }
+        },
+        {
+          "answered": 569,
+          "column": "has_forest_protection_practices_code",
+          "label": "Has forest protection practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 63,
+            "Yes": 506
+          },
+          "responsesInScope": 574,
+          "states": {
+            "missing": 5,
+            "value": 569
+          }
+        },
+        {
+          "answered": 568,
+          "column": "has_received_fertilizer_training_code",
+          "label": "Has received fertilizer training",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 42,
+            "Yes": 526
+          },
+          "responsesInScope": 574,
+          "states": {
+            "dont_know": 2,
+            "missing": 4,
+            "value": 568
+          }
+        },
+        {
+          "answered": 563,
+          "column": "has_integrated_pest_management_practices_name",
+          "label": "Has integrated pest management practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "Apply pesticide or kill pests only after identifying the pest and only at the best time in the pest’s life cycle to permanently reduce its population.": 21,
+            "Conduct regular visual examinations of the coffee to detect pests and/or diseases": 103,
+            "Create or preserve places (including plant species) for beneficial predators of pests to live": 77,
+            "I don't employ any of these practices": 65,
+            "Maintain written record of pest infestation, treatments, and results": 41,
+            "Other": 34,
+            "Plant or preserve species that repel pests of the coffee": 70,
+            "Use traps, repellents, and natural pesticides": 152
+          },
+          "responsesInScope": 574,
+          "states": {
+            "missing": 5,
+            "refused": 6,
+            "value": 563
+          }
+        },
+        {
+          "answered": 198,
+          "column": "water_access_distance_name",
+          "label": "Water access distance",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "Always available in my house": 127,
+            "I don't have access to drinking water": 19,
+            "It takes less than 30 minutes": 37,
+            "It takes more than 30 minutes": 15
+          },
+          "responsesInScope": 574,
+          "states": {
+            "dont_know": 1,
+            "not_applicable_label": 369,
+            "refused": 6,
+            "value": 198
+          }
+        }
+      ],
+      "sourceContext": "coffee, Huila, Colombia",
+      "surveyYears": {
+        "2021": 170,
+        "2022": 2,
+        "2023": 402
+      },
+      "surveys": [
+        "CADEFIHUILA_Coffee_SPO_Colombia_2021_V 1.4_HHS",
+        "Cadefihuila_Coffee_SPO_Colombia_2023_V 1.7_HHS"
+      ],
+      "synthetic": false
+    },
+    "A7F700B04BCE55512CB026A71121426C": {
+      "account": {
+        "account_category_name": "Coffee",
+        "account_sk": "A7F700B04BCE55512CB026A71121426C",
+        "account_type_name": "Supplier",
+        "certification_scope_name": "Producer",
+        "certification_status_name": "Authorized",
+        "country": {
+          "iso2": "PE",
+          "normalized": "Peru",
+          "raw": "Peru",
+          "status": "exact"
+        },
+        "country_name": "Peru",
+        "product_category_name": "Coffee",
+        "raw_supply_chain_role_txt": "Producer;Premium Conveyor;Price Conveyor",
+        "structure_txt": "1st Grade"
+      },
+      "codebook": "unavailable: labels are coded identifiers; wording and applicability are provisional",
+      "consentToShare": "not_applicable_public_source",
+      "consistentMultipleChoiceOptionRows": 3708,
+      "consistentSingleChoiceResponses": 683,
+      "curationStatus": "not_curated",
+      "multipleChoiceSummaries": {
+        "borrow_source_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 258,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Bank": 105,
+            "Cooperative": 227,
+            "Friends/Family": 71,
+            "Informal lender": 3,
+            "Micro-finance institution": 7
+          }
+        },
+        "child_not_enrolled_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 16,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Completed education before turning 18": 10,
+            "Other": 3,
+            "Refused": 1,
+            "The child has a handicap": 1,
+            "The child is pregnant": 3
+          }
+        },
+        "committees_skills_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 59,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Business transaction skills": 1,
+            "Computer/Technical Skills": 13,
+            "Financial management/literacy": 13,
+            "I did not learn any skills": 2,
+            "Leadership": 53,
+            "Public speaking": 45
+          }
+        },
+        "committees_tf_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 57,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Yes": 57
+          }
+        },
+        "covid_challenges_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 9,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Decreased Income": 7,
+            "Illness in the family": 8,
+            "No education for children": 4,
+            "lack of access to medical care": 4,
+            "lack of nutritious food": 3
+          }
+        },
+        "ft_benefits_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 503,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Don't know": 12,
+            "Feeling valued by the farm/coop/factory": 68,
+            "Increased benefits": 286,
+            "Other": 1,
+            "Premium fund": 318,
+            "Sense of community": 18,
+            "Steady wages/hours": 345,
+            "Training": 184
+          }
+        },
+        "harvest_change_reason_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 374,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Better care of the farm": 7,
+            "Better inputs from FT": 8,
+            "Climate change": 29,
+            "Lack of fertilizer": 26,
+            "Less land area under production": 176,
+            "More land area under production": 89,
+            "Old trees": 2,
+            "Other": 100,
+            "Pest and plant diseases": 7,
+            "Refused": 2
+          }
+        },
+        "income_sources_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 300,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Alimony": 6,
+            "Government Assistance": 3,
+            "Other": 83,
+            "Refused": 3,
+            "Remittances": 2,
+            "Small animal farming (Guinea pigs, pigs, ducks etc)": 178,
+            "Small family business": 82,
+            "Small family business (intercrops)": 41
+          }
+        },
+        "med_reasons_no_doc_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 503,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Cannot afford to pay the medical bill": 6,
+            "Don't know": 18,
+            "I always look for medical services": 116,
+            "I don't have health insurance": 6,
+            "I will lose too much income if I take off work": 40,
+            "Medical services are too far": 171,
+            "Other": 6,
+            "Refused": 9,
+            "The medical service is poor": 115,
+            "There are no medical services available": 16,
+            "Wait is too long": 168
+          }
+        },
+        "no_leadership_feedback_reason_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 314,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Afraid to share my opinion": 10,
+            "Concerned about negative repercussions": 1,
+            "Did not care enough to share my opinion": 40,
+            "Did not think my opinion would make a difference": 30,
+            "Have been satisfied with operations": 149,
+            "Other": 29,
+            "Wanted to understand better before complaing": 61
+          }
+        }
+      },
+      "origin": "public_source_data",
+      "projects": [
+        "PRJ-9BDCAF51DECA",
+        "PRJ-626BC9B2A54B",
+        "PRJ-AA14B32CC3EC"
+      ],
+      "quarantinedRowsForThisAccount": {
+        "multi": 0,
+        "single": 0
+      },
+      "responseHeaders": 683,
+      "singleChoiceSummaries": [
+        {
+          "answered": 682,
+          "column": "has_hired_labor_code",
+          "label": "Has hired labor",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 16,
+            "Yes": 666
+          },
+          "responsesInScope": 683,
+          "states": {
+            "missing": 1,
+            "value": 682
+          }
+        },
+        {
+          "answered": 680,
+          "column": "harvest_changed_code",
+          "label": "Harvest changed",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "It has decreased": 319,
+            "It has increased": 166,
+            "It has not changed": 195
+          },
+          "responsesInScope": 683,
+          "states": {
+            "dont_know": 3,
+            "value": 680
+          }
+        },
+        {
+          "answered": 668,
+          "column": "has_water_conservation_practices_code",
+          "label": "Has water conservation practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 139,
+            "Yes": 529
+          },
+          "responsesInScope": 683,
+          "states": {
+            "dont_know": 14,
+            "refused": 1,
+            "value": 668
+          }
+        },
+        {
+          "answered": 676,
+          "column": "has_soil_conservation_practices_code",
+          "label": "Has soil conservation practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 27,
+            "Yes": 649
+          },
+          "responsesInScope": 683,
+          "states": {
+            "dont_know": 6,
+            "refused": 1,
+            "value": 676
+          }
+        },
+        {
+          "answered": 679,
+          "column": "has_forest_protection_practices_code",
+          "label": "Has forest protection practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 41,
+            "Yes": 638
+          },
+          "responsesInScope": 683,
+          "states": {
+            "dont_know": 3,
+            "refused": 1,
+            "value": 679
+          }
+        },
+        {
+          "answered": 680,
+          "column": "has_received_fertilizer_training_code",
+          "label": "Has received fertilizer training",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 52,
+            "Yes": 628
+          },
+          "responsesInScope": 683,
+          "states": {
+            "dont_know": 3,
+            "value": 680
+          }
+        },
+        {
+          "answered": 682,
+          "column": "has_integrated_pest_management_practices_name",
+          "label": "Has integrated pest management practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "Apply pesticide or kill pests only after identifying the pest and only at the best time in the pest’s life cycle to permanently reduce its population.": 139,
+            "Conduct regular visual examinations of the coffee to detect pests and/or diseases": 27,
+            "Create or preserve places (including plant species) for beneficial predators of pests to live": 15,
+            "I don't employ any of these practices": 197,
+            "Maintain written record of pest infestation, treatments, and results": 92,
+            "Other": 8,
+            "Plant or preserve species that repel pests of the coffee": 30,
+            "Use traps, repellents, and natural pesticides": 174
+          },
+          "responsesInScope": 683,
+          "states": {
+            "refused": 1,
+            "value": 682
+          }
+        },
+        {
+          "answered": 468,
+          "column": "water_access_distance_name",
+          "label": "Water access distance",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "Always available in my house": 97,
+            "I don't have access to drinking water": 77,
+            "It takes less than 30 minutes": 272,
+            "It takes more than 30 minutes": 22
+          },
+          "responsesInScope": 683,
+          "states": {
+            "dont_know": 1,
+            "not_applicable_label": 213,
+            "refused": 1,
+            "value": 468
+          }
+        }
+      ],
+      "sourceContext": "coffee, Cajamarca, Peru",
+      "surveyYears": {
+        "2021": 189,
+        "2023": 246,
+        "2026": 248
+      },
+      "surveys": [
+        "APROCASSI_Coffee_SPO_Peru_2026_V 1.9_HHS",
+        "Aprocassi_Coffee_SPO_Peru_2021_V 1.4_HHS",
+        "Aprocassi_Coffee_SPO_Peru_2023_V 1.7_HHS"
+      ],
+      "synthetic": false
+    },
+    "CED2DEE8ED99922FA5C6244DEF177AF3": {
+      "account": {
+        "account_category_name": "Coffee",
+        "account_sk": "CED2DEE8ED99922FA5C6244DEF177AF3",
+        "account_type_name": "Supplier",
+        "certification_scope_name": "Producer",
+        "certification_status_name": "Certified",
+        "country": {
+          "iso2": "HN",
+          "normalized": "Honduras",
+          "raw": "Honduras",
+          "status": "exact"
+        },
+        "country_name": "Honduras",
+        "product_category_name": "Coffee",
+        "raw_supply_chain_role_txt": "Exporter;Producer;Trader;Premium Conveyor;Price Conveyor",
+        "structure_txt": "1st Grade"
+      },
+      "codebook": "unavailable: labels are coded identifiers; wording and applicability are provisional",
+      "consentToShare": "not_applicable_public_source",
+      "consistentMultipleChoiceOptionRows": 2864,
+      "consistentSingleChoiceResponses": 314,
+      "curationStatus": "not_curated",
+      "multipleChoiceSummaries": {
+        "borrow_source_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 224,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Bank": 100,
+            "Cooperative": 106,
+            "FT Premium Fund": 2,
+            "Friends/Family": 63,
+            "Informal lender": 6,
+            "Micro-finance institution": 47,
+            "Other": 1
+          }
+        },
+        "child_not_enrolled_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 3,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Other": 1,
+            "The child has a handicap": 2
+          }
+        },
+        "committees_skills_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 30,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Business transaction skills": 10,
+            "Computer/Technical Skills": 16,
+            "Financial management/literacy": 15,
+            "Leadership": 24,
+            "Negotiate or remediation with leadership": 12,
+            "Public speaking": 16
+          }
+        },
+        "committees_tf_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 30,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Yes": 30
+          }
+        },
+        "ft_benefits_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 314,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Don't know": 11,
+            "Feeling valued by the farm/coop/factory": 89,
+            "Increased benefits": 196,
+            "Other": 16,
+            "Premium fund": 128,
+            "Refused": 40,
+            "Sense of community": 75,
+            "Steady wages/hours": 164,
+            "Training": 233
+          }
+        },
+        "harvest_change_reason_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 229,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Better care of the farm": 5,
+            "Better inputs from FT": 34,
+            "Damaged by natural disasters": 77,
+            "Increase in fertilizers cost": 3,
+            "Lack of resources": 6,
+            "Less land area under production": 6,
+            "More land area under production": 31,
+            "Old trees": 3,
+            "Other": 50,
+            "Pest and plant diseases": 30,
+            "Refused": 1
+          }
+        },
+        "income_sources_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 272,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Alimony": 3,
+            "Formal work or employed": 108,
+            "Government Assistance": 6,
+            "Other": 61,
+            "Refused": 8,
+            "Remittances": 34,
+            "Small family business": 113,
+            "Tourism": 2
+          }
+        },
+        "med_reasons_no_doc_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 314,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Cannot afford to pay the medical bill": 134,
+            "Don't know": 23,
+            "I don't have health insurance": 138,
+            "I will lose too much income if I take off work": 36,
+            "Medical services are too far": 31,
+            "Other": 24,
+            "Refused": 22,
+            "The medical service is poor": 93,
+            "There are no medical services available": 31,
+            "Wait is too long": 60
+          }
+        },
+        "no_leadership_feedback_reason_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 288,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Afraid to share my opinion": 10,
+            "Concerned about negative repercussions": 6,
+            "Did not care enough to share my opinion": 8,
+            "Did not think my opinion would make a difference": 28,
+            "Have been satisfied with operations": 168,
+            "Other": 10,
+            "Refused": 26,
+            "Wanted to understand better before complaing": 32
+          }
+        }
+      },
+      "origin": "public_source_data",
+      "projects": [
+        "PRJ-E6870DB8976A"
+      ],
+      "quarantinedRowsForThisAccount": {
+        "multi": 0,
+        "single": 0
+      },
+      "responseHeaders": 314,
+      "singleChoiceSummaries": [
+        {
+          "answered": 314,
+          "column": "has_hired_labor_code",
+          "label": "Has hired labor",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 12,
+            "Yes": 302
+          },
+          "responsesInScope": 314,
+          "states": {
+            "value": 314
+          }
+        },
+        {
+          "answered": 312,
+          "column": "harvest_changed_code",
+          "label": "Harvest changed",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "It has decreased": 140,
+            "It has increased": 89,
+            "It has not changed": 83
+          },
+          "responsesInScope": 314,
+          "states": {
+            "dont_know": 2,
+            "value": 312
+          }
+        },
+        {
+          "answered": 314,
+          "column": "has_water_conservation_practices_code",
+          "label": "Has water conservation practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 122,
+            "Yes": 192
+          },
+          "responsesInScope": 314,
+          "states": {
+            "value": 314
+          }
+        },
+        {
+          "answered": 314,
+          "column": "has_soil_conservation_practices_code",
+          "label": "Has soil conservation practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 10,
+            "Yes": 304
+          },
+          "responsesInScope": 314,
+          "states": {
+            "value": 314
+          }
+        },
+        {
+          "answered": 314,
+          "column": "has_forest_protection_practices_code",
+          "label": "Has forest protection practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 24,
+            "Yes": 290
+          },
+          "responsesInScope": 314,
+          "states": {
+            "value": 314
+          }
+        },
+        {
+          "answered": 314,
+          "column": "has_received_fertilizer_training_code",
+          "label": "Has received fertilizer training",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "No": 49,
+            "Yes": 265
+          },
+          "responsesInScope": 314,
+          "states": {
+            "value": 314
+          }
+        },
+        {
+          "answered": 314,
+          "column": "has_integrated_pest_management_practices_name",
+          "label": "Has integrated pest management practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "Conduct regular visual examinations of the coffee to detect pests and/or diseases": 7,
+            "Create or preserve places (including plant species) for beneficial predators of pests to live": 8,
+            "I don't employ any of these practices": 40,
+            "Maintain written record of pest infestation, treatments, and results": 4,
+            "Other": 9,
+            "Plant or preserve species that repel pests of the coffee": 14,
+            "Use traps, repellents, and natural pesticides": 232
+          },
+          "responsesInScope": 314,
+          "states": {
+            "value": 314
+          }
+        },
+        {
+          "answered": 87,
+          "column": "water_access_distance_name",
+          "label": "Water access distance",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "It takes less than 30 minutes": 84,
+            "It takes more than 30 minutes": 3
+          },
+          "responsesInScope": 314,
+          "states": {
+            "not_applicable_label": 227,
+            "value": 87
+          }
+        }
+      ],
+      "sourceContext": "coffee, La Paz, Honduras",
+      "surveyYears": {
+        "2023": 314
+      },
+      "surveys": [
+        "COMSA_Coffee_SPO_Honduras_2023_V 1.7_HHS"
+      ],
+      "synthetic": false
+    },
+    "FA9ADCCE1553D4FADD64C87CA6219F97": {
+      "account": {
+        "account_category_name": "CPG",
+        "account_sk": "FA9ADCCE1553D4FADD64C87CA6219F97",
+        "account_type_name": "Supplier",
+        "certification_scope_name": "Producer",
+        "certification_status_name": "Authorized",
+        "country": {
+          "iso2": "CI",
+          "normalized": "Côte d'Ivoire",
+          "raw": "Cote d'Ivoire",
+          "status": "alias"
+        },
+        "country_name": "Cote d'Ivoire",
+        "product_category_name": "Cocoa",
+        "raw_supply_chain_role_txt": "Producer",
+        "structure_txt": ""
+      },
+      "codebook": "unavailable: labels are coded identifiers; wording and applicability are provisional",
+      "consentToShare": "not_applicable_public_source",
+      "consistentMultipleChoiceOptionRows": 686,
+      "consistentSingleChoiceResponses": 86,
+      "curationStatus": "not_curated",
+      "multipleChoiceSummaries": {
+        "borrow_source_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 47,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Cooperative": 23,
+            "FT Premium Fund": 3,
+            "Friends/Family": 12,
+            "Informal lender": 9,
+            "Micro-finance institution": 3,
+            "Other": 1
+          }
+        },
+        "child_not_enrolled_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 25,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "I can't afford the school fees": 1,
+            "Other": 9,
+            "Refused": 16,
+            "The child has a handicap": 1
+          }
+        },
+        "committees_skills_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 10,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Computer/Technical Skills": 1,
+            "Don't know": 1,
+            "Financial management/literacy": 1,
+            "I did not learn any skills": 1,
+            "Leadership": 4,
+            "Negotiate or remediation with leadership": 1,
+            "Public speaking": 7
+          }
+        },
+        "committees_tf_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 86,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Don't know": 3,
+            "No": 73,
+            "Yes": 10
+          }
+        },
+        "ft_benefits_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 86,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Construction d ecole": 1,
+            "Don't know": 1,
+            "Feeling valued by the farm/coop/factory": 24,
+            "Increased benefits": 31,
+            "Je suis un nouveau adherant": 1,
+            "Other": 2,
+            "Premium fund": 83,
+            "Sense of community": 39,
+            "Training": 49
+          }
+        },
+        "harvest_change_reason_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 85,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Better inputs from FT": 11,
+            "Climate change": 38,
+            "Diseases (Swollen shoot etc.)": 25,
+            "Less land area under production": 3,
+            "More land area under production": 1,
+            "Other": 30
+          }
+        },
+        "income_sources_ms_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 51,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Banana plantation": 16,
+            "Cashew nut plantation": 2,
+            "Coffee plantation": 1,
+            "Corn plantation": 4,
+            "Other": 15,
+            "Rice plantation": 14,
+            "Rubber plantation": 21,
+            "Vegetables / produces for local consumption": 27
+          }
+        },
+        "no_leadership_feedback_reason_core": {
+          "denominatorBasis": "responses with at least one selection for this question",
+          "denominatorResponses": 67,
+          "labelStatus": "provisional_from_question_label",
+          "options": {
+            "Did not care enough to share my opinion": 4,
+            "Did not think my opinion would make a difference": 1,
+            "Have been satisfied with operations": 59,
+            "Other": 2,
+            "Wanted to understand better before complaing": 1
+          }
+        }
+      },
+      "origin": "public_source_data",
+      "projects": [
+        "PRJ-DB85E25EBA88",
+        "PRJ-DCF6239644C8"
+      ],
+      "quarantinedRowsForThisAccount": {
+        "multi": 0,
+        "single": 0
+      },
+      "responseHeaders": 86,
+      "singleChoiceSummaries": [
+        {
+          "answered": 0,
+          "column": "has_hired_labor_code",
+          "label": "Has hired labor",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {},
+          "responsesInScope": 86,
+          "states": {
+            "missing": 86
+          }
+        },
+        {
+          "answered": 86,
+          "column": "harvest_changed_code",
+          "label": "Harvest changed",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "It has decreased": 67,
+            "It has increased": 18,
+            "It has not changed": 1
+          },
+          "responsesInScope": 86,
+          "states": {
+            "value": 86
+          }
+        },
+        {
+          "answered": 0,
+          "column": "has_water_conservation_practices_code",
+          "label": "Has water conservation practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {},
+          "responsesInScope": 86,
+          "states": {
+            "missing": 86
+          }
+        },
+        {
+          "answered": 0,
+          "column": "has_soil_conservation_practices_code",
+          "label": "Has soil conservation practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {},
+          "responsesInScope": 86,
+          "states": {
+            "missing": 86
+          }
+        },
+        {
+          "answered": 0,
+          "column": "has_forest_protection_practices_code",
+          "label": "Has forest protection practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {},
+          "responsesInScope": 86,
+          "states": {
+            "missing": 86
+          }
+        },
+        {
+          "answered": 0,
+          "column": "has_received_fertilizer_training_code",
+          "label": "Has received fertilizer training",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {},
+          "responsesInScope": 86,
+          "states": {
+            "missing": 86
+          }
+        },
+        {
+          "answered": 0,
+          "column": "has_integrated_pest_management_practices_name",
+          "label": "Has integrated pest management practices",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {},
+          "responsesInScope": 86,
+          "states": {
+            "missing": 86
+          }
+        },
+        {
+          "answered": 13,
+          "column": "water_access_distance_name",
+          "label": "Water access distance",
+          "labelStatus": "provisional_from_column_name",
+          "note": "missing, zero_raw, refused and dont_know are kept separate; none is treated as a respondent answer unless state is 'value'",
+          "options": {
+            "It takes less than 30 minutes": 8,
+            "It takes more than 30 minutes": 5
+          },
+          "responsesInScope": 86,
+          "states": {
+            "not_applicable_label": 73,
+            "value": 13
+          }
+        }
+      ],
+      "sourceContext": "cocoa, Bas-Sassandra, Côte d'Ivoire",
+      "surveyYears": {
+        "2024": 86
+      },
+      "surveys": [
+        "Cocoa_SPO_Cote D'Ivoire_2024_V 1.7_HHS"
+      ],
+      "synthetic": false
+    }
+  },
+  "ingestionVersion": "07483769d463aef4"
+}

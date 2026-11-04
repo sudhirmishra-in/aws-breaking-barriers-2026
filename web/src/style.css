@@ -302,3 +302,4 @@ html.dark .hist-dot { background:var(--warn); }
 @media (max-width:420px) { .kv { grid-template-columns:1fr; } .kv dd { margin-bottom:.4rem; } }
 .ev { display:grid; gap:.5rem; margin:.5rem 0; }
 .match-why { margin:.25rem 0; font-size:.9rem; }
+.ev-title { margin:.25rem 0; font-size:1rem; } .ev-sub { margin:.75rem 0 .25rem; font-size:.9rem; color:var(--muted); }

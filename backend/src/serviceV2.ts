@@ -3,6 +3,7 @@ import type { CorrectionRecord, CorrectableField, Organization, Outcome, Produce
 import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, notFound } from "./errors";
 import { evidenceFor } from "./evidence";
+import { isoOf, LocalProjectRetriever, projectEvidence } from "./projectEvidence";
 import { isEligible, parseCaseId, projectCase, versionOf, type Viewer } from "./peers";
 import { RETENTION, requireProducer, requireReviewer, Service, summaryHashOf, type Principal } from "./service";
 
@@ -276,7 +277,11 @@ export class ServiceV2 extends Service {
     const profile = await this.profileFor(p);
     const org = await this.orgFor(profile);
     const items = evidenceFor(org?.info.countryName ?? null, o.challengeTags ?? []);
-    return { items, limitation: items.length ? null : "No prepared evidence matches this topic and location.", syntheticDemo: true };
+    // Public project records: scope (country, crop) comes from the caller's own organization and record, never from the request.
+    const hits = await (this.d.projects ?? new LocalProjectRetriever()).search({ text: `${o.summaryEn ?? ""} ${(o.challengeTags ?? []).join(" ")}`,
+      countryIso2: isoOf(org?.info.countryName), crop: (o.crop ?? profile.crop) || null, limit: 3 }).catch(() => []);
+    const projects = hits.map((h) => projectEvidence(h.project));
+    return { items, projects, limitation: items.length || projects.length ? null : "No prepared evidence matches this topic and location.", syntheticDemo: true };
   }
 
   // ---- peers ------------------------------------------------------------------------------------------------------------------

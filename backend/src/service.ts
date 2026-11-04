@@ -21,6 +21,8 @@ export interface Deps {
   log?: (event: Record<string, unknown>) => void;
   /** Called by the publisher before a record becomes "published" (derived memory / index update). A throw leaves the record "failed". */
   publishSideEffect?: (o: Outcome) => Promise<void>;
+  /** Retrieval over public project records (local concept retriever by default; a Bedrock Knowledge Base adapter implements the same port). */
+  projects?: import("./projectEvidence").ProjectRetriever;
 }
 
 export const MIN_USER_TURNS_BEFORE_PLAYBACK = 2;

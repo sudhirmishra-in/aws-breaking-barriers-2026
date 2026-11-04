@@ -18,6 +18,7 @@ import * as authorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as bedrock from "aws-cdk-lib/aws-bedrock";
 import * as agentcore from "aws-cdk-lib/aws-bedrockagentcore";
+import * as s3vectors from "aws-cdk-lib/aws-s3vectors";
 
 export interface ExchangeProps extends cdk.StackProps {
   envName: string;
@@ -27,6 +28,8 @@ export interface ExchangeProps extends cdk.StackProps {
   agentZip: string;
   webDist: string;
   gitSha: string; // recorded on the runtime, stack tag and output so a deploy can be tied to a commit
+  enableKnowledgeBase: boolean; // provisions the project-evidence Knowledge Base (S3 Vectors); off by default
+  knowledgeBaseCards: string; // directory of Markdown cards + .metadata.json produced by scripts/nonprofit_ingest.py
   enableCiClient: boolean; // sandbox only: adds an IAM-gated (admin API) client for smoke tests; the browser client is unchanged
 }
 
@@ -148,6 +151,34 @@ export class ExchangeStack extends cdk.Stack {
     });
     runtime.node.addDependency(runtimeRole);
 
+
+    // ---- project-evidence Knowledge Base (public project cards; managed, S3 Vectors store). Optional: -c enableKnowledgeBase=true -------------
+    let kbId: string | undefined;
+    if (p.enableKnowledgeBase) {
+      const embedModel = `arn:${this.partition}:bedrock:${this.region}::foundation-model/amazon.titan-embed-text-v2:0`; // multilingual, 1024 dimensions
+      const cards = new s3.Bucket(this, "KbCards", { blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL, enforceSSL: true, encryption: s3.BucketEncryption.S3_MANAGED, removalPolicy: removal, autoDeleteObjects: removal === cdk.RemovalPolicy.DESTROY });
+      new s3deploy.BucketDeployment(this, "KbCardsDeploy", { destinationBucket: cards, destinationKeyPrefix: "project-cards", prune: true, sources: [s3deploy.Source.asset(path.resolve(process.cwd(), p.knowledgeBaseCards))] });
+      const vb = new s3vectors.CfnVectorBucket(this, "KbVectors", { vectorBucketName: `${n("kb-vectors")}-${this.account}`.toLowerCase() });
+      const index = new s3vectors.CfnIndex(this, "KbIndex", { vectorBucketName: vb.vectorBucketName!, indexName: "project-cards", dimension: 1024, distanceMetric: "cosine", dataType: "float32",
+        metadataConfiguration: { nonFilterableMetadataKeys: ["AMAZON_BEDROCK_TEXT", "AMAZON_BEDROCK_METADATA"] } });
+      index.addDependency(vb);
+      const kbRole = new iam.Role(this, "KbRole", { assumedBy: new iam.ServicePrincipal("bedrock.amazonaws.com", { conditions: { StringEquals: { "aws:SourceAccount": this.account } } }) });
+      cards.grantRead(kbRole);
+      kbRole.addToPolicy(new iam.PolicyStatement({ actions: ["bedrock:InvokeModel"], resources: [embedModel] }));
+      kbRole.addToPolicy(new iam.PolicyStatement({ actions: ["s3vectors:GetIndex", "s3vectors:QueryVectors", "s3vectors:PutVectors", "s3vectors:GetVectors", "s3vectors:DeleteVectors", "s3vectors:ListVectors"], resources: [index.attrIndexArn] }));
+      const kb = new bedrock.CfnKnowledgeBase(this, "ProjectKb", { name: n("project-evidence"), description: "Public project records as evidence cards (not FTUSA-curated)", roleArn: kbRole.roleArn,
+        knowledgeBaseConfiguration: { type: "VECTOR", vectorKnowledgeBaseConfiguration: { embeddingModelArn: embedModel } },
+        storageConfiguration: { type: "S3_VECTORS", s3VectorsConfiguration: { indexArn: index.attrIndexArn } } });
+      kb.node.addDependency(kbRole); kb.addDependency(index);
+      const ds = new bedrock.CfnDataSource(this, "ProjectKbSource", { knowledgeBaseId: kb.attrKnowledgeBaseId, name: "project-cards",
+        dataSourceConfiguration: { type: "S3", s3Configuration: { bucketArn: cards.bucketArn, inclusionPrefixes: ["project-cards/"] } },
+        vectorIngestionConfiguration: { chunkingConfiguration: { chunkingStrategy: "NONE" } } }); // one card = one chunk, so a citation points at exactly one project
+      kbId = kb.attrKnowledgeBaseId;
+      new cdk.CfnOutput(this, "KnowledgeBaseId", { value: kb.attrKnowledgeBaseId });
+      new cdk.CfnOutput(this, "KnowledgeBaseDataSourceId", { value: ds.attrDataSourceId });
+      new cdk.CfnOutput(this, "KnowledgeBaseCardsBucket", { value: cards.bucketName });
+    }
+
     // ---- API ----------------------------------------------------------------
     const apiLogs = new logs.LogGroup(this, "ApiFnLogs", { retention: logs.RetentionDays.ONE_MONTH, removalPolicy: cdk.RemovalPolicy.DESTROY });
     const fn = new nodejs.NodejsFunction(this, "ApiFn", {
@@ -155,13 +186,14 @@ export class ExchangeStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64, memorySize: 512, timeout: cdk.Duration.seconds(60), logGroup: apiLogs, reservedConcurrentExecutions: undefined,
       environment: {
         CONVERSATIONS_TABLE: conversations.tableName, OUTCOMES_TABLE: outcomes.tableName, AGENT_RUNTIME_ARN: runtime.attrAgentRuntimeArn,
-        USER_POOL_CLIENT_ID: client.userPoolClientId, ALLOWED_CLIENT_IDS: [client.userPoolClientId, ...(ciClient ? [ciClient.userPoolClientId] : [])].join(","), ISSUER: issuer, NODE_OPTIONS: "--enable-source-maps",
+        USER_POOL_CLIENT_ID: client.userPoolClientId, ALLOWED_CLIENT_IDS: [client.userPoolClientId, ...(ciClient ? [ciClient.userPoolClientId] : [])].join(","), ISSUER: issuer, NODE_OPTIONS: "--enable-source-maps", ...(kbId ? { KNOWLEDGE_BASE_ID: kbId } : {}),
       },
       bundling: { minify: true, sourceMap: true, target: "node22" },
       depsLockFilePath: path.join(__dirname, "../../package-lock.json"),
       projectRoot: path.join(__dirname, "../.."),
     });
     conversations.grantReadWriteData(fn); outcomes.grantReadWriteData(fn); key.grantEncryptDecrypt(fn);
+    if (kbId) fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["bedrock:Retrieve"], resources: [`arn:${this.partition}:bedrock:${this.region}:${this.account}:knowledge-base/${kbId}`] }));
     // Dictation: Transcribe streaming has no resource-level permissions. Audio is not stored.
     fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["transcribe:StartStreamTranscription"], resources: ["*"] }));
     // Read aloud: Polly speech synthesis has no resource-level permissions (only lexicons do). Audio is not stored.

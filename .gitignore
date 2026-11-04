@@ -10,3 +10,4 @@ web/public/config.json
 .DS_Store
 cdk-outputs.json
 dist
+build/

@@ -12,9 +12,9 @@ import type { ApiFailure, ConversationView, EvidenceItem, RecordStateDto } from 
 const props = defineProps<{ view: ConversationView }>();
 const emit = defineEmits<{ changed: []; ask: [caseId: string] }>();
 const rec = computed<RecordStateDto | null>(() => props.view.record ?? null);
-const evidence = ref<EvidenceItem[]>([]); const limitation = ref("");
+const evidence = ref<EvidenceItem[]>([]); const projects = ref<EvidenceItem[]>([]); const limitation = ref("");
 const curated = computed(() => evidence.value.filter((e) => e.curationStatus === "ftusa_curated"));
-onMounted(async () => { try { const r = await api.evidence(props.view.conversation.conversationId); evidence.value = r.items; limitation.value = r.limitation ?? ""; } catch { limitation.value = "Evidence could not be loaded just now."; } });
+onMounted(async () => { try { const r = await api.evidence(props.view.conversation.conversationId); evidence.value = r.items; projects.value = r.projects ?? []; limitation.value = r.limitation ?? ""; } catch { limitation.value = "Evidence could not be loaded just now."; } });
 const msg = ref(""); const busy = ref(false); const confirmDelete = ref(false);
 async function act(fn: () => Promise<unknown>) { busy.value = true; msg.value = ""; try { await fn(); emit("changed"); } catch (e) { msg.value = (e as ApiFailure).message; } finally { busy.value = false; } }
 const fbBusy = ref(false);
@@ -47,7 +47,9 @@ const deletion = () => act(async () => { const r = await api.requestDeletion(pro
       <p v-if="msg" class="hint" role="status">{{ msg }}</p></div>
     <div class="card"><h3>What the data shows</h3>
       <EvidenceCard v-for="e in evidence" :key="e.evidenceId" :item="e" />
-      <p v-if="!evidence.length" class="hint">{{ limitation || "Loading…" }}</p></div>
+      <h4 v-if="projects.length" class="ev-sub">Similar project records from public source data</h4>
+      <EvidenceCard v-for="e in projects" :key="e.evidenceId" :item="e" />
+      <p v-if="!evidence.length && !projects.length" class="hint">{{ limitation || "Loading…" }}</p></div>
     <div class="card"><h3>Information curated by Fair Trade USA</h3>
       <EvidenceCard v-for="e in curated" :key="e.evidenceId" :item="e" />
       <p v-if="!curated.length" class="hint">Nothing curated by Fair Trade USA is available for this case yet.</p></div>

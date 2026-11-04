@@ -8,9 +8,30 @@ const app = new cdk.App();
 const stack = new ExchangeStack(app, "T", {
   env: { account: "111111111111", region: "us-west-2" }, envName: "test", modelId: "us.anthropic.claude-haiku-4-5-20251001-v1:0",
   extraCallbackUrls: ["http://localhost:5173/auth/callback"], extraLogoutUrls: ["http://localhost:5173/"],
-  agentZip: "../agent/dist/agent.zip", webDist: "../web/dist", gitSha: "abc123", enableCiClient: true,
+  agentZip: "../agent/dist/agent.zip", webDist: "../web/dist", gitSha: "abc123", enableCiClient: true, enableKnowledgeBase: false, knowledgeBaseCards: "../data/v2-synthetic",
 });
 const t = Template.fromStack(stack);
+const kbStack = new ExchangeStack(new cdk.App(), "K", {
+  env: { account: "111111111111", region: "us-west-2" }, envName: "test", modelId: "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  extraCallbackUrls: ["http://localhost:5173/auth/callback"], extraLogoutUrls: ["http://localhost:5173/"],
+  agentZip: "../agent/dist/agent.zip", webDist: "../web/dist", gitSha: "abc123", enableCiClient: true, enableKnowledgeBase: true, knowledgeBaseCards: "../data/v2-synthetic",
+});
+const kt = Template.fromStack(kbStack);
+
+describe("knowledge base (optional)", () => {
+  it("is absent unless enabled", () => { t.resourceCountIs("AWS::Bedrock::KnowledgeBase", 0); t.resourceCountIs("AWS::S3Vectors::VectorBucket", 0); });
+  it("uses a managed KB on an S3 Vectors index with a multilingual embedding model, one chunk per card", () => {
+    kt.hasResourceProperties("AWS::Bedrock::KnowledgeBase", Match.objectLike({ StorageConfiguration: Match.objectLike({ Type: "S3_VECTORS" }) }));
+    kt.hasResourceProperties("AWS::S3Vectors::Index", Match.objectLike({ Dimension: 1024, DistanceMetric: "cosine" }));
+    kt.hasResourceProperties("AWS::Bedrock::DataSource", Match.objectLike({ VectorIngestionConfiguration: { ChunkingConfiguration: { ChunkingStrategy: "NONE" } } }));
+    expect(JSON.stringify(kt.toJSON())).toContain("amazon.titan-embed-text-v2:0");
+  });
+  it("the API may only retrieve from that one knowledge base", () => {
+    const stmts = Object.values(kt.findResources("AWS::IAM::Policy")).flatMap((r) => (r as { Properties: { PolicyDocument: { Statement: { Action: string | string[]; Resource: unknown }[] } } }).Properties.PolicyDocument.Statement);
+    const retr = stmts.filter((x) => [x.Action].flat().includes("bedrock:Retrieve"));
+    expect(retr).toHaveLength(1); expect(JSON.stringify(retr[0].Resource)).toContain("knowledge-base/"); expect(retr[0].Resource).not.toBe("*");
+  });
+});
 
 describe("stack", () => {
   it("uses a public PKCE client without a secret and no password flows", () => {

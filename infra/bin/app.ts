@@ -13,6 +13,8 @@ new ExchangeStack(app, `FtusaExchange-${envName}`, {
   extraLogoutUrls: (app.node.tryGetContext("extraLogoutUrls") ?? "http://localhost:5173/").split(","),
   gitSha: app.node.tryGetContext("gitSha") ?? "local",
   enableCiClient: String(app.node.tryGetContext("enableCiClient") ?? "false") === "true",
+  enableKnowledgeBase: String(app.node.tryGetContext("enableKnowledgeBase") ?? "false") === "true",
+  knowledgeBaseCards: app.node.tryGetContext("knowledgeBaseCards") ?? "../build/nonprofit/cards",
   agentZip: app.node.tryGetContext("agentZip") ?? "../agent/dist/agent.zip",
   webDist: app.node.tryGetContext("webDist") ?? "../web/dist",
 });

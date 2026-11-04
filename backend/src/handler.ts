@@ -3,6 +3,8 @@ import { ZodError } from "zod";
 import { AgentCoreClient } from "./agent";
 import { CorrectionCreateReq, CorrectionDecisionReq, FinalizeReq, FeedbackReq, PeerQuery, ReconfirmReq, SharingUpdateReq, AskReq, ReviewPatchReq, ReviewProducersQuery, TranscribeReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
 import { DdbStore } from "./ddbStore";
+import { BedrockAgentRuntimeClient, RetrieveCommand } from "@aws-sdk/client-bedrock-agent-runtime";
+import { KnowledgeBaseRetriever, LocalProjectRetriever, type ProjectRetriever } from "./projectEvidence";
 import { PollySpeaker } from "./speech";
 import { TranscribeStreamingTranscriber } from "./transcribe";
 import { ApiError, invalid, notFound, unauthorized } from "./errors";
@@ -89,12 +91,20 @@ export async function route(svc: ServiceV2, p: Principal, method: string, path: 
   throw notFound();
 }
 
+/** Knowledge Base retrieval when one is provisioned and ingested; otherwise the deterministic local retriever. A KB failure at query time also falls back to local. */
+function projectRetriever(): ProjectRetriever {
+  const local = new LocalProjectRetriever();
+  const kb = process.env.KNOWLEDGE_BASE_ID && new KnowledgeBaseRetriever(process.env.KNOWLEDGE_BASE_ID, new BedrockAgentRuntimeClient({}) as never, (i) => new RetrieveCommand(i as never));
+  return kb ? { search: async (q) => { try { const r = await kb.search(q); return r.length ? r : local.search(q); } catch { return local.search(q); } } } : local;
+}
+
 let svc: ServiceV2 | undefined;
 const getSvc = () => (svc ??= new ServiceV2({
   store: new DdbStore(process.env.CONVERSATIONS_TABLE!, process.env.OUTCOMES_TABLE!),
   agent: new AgentCoreClient(process.env.AGENT_RUNTIME_ARN!),
   transcriber: new TranscribeStreamingTranscriber(),
   speaker: new PollySpeaker(),
+  projects: projectRetriever(),
   log: (e) => console.log(JSON.stringify({ level: "info", ...e })), // structured; never message text
 }));
 

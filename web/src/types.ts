@@ -76,4 +76,6 @@ export interface RelatedData {
   certification: { standard: string; version: string; status: string; lastAudit: string }[];
 }
 export interface EvidenceItem { evidenceId: string; geography: string; period: string; tag: string; finding: string; source: string;
-  origin: "external_imported" | "ftusa_authored"; curationStatus: "ftusa_curated" | "not_curated"; illustrative: boolean; stale?: boolean; standards: string[] }
+  origin: "external_imported" | "ftusa_authored"; curationStatus: "ftusa_curated" | "not_curated"; illustrative: boolean; stale?: boolean; standards: string[];
+  kind?: "project_record"; title?: string; recordedStatus?: string; taxonomy?: string; outcome?: string;
+  citation?: { label: string; projectId: string; dataVersion: string; contentHash: string } }
