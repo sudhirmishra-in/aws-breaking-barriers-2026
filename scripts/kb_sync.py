@@ -16,5 +16,5 @@ while job["status"] in ("STARTING", "IN_PROGRESS"):
     time.sleep(10); job = c.get_ingestion_job(knowledgeBaseId=o["KnowledgeBaseId"], dataSourceId=o["KnowledgeBaseDataSourceId"], ingestionJobId=job["ingestionJobId"])["ingestionJob"]
 st = job.get("statistics", {})
 print("status", job["status"], {k: st.get(k) for k in ("numberOfDocumentsScanned", "numberOfNewDocumentsIndexed", "numberOfModifiedDocumentsIndexed", "numberOfDocumentsDeleted", "numberOfDocumentsFailed")})
-if job.get("failureReasons"): print("failures:", job["failureReasons"][:5])
+if job.get("failureReasons"): print("failure reasons (first of %d):" % len(job["failureReasons"]), job["failureReasons"][0][:400])
 sys.exit(0 if job["status"] == "COMPLETE" and not st.get("numberOfDocumentsFailed") else 1)

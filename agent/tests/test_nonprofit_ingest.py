@@ -110,3 +110,10 @@ def test_cards_never_derive_outcomes_or_curation_and_skip_unusable_rows(tmp_path
     assert not any(w in text.lower() for w in ("improved", "increased yield", "success", "resolved", "aps ", "fps "))
     n = ni.write_cards([base, {**base, "projectId": "PRJ-BBB", "usableAsRegionalPrecedent": False}], "v1", tmp_path)
     assert n == 1 and (tmp_path / "cards" / "PRJ-AAA.md").exists() and not (tmp_path / "cards" / "PRJ-BBB.md").exists()
+
+
+def test_card_metadata_has_no_empty_values():
+    p = {"projectId": "PRJ-E", "title": "t", "description": "d", "country": ni.normalize_country("Peru"), "region": "", "products": [], "startDate": "", "endDate": "", "dateFlags": [],
+         "recordedStatus": "Completed", "category": "Environmental", "subCategory": "", "contentHash": "h", "sourceRef": {"accountSk": "A", "row": 2}, "usableAsRegionalPrecedent": True}
+    _, meta = ni.project_card(p, "v1")
+    assert all(v != "" for v in meta["metadataAttributes"].values()) and "region" not in meta["metadataAttributes"] and "subCategory" not in meta["metadataAttributes"]

@@ -14,7 +14,7 @@ from __future__ import annotations
 import argparse, collections, csv, datetime as dt, gzip, hashlib, json, re, sys
 from pathlib import Path
 
-PIPELINE_VERSION = "1.0.0"
+PIPELINE_VERSION = "1.0.1"
 SCHEMA_VERSION = "nonprofit-csv-2026-10-29"
 FILES = {
     "accounts": "Producer Accounts.csv", "projects": "Premium Projects Environmental.csv", "survey_defs": "Household Survey Header.csv",
@@ -145,6 +145,8 @@ def project_card(p: dict, ingestion_version: str) -> tuple[str, dict]:
     meta = {"metadataAttributes": {"projectId": p["projectId"], "countryIso2": c["iso2"] or "", "region": p["region"], "products": ";".join(p["products"]).lower(), "category": p["category"],
             "subCategory": p["subCategory"], "recordedStatus": p["recordedStatus"], "startYear": int(p["startDate"][:4]) if p["startDate"][:4].isdigit() else 0,
             "origin": "public_source_data", "curationStatus": "not_curated", "sourceAccountSk": p["sourceRef"]["accountSk"], "contentHash": p["contentHash"], "ingestionVersion": ingestion_version}}
+    # Bedrock KB rejects empty-string attribute values (71 cards failed ingestion on a live run): absent is the correct representation of "not recorded".
+    meta["metadataAttributes"] = {k: v for k, v in meta["metadataAttributes"].items() if v != ""}
     return text, meta
 
 

@@ -152,8 +152,8 @@
       "sha256": "771c5aa798f4e756b6805a0796597594819dfbb882bd6b33e457427034a73859"
     }
   },
-  "ingestionVersion": "07483769d463aef4",
-  "pipelineVersion": "1.0.0",
+  "ingestionVersion": "b3e2e7617b565641",
+  "pipelineVersion": "1.0.1",
   "provenance": {
     "consentToShare": "not_applicable_public_source",
     "curationStatus": "not_curated",
