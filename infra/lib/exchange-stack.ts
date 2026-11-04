@@ -167,10 +167,10 @@ export class ExchangeStack extends cdk.Stack {
 
     const api = new apigw.HttpApi(this, "Api", {
       apiName: n("api"),
-      corsPreflight: { allowOrigins: [webUrl, ...p.extraCallbackUrls.map((u) => new URL(u).origin)], allowMethods: [apigw.CorsHttpMethod.GET, apigw.CorsHttpMethod.POST, apigw.CorsHttpMethod.PUT], allowHeaders: ["authorization", "content-type"], maxAge: cdk.Duration.hours(1) },
+      corsPreflight: { allowOrigins: [webUrl, ...p.extraCallbackUrls.map((u) => new URL(u).origin)], allowMethods: [apigw.CorsHttpMethod.GET, apigw.CorsHttpMethod.POST, apigw.CorsHttpMethod.PUT, apigw.CorsHttpMethod.DELETE], allowHeaders: ["authorization", "content-type"], maxAge: cdk.Duration.hours(1) },
       defaultAuthorizer: new authorizers.HttpJwtAuthorizer("CognitoJwt", issuer, { jwtAudience: [client.userPoolClientId, ...(ciClient ? [ciClient.userPoolClientId] : [])] }),
     });
-    api.addRoutes({ path: "/{proxy+}", methods: [apigw.HttpMethod.GET, apigw.HttpMethod.POST, apigw.HttpMethod.PUT], integration: new integrations.HttpLambdaIntegration("ApiIntegration", fn) });
+    api.addRoutes({ path: "/{proxy+}", methods: [apigw.HttpMethod.GET, apigw.HttpMethod.POST, apigw.HttpMethod.PUT, apigw.HttpMethod.DELETE], integration: new integrations.HttpLambdaIntegration("ApiIntegration", fn) });
     const stage = api.defaultStage!.node.defaultChild as apigw.CfnStage;
     stage.defaultRouteSettings = { throttlingBurstLimit: 20, throttlingRateLimit: 10 };
     const accessLogs = new logs.LogGroup(this, "ApiAccessLogs", { retention: logs.RetentionDays.ONE_MONTH, removalPolicy: cdk.RemovalPolicy.DESTROY });

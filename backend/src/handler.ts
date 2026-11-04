@@ -38,6 +38,7 @@ export async function route(svc: Service, p: Principal, method: string, path: st
     if (method === "POST" && !r1) { const q = CreateConversationReq.parse(body); return svc.create(p, q.language, q.requestId); }
     if (method === "GET" && r1 === "current") return svc.getCurrent(p);
     if (r1 && method === "GET" && !r2) return svc.getConversation(p, r1);
+    if (r1 && method === "DELETE" && !r2) return svc.deleteConversation(p, r1);
     if (r1 && method === "POST" && r2 === "messages") { const q = SubmitMessageReq.parse(body); return svc.message(p, r1, q.requestId, q.text); }
     if (r1 && method === "POST" && r2 === "playback") { return svc.playback(p, r1, PlaybackReq.parse(body)); }
     if (r1 && method === "POST" && r2 === "consent") { const q = ConsentReq.parse(body); return svc.consent(p, r1, q.requestId, q.storeSummary); }

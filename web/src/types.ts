@@ -6,10 +6,10 @@ export interface ConversationDto {
   conversationId: string; language: Lang;
   workflow: "intake" | "playback_pending" | "guidance_pending" | "consent_pending" | "closed";
   confirmation: string; consent: "unanswered" | "granted" | "declined"; status: "active" | "completed" | "declined";
-  title?: string | null; playbackSummary?: string; summaryEn?: string; summaryEs?: string; expiresAt: string;
+  title?: string | null; playbackSummary?: string; summaryEn?: string; summaryEs?: string; expiresAt: string | null;
 }
 export interface ConversationView { conversation: ConversationDto; messages: Message[]; retention: { activeDays: number; savedDays?: number; text: string }; syntheticDemo: true }
-export interface ConversationSummary { conversationId: string; title: string | null; language: Lang; createdAt: string; updatedAt: string; status: "in_progress" | "saved" }
+export interface ConversationSummary { conversationId: string; title: string | null; language: Lang; createdAt: string; updatedAt: string; status: "in_progress" | "saved"; summary: string | null }
 export interface CurrentView { conversation: ConversationDto | null; messages?: Message[]; retention?: ConversationView["retention"] }
 export interface Me { roles: ("producer" | "reviewer")[]; profile?: { displayName: string; entityType: string; location: string; crop: string; preferredLanguage: Lang }; syntheticDemo: true }
 export interface ReviewItem {

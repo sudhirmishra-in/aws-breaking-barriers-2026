@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { AlertTriangle, Bot, Check, CheckCircle2, Copy, EyeOff, Heart, History, MessageCircle, Plus, RotateCw, SendHorizontal, ShieldCheck, X } from "lucide-vue-next";
+import { AlertTriangle, Bot, Check, CheckCircle2, Copy, EyeOff, Heart, MessageCircle, Plus, RotateCw, SendHorizontal, ShieldCheck, X } from "lucide-vue-next";
 import DictateButton from "../components/DictateButton.vue";
-import HistoryDrawer from "../components/HistoryDrawer.vue";
+import HistoryPanel from "../components/HistoryPanel.vue";
 import ProgressPanel from "../components/ProgressPanel.vue";
 import { api, newRequestId } from "../lib/api";
 import { renderMarkdown } from "../lib/markdown";
@@ -26,10 +26,8 @@ const correcting = ref(false);
 const corr = ref({ text: "", location: "", entity: "" });
 const confirmEnd = ref(false);
 const copiedSeq = ref<number | null>(null);
-const historyOpen = ref(false);
 const log = ref<HTMLElement | null>(null);
 const box = ref<HTMLTextAreaElement | null>(null);
-const histBtn = ref<HTMLButtonElement | null>(null);
 
 const STAGE_OF: Record<ConversationDto["workflow"], Stage> = { intake: "intake", playback_pending: "playback", guidance_pending: "response", consent_pending: "consent", closed: "consent" };
 const closed = computed(() => conv.value?.workflow === "closed");
@@ -106,19 +104,20 @@ const decide = (store: boolean) => run((rid) => api.consent(conv.value!.conversa
 async function endNow() { confirmEnd.value = false; await run((rid) => api.end(conv.value!.conversationId, rid)); }
 async function copy(m: Message) { try { await navigator.clipboard.writeText(m.text); copiedSeq.value = m.seq; setTimeout(() => (copiedSeq.value = null), 1800); } catch { /* clipboard unavailable */ } }
 
-function closeHistory() { historyOpen.value = false; nextTick(() => histBtn.value?.focus()); }
-function openConversation(id: string) { historyOpen.value = false; void router.push(`/chat/${id}`); }
-function newConversation() { historyOpen.value = false; conv.value = null; messages.value = []; error.value = null; void router.push({ path: "/chat", query: { new: "1" } }); }
+function openConversation(id: string) { void router.push(`/chat/${id}`); }
+function onDeleted(id: string) { if (conv.value?.conversationId === id) newConversation(); }
+function newConversation() { conv.value = null; messages.value = []; error.value = null; void router.push({ path: "/chat", query: { new: "1" } }); }
 function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="${st}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }
 </script>
 
 <template>
-  <HistoryDrawer :open="historyOpen" :current-id="conv?.conversationId" @close="closeHistory" @select="openConversation" @new="newConversation" />
-
   <div class="chat-page" :class="{ 'no-panel': !conv }">
     <section class="chat-main" aria-label="Conversation">
       <header class="chat-hd">
-        <button ref="histBtn" type="button" class="icon-btn" :aria-label="s.openHistory" :title="s.openHistory" aria-haspopup="dialog" :aria-expanded="historyOpen" @click="historyOpen = true"><History :size="18" aria-hidden="true" /></button>
+        <div class="chat-actions">
+          <button type="button" class="btn primary sm" @click="newConversation"><Plus :size="14" aria-hidden="true" />{{ s.newConversation }}</button>
+          <HistoryPanel :current-id="conv?.conversationId" @open="openConversation" @deleted="onDeleted" />
+        </div>
         <h1 class="chat-title">{{ heading }}</h1>
         <span v-if="conv" class="pill" :class="closed ? (outcome === 'saved' ? 'ok' : '') : 'warn'">{{ closed ? (outcome === "saved" ? s.outcomeSaved : s.outcomeDeclined) : s.inProgress }}</span>
         <span class="grow" />
@@ -127,7 +126,6 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
           <span v-else role="alertdialog" aria-label="confirm end" class="row end-confirm">{{ s.endConfirm }}
             <button type="button" class="btn sm" @click="endNow">{{ s.end }}</button><button type="button" class="btn sm" @click="confirmEnd = false">{{ s.cancel }}</button></span>
         </template>
-        <button v-if="conv" type="button" class="icon-btn" :aria-label="s.newConversation" :title="s.newConversation" @click="newConversation"><Plus :size="18" aria-hidden="true" /></button>
       </header>
       <ProgressPanel v-if="conv" class="only-narrow" variant="inline" :stage="stage" :outcome="outcome" :reached="reached" @jump="jump" />
 
@@ -212,7 +210,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
           <div v-if="closed" class="decision closed-note" role="status">
             <span class="done-ic"><Heart v-if="outcome === 'saved'" :size="18" aria-hidden="true" /><Check v-else :size="18" aria-hidden="true" /></span>
             <p style="margin:0">{{ outcome === "saved" ? s.doneStored : s.doneDeclined }}</p>
-            <p v-if="outcome === 'saved'" class="hint" style="margin:0">{{ s.readOnly }}</p>
+            <p v-if="outcome === 'saved'" class="hint" style="margin:0">{{ messages.length ? s.readOnly : s.transcriptGone }}</p>
             <div><button type="button" class="btn primary" @click="newConversation"><Plus :size="16" aria-hidden="true" />{{ s.newConversation }}</button></div>
           </div>
         </div>

@@ -159,7 +159,7 @@ describe("consent, decline, review", () => {
     const o = [...store.outcomes.values()][0];
     expect(v.conversation.status).toBe("completed"); expect(o).toMatchObject({ kind: "record", source: "agent conversation", reviewStatus: "pending", summaryEn: "EN summary", summaryEs: "ES resumen" });
     expect((await store.listMessages(id)).length).toBeGreaterThan(0); // saved: transcript stays in the producer's history
-    expect((await store.getConversation(id))!.summaryEn).toBeUndefined();
+    expect((await store.getConversation(id))!.summaryEn).toBe("EN summary"); // kept for the producer's own history
   });
   it("decline creates no narrative record and removes transient narrative", async () => {
     const { svc, store } = setup(); const id = await toConsent(svc);
@@ -264,7 +264,8 @@ describe("history and multiple conversations", () => {
     await svc.create(bob, "en", rid());
     let list = (await svc.listConversations(alice)).items;
     expect(list.map((i) => i.conversationId)).toEqual([second, first]);
-    expect(list[1]).toMatchObject({ title: "Late rain and lower yield", status: "in_progress" });
+    expect(list[1]).toMatchObject({ title: "Late rain and lower yield", status: "in_progress", summary: "late rain hurt yield" });
+    expect(list[0].summary).toBeNull(); // still at intake
     await svc.end(alice, second, rid());
     list = (await svc.listConversations(alice)).items;
     expect(list.map((i) => i.conversationId)).toEqual([first]);
@@ -273,7 +274,7 @@ describe("history and multiple conversations", () => {
   });
   it("a saved conversation is listed as saved and its transcript stays readable but read-only", async () => {
     const { svc } = setup(); const id = await toConsent(svc); await svc.consent(alice, id, rid(), true);
-    expect((await svc.listConversations(alice)).items[0]).toMatchObject({ conversationId: id, status: "saved" });
+    expect((await svc.listConversations(alice)).items[0]).toMatchObject({ conversationId: id, status: "saved", summary: "EN summary" });
     const v = await svc.getConversation(alice, id);
     expect(v.messages.length).toBeGreaterThan(3); expect(v.conversation.status).toBe("completed");
     expect(await code(svc.message(alice, id, rid(), "more"))).toBe("conversation_closed");
@@ -294,5 +295,44 @@ describe("history and multiple conversations", () => {
     expect(cleanTitle("  Late   rain \n and yield ")).toBe("Late rain and yield");
     expect(cleanTitle(null, "x".repeat(100))!.length).toBe(58);
     expect(cleanTitle("", "")).toBeUndefined();
+  });
+});
+
+describe("decline keeps no summary", () => {
+  it("a declined conversation keeps no title or summary", async () => {
+    const { svc, store } = setup(); const id = await toConsent(svc); await svc.consent(alice, id, rid(), false);
+    const c = (await store.getConversation(id))!;
+    expect([c.title, c.summaryEn, c.summaryEs, c.playbackSummary]).toEqual([undefined, undefined, undefined, undefined]);
+  });
+});
+
+describe("saved summaries are kept until deleted", () => {
+  it("a saved conversation has no expiry; its summary stays in the list", async () => {
+    const { svc, store } = setup(); const id = await toConsent(svc); await svc.consent(alice, id, rid(), true);
+    expect((await store.getConversation(id))!.expiresAt).toBe(0);
+    expect((await svc.getConversation(alice, id)).conversation.expiresAt).toBeNull();
+  });
+  it("the owner can delete a saved conversation; it leaves the history and its transcript and snapshots are gone", async () => {
+    const { svc, store } = setup(); const id = await toConsent(svc); await svc.consent(alice, id, rid(), true);
+    expect(await code(svc.deleteConversation(bob, id))).toBe("not_found");
+    expect(await code(svc.deleteConversation(rev, id))).toBe("forbidden");
+    await svc.deleteConversation(alice, id);
+    expect(await store.getConversation(id)).toBeUndefined();
+    expect(await store.listMessages(id)).toHaveLength(0);
+    expect([...store.idem.keys()].some((k) => k.startsWith(id))).toBe(false);
+    expect((await svc.listConversations(alice)).items).toHaveLength(0);
+    expect(await code(svc.getConversation(alice, id))).toBe("not_found");
+    // the consented review record is a separate record and is not changed
+    expect(store.outcomes.get(`rec-${id}`)).toBeDefined();
+  });
+  it("an in-progress conversation cannot be deleted (end it instead)", async () => {
+    const { svc } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
+    expect(await code(svc.deleteConversation(alice, id))).toBe("wrong_state");
+  });
+  it("declining also removes idempotency snapshots that could hold narrative", async () => {
+    const { svc, store } = setup(); const id = (await svc.create(alice, "en", rid())).conversation.conversationId;
+    await svc.message(alice, id, rid(), "my story"); await svc.end(alice, id, rid());
+    const snaps = [...store.idem.entries()].filter(([k]) => k.startsWith(id)).map(([, v]) => JSON.stringify(v));
+    expect(snaps.some((x) => x.includes("my story"))).toBe(false);
   });
 });

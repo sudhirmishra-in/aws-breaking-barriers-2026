@@ -19,13 +19,16 @@ export function installDevMock(role: "producer" | "reviewer") {
     retention: { activeDays: 7, savedDays: 30, text: "" }, syntheticDemo: true,
   };
   const history = { items: [
-    { conversationId: "c-1", title: "Lluvias irregulares y menor cosecha", language: "es", createdAt: iso(0), updatedAt: iso(0), status: "in_progress" },
-    { conversationId: "c-2", title: "Planning next year's Premium projects", language: "en", createdAt: iso(5), updatedAt: iso(5), status: "saved" },
-    { conversationId: "c-3", title: "Precios más bajos después de la cosecha", language: "es", createdAt: iso(50), updatedAt: iso(50), status: "saved" },
+    { conversationId: "c-1", title: "Lluvias irregulares y menor cosecha", language: "es", createdAt: iso(0), updatedAt: iso(0), status: "in_progress", summary: "Lluvias irregulares desde finales de 2023; cosecha cerca de 25 % menor." },
+    { conversationId: "c-2", title: "Planning next year's Premium projects", language: "en", createdAt: iso(5), updatedAt: iso(5), status: "saved", summary: "The cooperative wants to choose next year's Premium projects and is weighing water storage against a drying patio." },
+    { conversationId: "c-3", title: "Precios más bajos después de la cosecha", language: "es", createdAt: iso(50), updatedAt: iso(50), status: "saved", summary: null },
   ] };
   const routes: Record<string, unknown> = {
     "GET /conversations": history,
     "GET /conversations/c-1": sample,
+    "DELETE /conversations/c-2": { deleted: true, conversationId: "c-2" },
+    "GET /conversations/c-2": { ...sample, conversation: { ...sample.conversation, conversationId: "c-2", language: "en", workflow: "closed", status: "completed", consent: "granted", title: "Planning next year's Premium projects" },
+      messages: [{ seq: 1, role: "assistant", text: "What has been difficult recently?", at: iso(5), stage: "intake" }, { seq: 2, role: "user", text: "We need to decide next year's Premium projects.", at: iso(5), stage: "intake" }] },
     "GET /me": role === "producer" ? { roles: ["producer"], profile, syntheticDemo: true } : { roles: ["reviewer"], syntheticDemo: true },
     "GET /overview": role === "producer" ? { producer: { activeConversation: null } } : { reviewer: { pending: 2, approved: 1, corrected: 1, piiFlagged: 1, recent: [item("rec-1", "pending", true), item("rec-2", "approved")] } },
     "GET /conversations/current": sample,

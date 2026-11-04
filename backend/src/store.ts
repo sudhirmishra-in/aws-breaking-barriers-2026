@@ -25,6 +25,8 @@ export interface Store {
   addMessages(id: string, msgs: Message[]): Promise<void>;
   listMessages(id: string): Promise<Message[]>;
   deleteMessages(id: string): Promise<void>;
+  /** Deletes a conversation's messages and idempotency snapshots; with keepMeta false also the conversation item. */
+  purgeConversation(id: string, opts: { keepMeta: boolean }): Promise<void>;
   getIdem(id: string, requestId: string): Promise<unknown | undefined>;
   putIdem(id: string, requestId: string, response: unknown, ttl: number): Promise<void>;
   putOutcome(o: Outcome): Promise<void>;
@@ -83,6 +85,11 @@ export class MemoryStore implements Store {
   async addMessages(id: string, m: Message[]) { this.msgs.set(id, [...(this.msgs.get(id) ?? []), ...m]); }
   async listMessages(id: string) { return [...(this.msgs.get(id) ?? [])]; }
   async deleteMessages(id: string) { this.msgs.delete(id); }
+  async purgeConversation(id: string, opts: { keepMeta: boolean }) {
+    this.msgs.delete(id);
+    for (const k of [...this.idem.keys()]) if (k.startsWith(`${id}#`)) this.idem.delete(k);
+    if (!opts.keepMeta) this.convs.delete(id);
+  }
   async getIdem(id: string, r: string) { return this.idem.get(`${id}#${r}`); }
   async putIdem(id: string, r: string, resp: unknown) { this.idem.set(`${id}#${r}`, resp); }
   async putOutcome(o: Outcome) { this.outcomes.set(o.outcomeId, structuredClone(o)); }

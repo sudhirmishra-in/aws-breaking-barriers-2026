@@ -73,7 +73,7 @@ export interface Conversation {
   lockExpires?: number;
   createdAt: string;
   updatedAt: string;
-  expiresAt: number; // epoch seconds (DynamoDB TTL)
+  expiresAt: number; // epoch seconds (DynamoDB TTL); 0 = kept until the producer deletes it (saved conversations)
 }
 
 export interface Message { seq: number; role: "user" | "assistant"; text: string; at: string; stage?: Stage }

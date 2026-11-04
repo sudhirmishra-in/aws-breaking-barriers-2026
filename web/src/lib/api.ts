@@ -31,6 +31,7 @@ export const api = {
   ask: (requestId: string, text: string, language: Lang) => call<AskResponse>("POST", "/ask", { requestId, text, language }),
   current: () => call<CurrentView>("GET", "/conversations/current"),
   list: () => call<{ items: ConversationSummary[] }>("GET", "/conversations"),
+  remove: (id: string) => call<{ deleted: true }>("DELETE", `/conversations/${encodeURIComponent(id)}`),
   get: (id: string) => call<ConversationView>("GET", `/conversations/${encodeURIComponent(id)}`),
   create: (language: Lang, requestId: string = newRequestId()) => call<ConversationView>("POST", "/conversations", { requestId, language }),
   message: (id: string, requestId: string, text: string) => call<ConversationView>("POST", `/conversations/${id}/messages`, { requestId, text }),

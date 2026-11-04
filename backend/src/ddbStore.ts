@@ -36,9 +36,11 @@ export class DdbStore implements Store {
     const next: Conversation = { ...cur, ...patch, version: v + 1 };
     try {
       await this.d.send(new UpdateCommand({ TableName: this.convTable, Key: { pk: `CONV#${id}`, sk: META },
-        UpdateExpression: "SET #data = :n, convStatus = :s, #ttl = :t", ConditionExpression: "#data.#v = :v",
+        // expiresAt 0 means "kept until the producer deletes it": the TTL attribute is removed.
+        UpdateExpression: next.expiresAt ? "SET #data = :n, convStatus = :s, #ttl = :t" : "SET #data = :n, convStatus = :s REMOVE #ttl",
+        ConditionExpression: "#data.#v = :v",
         ExpressionAttributeNames: { "#data": "data", "#v": "version", "#ttl": "ttl" },
-        ExpressionAttributeValues: { ":n": next, ":v": v, ":s": next.status, ":t": next.expiresAt } }));
+        ExpressionAttributeValues: { ":n": next, ":v": v, ":s": next.status, ...(next.expiresAt ? { ":t": next.expiresAt } : {}) } }));
       return next;
     } catch (e) { if (isCCF(e)) return undefined; throw e; }
   }
@@ -105,6 +107,18 @@ export class DdbStore implements Store {
     for (let i = 0; i < keys.length; i += 25) {
       await this.d.send(new BatchWriteCommand({ RequestItems: { [this.convTable]: keys.slice(i, i + 25).map((k) => ({ DeleteRequest: { Key: { pk: k.pk, sk: k.sk } } })) } }));
     }
+  }
+  async purgeConversation(id: string, opts: { keepMeta: boolean }) {
+    let start: Record<string, unknown> | undefined;
+    do {
+      const r = await this.d.send(new QueryCommand({ TableName: this.convTable, ConsistentRead: true, ProjectionExpression: "pk, sk", ExclusiveStartKey: start,
+        KeyConditionExpression: "pk = :p", ExpressionAttributeValues: { ":p": `CONV#${id}` } }));
+      const keys = (r.Items ?? []).filter((k) => opts.keepMeta ? k.sk !== META : true);
+      for (let i = 0; i < keys.length; i += 25) {
+        await this.d.send(new BatchWriteCommand({ RequestItems: { [this.convTable]: keys.slice(i, i + 25).map((k) => ({ DeleteRequest: { Key: { pk: k.pk, sk: k.sk } } })) } }));
+      }
+      start = r.LastEvaluatedKey;
+    } while (start);
   }
   async getIdem(id: string, requestId: string) {
     const r = await this.d.send(new GetCommand({ TableName: this.convTable, Key: { pk: `CONV#${id}`, sk: `REQ#${requestId}` }, ConsistentRead: true }));

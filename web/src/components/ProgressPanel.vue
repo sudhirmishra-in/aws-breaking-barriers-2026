@@ -30,7 +30,7 @@ const expanded = ref(false);
         <span v-else class="pp-step">{{ stepLabel }}</span>
       </div>
       <ol class="pp-list">
-        <li v-for="(st, i) in ORDER" :key="st" :class="{ done: isDone(i), now: !outcome && i === current }" :aria-current="!outcome && i === current ? 'step' : undefined">
+        <li v-for="(st, i) in ORDER" :key="st" :class="{ 'pp-done': isDone(i), 'pp-now': !outcome && i === current }" :aria-current="!outcome && i === current ? 'step' : undefined">
           <span class="pp-mark" aria-hidden="true"><Check v-if="isDone(i)" :size="13" :stroke-width="3" /><template v-else>{{ i + 1 }}</template></span>
           <div class="pp-body">
             <button v-if="isDone(i) && reached.includes(st)" type="button" class="pp-name link-btn" :title="s.jumpTo" @click="emit('jump', st)">{{ s.stageNames[st] }}</button>

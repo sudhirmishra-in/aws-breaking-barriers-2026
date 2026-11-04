@@ -76,14 +76,14 @@ export class Service {
         conversationId: c.conversationId, language: c.language, workflow: c.workflow, confirmation: c.confirmation,
         // No PII flag here: the producer side never shows it (spec CHAT-19).
         consent: c.consent, status: c.status, title: c.title ?? null, playbackSummary: c.playbackSummary,
-        summaryEn: c.workflow === "consent_pending" ? c.summaryEn : undefined,
-        summaryEs: c.workflow === "consent_pending" ? c.summaryEs : undefined,
-        createdAt: c.createdAt, updatedAt: c.updatedAt, expiresAt: new Date(c.expiresAt * 1000).toISOString(),
+        summaryEn: c.workflow === "consent_pending" || c.status === "completed" ? c.summaryEn : undefined,
+        summaryEs: c.workflow === "consent_pending" || c.status === "completed" ? c.summaryEs : undefined,
+        createdAt: c.createdAt, updatedAt: c.updatedAt, expiresAt: c.expiresAt ? new Date(c.expiresAt * 1000).toISOString() : null,
       },
       messages: messages.map((m) => ({ seq: m.seq, role: m.role, text: m.text, at: m.at, stage: m.stage ?? null })),
       retention: {
         activeDays: 7, savedDays: 30,
-        text: "Messages are kept so you can continue, for up to 7 days without activity. If you save the conversation, it stays in your history for 30 days in this sandbox. If you don't save it, its messages are deleted when it ends.",
+        text: "Messages are kept so you can continue, for up to 7 days without activity. If you save the conversation, its summary stays in your history until you delete it, and the full conversation is kept for 30 days in this sandbox. If you don't save it, its messages are deleted when it ends.",
       },
       syntheticDemo: true,
     };
@@ -104,8 +104,14 @@ export class Service {
     const items = (await this.d.store.listByOwner(p.sub))
       .filter((c) => c.ownerSub === p.sub && c.status !== "declined")
       .map((c) => ({ conversationId: c.conversationId, title: c.title ?? null, language: c.language, createdAt: c.createdAt, updatedAt: c.updatedAt,
-        status: c.status === "active" ? "in_progress" as const : "saved" as const }));
+        status: c.status === "active" ? "in_progress" as const : "saved" as const, summary: this.producerSummary(c) }));
     return { items };
+  }
+
+  /** The summary the producer saw, in their language: the saved summary, else the latest playback. */
+  private producerSummary(c: Conversation): string | null {
+    const saved = c.language === "es" ? c.summaryEs : c.summaryEn;
+    return saved ?? c.confirmedAccount ?? c.playbackSummary ?? null;
   }
 
   async getCurrent(p: Principal) {
@@ -154,7 +160,7 @@ export class Service {
   private async save(c: Conversation, patch: Partial<Conversation>): Promise<Conversation> {
     const n = await this.d.store.updateConversation(c.conversationId, c.version, {
       ...patch, updatedAt: this.iso(),
-      expiresAt: patch.status && patch.status !== "active" ? Math.floor(this.now() / 1000) + CLOSED_META_TTL_S : Math.floor(this.now() / 1000) + ACTIVE_TTL_S,
+      expiresAt: patch.expiresAt ?? (patch.status && patch.status !== "active" ? Math.floor(this.now() / 1000) + CLOSED_META_TTL_S : Math.floor(this.now() / 1000) + ACTIVE_TTL_S),
     });
     if (!n) throw conflict("stale_state", "The conversation changed. Please reload and try again.", true);
     return n;
@@ -299,17 +305,30 @@ export class Service {
       // Saved: the transcript stays readable in the producer's own history (CONV-02) for the sandbox retention period.
       await this.d.store.retainMessages(c.conversationId, Math.floor(this.now() / 1000) + SAVED_TRANSCRIPT_TTL_S);
     } else {
-      // Declined: transcript and challenge-derived title are removed; the conversation leaves the history (CONV-04).
-      await this.d.store.deleteMessages(c.conversationId);
+      // Declined: transcript, idempotency snapshots and challenge-derived title are removed; it leaves the history (CONV-04).
+      await this.d.store.purgeConversation(c.conversationId, { keepMeta: true });
     }
     const saved = await this.save(c, {
       workflow: "closed", consent, status: consent === "granted" ? "completed" : "declined",
-      playbackSummary: undefined, confirmedAccount: undefined, summaryEn: undefined, summaryEs: undefined, producerAssertions: undefined,
-      ...(consent === "granted" ? {} : { title: undefined }),
+      playbackSummary: undefined, confirmedAccount: undefined, producerAssertions: undefined,
+      // Saved: the confirmed summary stays with the transcript for the producer's history. Declined: nothing narrative is kept.
+      // Saved: the summary and title stay until the producer deletes them (no expiry). Declined: nothing narrative is kept.
+      ...(consent === "granted" ? { expiresAt: 0 } : { title: undefined, summaryEn: undefined, summaryEs: undefined }),
     });
     await this.d.store.clearCurrent(c.ownerSub, c.conversationId);
     this.log({ event: "conversation_closed", conversationId: c.conversationId, consent });
     return this.view(saved);
+  }
+
+  /** Removes a saved conversation from the producer's own history: summary, title, transcript and snapshots.
+   *  The record already shared with Fair Trade USA for review is a separate, consented record and is not changed here. */
+  async deleteConversation(p: Principal, id: string) {
+    const c = await this.owned(p, id);
+    if (c.status === "active") throw conflict("wrong_state", "End this conversation before deleting it.");
+    await this.d.store.purgeConversation(id, { keepMeta: false });
+    await this.d.store.clearCurrent(p.sub, id);
+    this.log({ event: "conversation_deleted", conversationId: id });
+    return { deleted: true, conversationId: id };
   }
 
   private assertActive(c: Conversation) { if (c.status !== "active") throw conflict("conversation_closed", "This conversation has ended."); }
