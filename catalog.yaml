@@ -1,0 +1,47 @@
+# Data catalog — the agent's awareness of what data exists and what each
+# dataset answers (CAT-1). A condensed summary of this goes in the agent's
+# system prompt (CAT-2); describe_dataset(name) returns the full field schema
+# on demand (CAT-3). Adding a dataset = a catalog entry + a queryable store;
+# no agent code change (CAT-4).
+#
+# This file is SHARED across components. Component 5 contributes the
+# `environmental_facts` entry and the theme->tag map below; Component 3 will
+# add the structured entries (producer_accounts, premium_projects,
+# survey_responses). Merge, don't overwrite, when both land.
+datasets:
+  - name: environmental_facts
+    grain: one row per (region, dataset, indicator, horizon)
+    description: >-
+      Pre-aggregated external environmental/climate facts per region — rainfall,
+      (later) water stress, soil, forest, protected areas, prices, elevation.
+      Always cached; the tool never pulls a dataset on a call.
+    answers: >-
+      what the environment/climate data shows for this region and challenge —
+      e.g. "rainfall in your country was X mm in 2025, Y% vs the 1981-2010 average"
+    source_store: DynamoDB environmental_facts (PK region_key, SK dataset#indicator#horizon)
+    fields:
+      region_key:        partition key, <country>#COUNTRY (country-level demo)
+      fact_key:          sort key, <dataset>#<indicator>#<horizon>
+      value:             the indicator value (number)
+      unit:              unit of value (e.g. mm/year)
+      period:            the period the value covers (e.g. "2025")
+      method:            how it was computed (attribution)
+      baseline_value:    the long-term reference value (e.g. 1981-2010 mean)
+      baseline_delta_pct: value vs baseline, in percent
+      baseline_period:   the baseline reference period (e.g. "1981-2010")
+      is_projection:     true if a forward-looking projection (reserved in demo)
+      is_stand_in:       true if a flagged stand-in value (fetch failed / no credential)
+      theme:             the dataset theme (climate, water, soil_land, ...)
+      retrieved_at:      when the fact was ingested
+
+# Theme -> challenge-tag map (Component 5 section 4). Data-driven so the model
+# never has to know which dataset backs which tag. The tool maps a conversation
+# tag to the theme(s) it supports, then returns only matching facts.
+theme_to_tags:
+  climate: [climate and weather, drought, floods]
+  water: [water, water scarcity, floods]
+  soil_land: [soil and land, soil health, biodiversity and conservation]
+  biodiversity: [biodiversity and conservation]
+  tenure: [social and community]
+  market: [market and price]
+  elevation: [infrastructure]

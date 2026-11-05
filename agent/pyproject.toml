@@ -2,11 +2,14 @@
 name = "ftusa-exchange-agent"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["strands-agents", "bedrock-agentcore", "boto3", "pydantic>=2"]
+dependencies = ["strands-agents", "bedrock-agentcore", "boto3", "pydantic>=2", "shapely"]
 
 [dependency-groups]
 dev = ["pytest"]
 
 [tool.pytest.ini_options]
-pythonpath = ["app"]
+# "app" is this agent's package. ".." is the repo root, where the Component 5
+# external_data package lives (a sibling of agent/ in source; flattened next to
+# app/ in the deployed zip). Both must be importable, mirroring the runtime layout.
+pythonpath = ["app", ".."]
 testpaths = ["tests"]
