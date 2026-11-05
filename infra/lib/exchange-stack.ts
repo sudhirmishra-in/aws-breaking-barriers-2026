@@ -158,7 +158,7 @@ export class ExchangeStack extends cdk.Stack {
       networkConfiguration: { networkMode: "PUBLIC" },
       protocolConfiguration: "HTTP",
       lifecycleConfiguration: { idleRuntimeSessionTimeout: 900, maxLifetime: 3600 },
-      environmentVariables: { AGENT_OBSERVABILITY_ENABLED: "true", OTEL_PYTHON_DISTRO: "aws_distro", OTEL_PYTHON_CONFIGURATOR: "aws_configurator", OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf", OTEL_RESOURCE_ATTRIBUTES: `service.name=ftusa-exchange-agent-${p.envName}`, ENVIRONMENTAL_FACTS_TABLE: environmentalFacts.tableName, MODEL_ID: p.modelId, GUARDRAIL_ID: guardrail.attrGuardrailId, GUARDRAIL_VERSION: guardrailVersion.attrVersion, ENV_NAME: p.envName, DEPLOYED_COMMIT: p.gitSha },
+      environmentVariables: { AGENT_OBSERVABILITY_ENABLED: "true", OTEL_PYTHON_DISTRO: "aws_distro", OTEL_PYTHON_CONFIGURATOR: "aws_configurator", OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf", OTEL_TRACES_SAMPLER: "always_on", /* spans were dropped as unsampled when the caller sends no sampled trace context */ OTEL_RESOURCE_ATTRIBUTES: `service.name=ftusa-exchange-agent-${p.envName}`, ENVIRONMENTAL_FACTS_TABLE: environmentalFacts.tableName, MODEL_ID: p.modelId, GUARDRAIL_ID: guardrail.attrGuardrailId, GUARDRAIL_VERSION: guardrailVersion.attrVersion, ENV_NAME: p.envName, DEPLOYED_COMMIT: p.gitSha },
     });
     runtime.node.addDependency(runtimeRole);
 
