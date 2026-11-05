@@ -93,3 +93,10 @@ def test_supplied_facts_appear_in_the_closing_turn_and_stand_ins_do_not():
     bad = {"dataset": "open_meteo", "indicator": "other", "value": None, "unit": "mm", "period": "2026", "is_stand_in": True}
     p = system_prompt(TrustedContext.model_validate({**base, "externalFacts": [good, bad]}))
     assert "2831.3 mm" in p and "+13.8 %" in p and "1981-2010" in p and "other = None" not in p and "reference point" in p
+
+
+def test_external_data_is_context_never_proof():
+    from exchange.prompts import system_prompt as sp
+    ctx = TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": "intake", "allowPlayback": False,
+                                         "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee"}})
+    assert "Never say it confirms, proves or explains" in sp(ctx) and "reference-point" in sp(ctx)
