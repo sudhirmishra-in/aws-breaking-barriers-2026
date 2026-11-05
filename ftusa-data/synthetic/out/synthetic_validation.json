@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "checks": [
+    "survey percentages vs independent oracle (harvest, drinking water, temporary workers)",
+    "top multi-choice reason",
+    "small-n suppression",
+    "quality exclusion",
+    "header-less responses kept",
+    "PII / test / in-planning rows excluded from peers",
+    "C3 schemas",
+    "producer/project counts"
+  ],
+  "not_verified": [
+    "AWS load",
+    "agent end-to-end scenarios",
+    "human tag accuracy",
+    "standards grounding",
+    "regional evidence integration"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "n_producers": 146,
+  "n_unknown_entity": 52,
+  "n_with_survey": 22,
+  "n_projects": 349,
+  "n_project_producers": 146,
+  "n_peer_eligible": 275,
+  "top_countries": "Colombia 106, Mexico 37, Peru 37, Guatemala 22",
+  "survey_years": "2020-2026",
+  "min_n": 10
+}

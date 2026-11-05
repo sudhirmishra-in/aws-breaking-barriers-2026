@@ -1,0 +1,99 @@
+account_sk,survey_year,question,metric,choice,n_selected,n_respondents,share,data_origin
+SYN-42-01,2024,borrow_source_ms_core,borrow_sources,Cooperative,8,18,0.444,synthetic
+SYN-42-01,2024,borrow_source_ms_core,borrow_sources,Bank,7,18,0.389,synthetic
+SYN-42-01,2024,borrow_source_ms_core,borrow_sources,Friends/Family,5,18,0.278,synthetic
+SYN-42-01,2024,borrow_source_ms_core,borrow_sources,Informal lender,3,18,0.167,synthetic
+SYN-42-01,2024,ft_benefits_ms_core,ft_benefits,Premium fund,9,18,0.5,synthetic
+SYN-42-01,2024,ft_benefits_ms_core,ft_benefits,Training,8,18,0.444,synthetic
+SYN-42-01,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,6,18,0.333,synthetic
+SYN-42-01,2024,ft_benefits_ms_core,ft_benefits,Sense of community,1,18,0.056,synthetic
+SYN-42-01,2024,harvest_change_reason_core,harvest_change_reasons,Climate change,15,18,0.833,synthetic
+SYN-42-01,2024,harvest_change_reason_core,harvest_change_reasons,Damaged by natural disasters,6,18,0.333,synthetic
+SYN-42-01,2024,harvest_change_reason_core,harvest_change_reasons,Other,4,18,0.222,synthetic
+SYN-42-01,2024,income_sources_ms_core,income_sources,Vegetables / produces for local consumption,10,18,0.556,synthetic
+SYN-42-01,2024,income_sources_ms_core,income_sources,Other,8,18,0.444,synthetic
+SYN-42-01,2024,income_sources_ms_core,income_sources,Small family business,7,18,0.389,synthetic
+SYN-42-01,2025,borrow_source_ms_core,borrow_sources,Friends/Family,11,20,0.55,synthetic
+SYN-42-01,2025,borrow_source_ms_core,borrow_sources,Cooperative,8,20,0.4,synthetic
+SYN-42-01,2025,borrow_source_ms_core,borrow_sources,Bank,5,20,0.25,synthetic
+SYN-42-01,2025,borrow_source_ms_core,borrow_sources,Informal lender,1,20,0.05,synthetic
+SYN-42-01,2025,ft_benefits_ms_core,ft_benefits,Training,10,20,0.5,synthetic
+SYN-42-01,2025,ft_benefits_ms_core,ft_benefits,Increased benefits,7,20,0.35,synthetic
+SYN-42-01,2025,ft_benefits_ms_core,ft_benefits,Premium fund,6,20,0.3,synthetic
+SYN-42-01,2025,ft_benefits_ms_core,ft_benefits,Sense of community,3,20,0.15,synthetic
+SYN-42-01,2025,harvest_change_reason_core,harvest_change_reasons,Climate change,19,20,0.95,synthetic
+SYN-42-01,2025,harvest_change_reason_core,harvest_change_reasons,Damaged by natural disasters,6,20,0.3,synthetic
+SYN-42-01,2025,harvest_change_reason_core,harvest_change_reasons,Other,3,20,0.15,synthetic
+SYN-42-01,2025,income_sources_ms_core,income_sources,Vegetables / produces for local consumption,12,20,0.6,synthetic
+SYN-42-01,2025,income_sources_ms_core,income_sources,Small family business,11,20,0.55,synthetic
+SYN-42-01,2025,income_sources_ms_core,income_sources,Other,4,20,0.2,synthetic
+SYN-42-02,2025,borrow_source_ms_core,borrow_sources,Cooperative,13,20,0.65,synthetic
+SYN-42-02,2025,borrow_source_ms_core,borrow_sources,Friends/Family,8,20,0.4,synthetic
+SYN-42-02,2025,borrow_source_ms_core,borrow_sources,Bank,4,20,0.2,synthetic
+SYN-42-02,2025,borrow_source_ms_core,borrow_sources,Informal lender,3,20,0.15,synthetic
+SYN-42-02,2025,ft_benefits_ms_core,ft_benefits,Training,9,20,0.45,synthetic
+SYN-42-02,2025,ft_benefits_ms_core,ft_benefits,Premium fund,8,20,0.4,synthetic
+SYN-42-02,2025,ft_benefits_ms_core,ft_benefits,Increased benefits,5,20,0.25,synthetic
+SYN-42-02,2025,ft_benefits_ms_core,ft_benefits,Sense of community,5,20,0.25,synthetic
+SYN-42-02,2025,harvest_change_reason_core,harvest_change_reasons,Other,10,20,0.5,synthetic
+SYN-42-02,2025,harvest_change_reason_core,harvest_change_reasons,Climate change,7,20,0.35,synthetic
+SYN-42-02,2025,harvest_change_reason_core,harvest_change_reasons,Less land area under production,7,20,0.35,synthetic
+SYN-42-02,2025,income_sources_ms_core,income_sources,Small family business,11,20,0.55,synthetic
+SYN-42-02,2025,income_sources_ms_core,income_sources,Other,10,20,0.5,synthetic
+SYN-42-02,2025,income_sources_ms_core,income_sources,Vegetables / produces for local consumption,5,20,0.25,synthetic
+SYN-42-03,2024,borrow_source_ms_core,borrow_sources,Trader,11,20,0.55,synthetic
+SYN-42-03,2024,borrow_source_ms_core,borrow_sources,Informal lender,6,20,0.3,synthetic
+SYN-42-03,2024,borrow_source_ms_core,borrow_sources,Cooperative,5,20,0.25,synthetic
+SYN-42-03,2024,borrow_source_ms_core,borrow_sources,Bank,4,20,0.2,synthetic
+SYN-42-03,2024,ft_benefits_ms_core,ft_benefits,Premium fund,11,20,0.55,synthetic
+SYN-42-03,2024,ft_benefits_ms_core,ft_benefits,Training,11,20,0.55,synthetic
+SYN-42-03,2024,ft_benefits_ms_core,ft_benefits,Increased benefits,6,20,0.3,synthetic
+SYN-42-03,2024,ft_benefits_ms_core,ft_benefits,Sense of community,5,20,0.25,synthetic
+SYN-42-03,2024,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,11,20,0.55,synthetic
+SYN-42-03,2024,harvest_change_reason_core,harvest_change_reasons,More land area under production,8,20,0.4,synthetic
+SYN-42-03,2024,harvest_change_reason_core,harvest_change_reasons,Other,7,20,0.35,synthetic
+SYN-42-03,2024,income_sources_ms_core,income_sources,Small family business,13,20,0.65,synthetic
+SYN-42-03,2024,income_sources_ms_core,income_sources,Other,8,20,0.4,synthetic
+SYN-42-03,2024,income_sources_ms_core,income_sources,"Small animal farming (Guinea pigs, pigs, ducks etc)",5,20,0.25,synthetic
+SYN-42-03,2025,borrow_source_ms_core,borrow_sources,Informal lender,10,20,0.5,synthetic
+SYN-42-03,2025,borrow_source_ms_core,borrow_sources,Trader,8,20,0.4,synthetic
+SYN-42-03,2025,borrow_source_ms_core,borrow_sources,Bank,4,20,0.2,synthetic
+SYN-42-03,2025,borrow_source_ms_core,borrow_sources,Cooperative,4,20,0.2,synthetic
+SYN-42-03,2025,ft_benefits_ms_core,ft_benefits,Training,13,20,0.65,synthetic
+SYN-42-03,2025,ft_benefits_ms_core,ft_benefits,Premium fund,10,20,0.5,synthetic
+SYN-42-03,2025,ft_benefits_ms_core,ft_benefits,Increased benefits,3,20,0.15,synthetic
+SYN-42-03,2025,ft_benefits_ms_core,ft_benefits,Sense of community,2,20,0.1,synthetic
+SYN-42-03,2025,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,10,20,0.5,synthetic
+SYN-42-03,2025,harvest_change_reason_core,harvest_change_reasons,Other,7,20,0.35,synthetic
+SYN-42-03,2025,harvest_change_reason_core,harvest_change_reasons,More land area under production,6,20,0.3,synthetic
+SYN-42-03,2025,income_sources_ms_core,income_sources,Small family business,13,20,0.65,synthetic
+SYN-42-03,2025,income_sources_ms_core,income_sources,"Small animal farming (Guinea pigs, pigs, ducks etc)",10,20,0.5,synthetic
+SYN-42-03,2025,income_sources_ms_core,income_sources,Other,2,20,0.1,synthetic
+SYN-42-04,2025,borrow_source_ms_core,borrow_sources,Bank,4,8,,synthetic
+SYN-42-04,2025,borrow_source_ms_core,borrow_sources,Cooperative,4,8,,synthetic
+SYN-42-04,2025,borrow_source_ms_core,borrow_sources,Friends/Family,1,8,,synthetic
+SYN-42-04,2025,ft_benefits_ms_core,ft_benefits,Premium fund,5,8,,synthetic
+SYN-42-04,2025,ft_benefits_ms_core,ft_benefits,Sense of community,3,8,,synthetic
+SYN-42-04,2025,ft_benefits_ms_core,ft_benefits,Training,2,8,,synthetic
+SYN-42-04,2025,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,5,8,,synthetic
+SYN-42-04,2025,harvest_change_reason_core,harvest_change_reasons,Climate change,3,8,,synthetic
+SYN-42-04,2025,harvest_change_reason_core,harvest_change_reasons,Other,2,8,,synthetic
+SYN-42-04,2025,harvest_change_reason_core,harvest_change_reasons,Less land area under production,1,8,,synthetic
+SYN-42-04,2025,income_sources_ms_core,income_sources,Small family business,5,8,,synthetic
+SYN-42-04,2025,income_sources_ms_core,income_sources,Vegetables / produces for local consumption,4,8,,synthetic
+SYN-42-04,2025,income_sources_ms_core,income_sources,Other,2,8,,synthetic
+SYN-42-06,2025,borrow_source_ms_core,borrow_sources,Cooperative,11,20,0.55,synthetic
+SYN-42-06,2025,borrow_source_ms_core,borrow_sources,Friends/Family,10,20,0.5,synthetic
+SYN-42-06,2025,borrow_source_ms_core,borrow_sources,Bank,6,20,0.3,synthetic
+SYN-42-06,2025,borrow_source_ms_core,borrow_sources,Informal lender,1,20,0.05,synthetic
+SYN-42-06,2025,ft_benefits_ms_core,ft_benefits,Training,11,20,0.55,synthetic
+SYN-42-06,2025,ft_benefits_ms_core,ft_benefits,Premium fund,7,20,0.35,synthetic
+SYN-42-06,2025,ft_benefits_ms_core,ft_benefits,Increased benefits,5,20,0.25,synthetic
+SYN-42-06,2025,ft_benefits_ms_core,ft_benefits,Sense of community,2,20,0.1,synthetic
+SYN-42-06,2025,harvest_change_reason_core,harvest_change_reasons,Climate change,9,20,0.45,synthetic
+SYN-42-06,2025,harvest_change_reason_core,harvest_change_reasons,Other,6,20,0.3,synthetic
+SYN-42-06,2025,harvest_change_reason_core,harvest_change_reasons,Less land area under production,5,20,0.25,synthetic
+SYN-42-06,2025,harvest_change_reason_core,harvest_change_reasons,Better inputs from FT,4,20,0.2,synthetic
+SYN-42-06,2025,income_sources_ms_core,income_sources,Vegetables / produces for local consumption,9,20,0.45,synthetic
+SYN-42-06,2025,income_sources_ms_core,income_sources,Small family business,8,20,0.4,synthetic
+SYN-42-06,2025,income_sources_ms_core,income_sources,Other,6,20,0.3,synthetic

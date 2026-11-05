@@ -1,0 +1,94 @@
+{
+  "surveys": [
+    {
+      "account_sk": "SYN-42-01",
+      "survey_year": 2024,
+      "n_responses": 18,
+      "n_harvest_decreased": 18,
+      "pct_harvest_decreased": 44.4,
+      "pct_no_drinking_water": 0.0,
+      "pct_temporary_workers": 35.3,
+      "top_harvest_reason_any_of": [
+        "Climate change"
+      ]
+    },
+    {
+      "account_sk": "SYN-42-01",
+      "survey_year": 2025,
+      "n_responses": 20,
+      "n_harvest_decreased": 19,
+      "pct_harvest_decreased": 63.2,
+      "pct_no_drinking_water": 0.0,
+      "pct_temporary_workers": 30.0,
+      "top_harvest_reason_any_of": [
+        "Climate change"
+      ]
+    },
+    {
+      "account_sk": "SYN-42-02",
+      "survey_year": 2025,
+      "n_responses": 20,
+      "n_harvest_decreased": 19,
+      "pct_harvest_decreased": 36.8,
+      "pct_no_drinking_water": null,
+      "pct_temporary_workers": 50.0,
+      "top_harvest_reason_any_of": [
+        "Climate change",
+        "Less land area under production"
+      ]
+    },
+    {
+      "account_sk": "SYN-42-03",
+      "survey_year": 2024,
+      "n_responses": 20,
+      "n_harvest_decreased": 20,
+      "pct_harvest_decreased": 20.0,
+      "pct_no_drinking_water": null,
+      "pct_temporary_workers": 40.0,
+      "top_harvest_reason_any_of": [
+        "Better inputs from FT"
+      ]
+    },
+    {
+      "account_sk": "SYN-42-03",
+      "survey_year": 2025,
+      "n_responses": 20,
+      "n_harvest_decreased": 20,
+      "pct_harvest_decreased": 20.0,
+      "pct_no_drinking_water": null,
+      "pct_temporary_workers": 15.0,
+      "top_harvest_reason_any_of": [
+        "Better inputs from FT"
+      ]
+    },
+    {
+      "account_sk": "SYN-42-04",
+      "survey_year": 2025,
+      "n_responses": 8,
+      "n_harvest_decreased": 8,
+      "pct_harvest_decreased": null,
+      "pct_no_drinking_water": null,
+      "pct_temporary_workers": null,
+      "top_harvest_reason_any_of": null
+    },
+    {
+      "account_sk": "SYN-42-06",
+      "survey_year": 2025,
+      "n_responses": 20,
+      "n_harvest_decreased": 19,
+      "pct_harvest_decreased": 31.6,
+      "pct_no_drinking_water": null,
+      "pct_temporary_workers": 44.4,
+      "top_harvest_reason_any_of": [
+        "Climate change"
+      ]
+    }
+  ],
+  "producers": 18,
+  "projects": 21,
+  "quality_dropped": 21,
+  "peer_eligible": 18,
+  "pii_flagged": 1,
+  "test_records": 1,
+  "in_planning": 1
+}

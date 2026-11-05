@@ -1,0 +1,19 @@
+account_sk,display_id,org_name_fictional,country,region,entity_type,primary_crop,certification_status,n_projects,project_tags,has_survey,latest_survey_year,survey_highlight,n_peer_projects_same_crop,score
+SYN-42-01,PRD-COL-0001,Finca Nueva Esperanza (fictional),Colombia,Huila,smallholder,coffee,Certified,2,water,True,2025.0,63.2% harvest decreased (n=19); top reasons: Climate change (95%)|Damaged by natural disasters (30%),11,6
+SYN-42-03,PRD-MEX-0001,Cooperativa Cerro Verde (fictional),Mexico,Chiapas,cooperative,coffee,Certified,1,market_price,True,2025.0,20.0% harvest decreased (n=20); top reasons: Better inputs from FT (50%)|More land area under production (30%),11,5
+SYN-42-02,PRD-PER-0001,Cooperativa El Roble (fictional),Peru,Cajamarca,cooperative,coffee,Certified,1,soil_land,True,2025.0,36.8% harvest decreased (n=19); top reasons: Climate change (35%)|Less land area under production (35%),11,5
+SYN-42-04,PRD-HND-0001,Hacienda Los Pinos (fictional),Honduras,Copan,estate,banana,Certified,1,labor_migration,True,2025.0,nan% harvest decreased (n=8); top reasons: nan,2,5
+SYN-42-06,PRD-MEX-0004,Beneficio Agua Dulce (fictional),Mexico,Chiapas,processing_operation,coffee,Certified,1,biodiversity_conservation,True,2025.0,31.6% harvest decreased (n=19); top reasons: Climate change (45%)|Less land area under production (25%)|Better inputs from FT (20%),11,5
+SYN-42-03-PA,PRD-MEX-0002,Cooperativa Agua Dulce 2 (fictional),Mexico,Chiapas,cooperative,coffee,Certified,2,market_price,False,,,11,3
+SYN-42-02-PA,PRD-PER-0002,Cooperativa Agua Dulce 3 (fictional),Peru,Cajamarca,cooperative,coffee,Certified,2,soil_land,False,,,11,3
+SYN-42-01-PA,PRD-COL-0002,Finca Flor del Campo (fictional),Colombia,Huila,smallholder,coffee,Certified,1,climate_weather,False,,,11,2
+SYN-42-01-PB,PRD-COL-0003,Cooperativa Las Palmas (fictional),Colombia,Cauca,cooperative,coffee,Certified,1,water,False,,,11,2
+SYN-42-05,PRD-CIV-0001,Coopérative Nouvelle Terre (fictional),Côte d'Ivoire,Bas-Sassandra,cooperative,cocoa,Certified,1,climate_weather,False,,,2,2
+SYN-42-04-PB,PRD-HND-0003,Cooperativa Agua Dulce (fictional),Honduras,Ocotepeque,cooperative,banana,Certified,1,education,False,,,2,2
+SYN-42-04-PA,PRD-HND-0002,Hacienda Alto Mayo (fictional),Honduras,Copan,estate,banana,Certified,1,social_community,False,,,2,2
+SYN-42-05-PA,PRD-CIV-0002,Coopérative Lumière (fictional),Côte d'Ivoire,Bas-Sassandra,cooperative,cocoa,Certified,1,biodiversity_conservation,False,,,2,2
+SYN-42-05-PB,PRD-CIV-0003,Coopérative La Source (fictional),Côte d'Ivoire,Goh-Djiboua,cooperative,cocoa,Certified,1,biodiversity_conservation,False,,,2,2
+SYN-42-06-PA,PRD-MEX-0005,Beneficio Buena Vista (fictional),Mexico,Chiapas,processing_operation,coffee,Certified,1,water,False,,,11,2
+SYN-42-03-PB,PRD-MEX-0003,Finca Alto Mayo (fictional),Mexico,Chiapas,smallholder,coffee,Certified,1,financial_capital,False,,,11,2
+SYN-42-06-PB,PRD-MEX-0006,Cooperativa Los Andes (fictional),Mexico,Chiapas,cooperative,coffee,Certified,1,biodiversity_conservation,False,,,11,2
+SYN-42-02-PB,PRD-PER-0003,Finca Río Claro (fictional),Peru,San Martin,smallholder,coffee,Certified,1,soil_land,False,,,11,2

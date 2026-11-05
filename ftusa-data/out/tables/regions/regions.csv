@@ -1,0 +1,94 @@
+region_id,country,country_iso3,region,n_projects,n_accounts,latitude,longitude,centroid_source,is_priority_country
+AFG-BADGHIS,Afghanistan,AFG,Badghis,1,1,,,,False
+AND-ESCALDES-ENGORDANY,Andorra,AND,Escaldes-Engordany,1,1,,,,False
+BLZ-ORANGE-WALK,Belize,BLZ,Orange Walk,2,1,,,,False
+BOL-ORURO,Bolivia,BOL,Oruro,1,1,,,,False
+BRA-AMAZONAS,Brazil,BRA,Amazonas,1,1,,,,False
+BRA-MINAS-GERAIS,Brazil,BRA,Minas Gerais,6,4,,,,False
+BRA-PIAUI,Brazil,BRA,Piaui,2,1,,,,False
+BRA-SAO-PAULO,Brazil,BRA,Sao Paulo,3,1,,,,False
+CHN-GUANGDONG,China,CHN,Guangdong,1,1,,,,False
+CHN-SHANGHAI,China,CHN,Shanghai,1,1,,,,False
+CHN-ZHEJIANG,China,CHN,Zhejiang,1,1,,,,False
+COL-ANTIOQUIA,Colombia,COL,Antioquia,25,9,6.7,-75.5,"approximate, manual - verify",True
+COL-CALDAS,Colombia,COL,Caldas,30,4,5.3,-75.3,"approximate, manual - verify",True
+COL-CAUCA,Colombia,COL,Cauca,5,3,2.4,-76.8,"approximate, manual - verify",True
+COL-CESAR,Colombia,COL,Cesar,6,4,9.3,-73.5,"approximate, manual - verify",True
+COL-HUILA,Colombia,COL,Huila,6,2,2.5,-75.5,"approximate, manual - verify",True
+COL-NORTE-DE-SANTANDER,Colombia,COL,Norte de Santander,2,2,8.0,-72.9,"approximate, manual - verify",True
+COL-RISARALDA,Colombia,COL,Risaralda,17,2,5.0,-75.9,"approximate, manual - verify",True
+COL-TOLIMA,Colombia,COL,Tolima,11,5,4.0,-75.2,"approximate, manual - verify",True
+COL-VALLE-DEL-CAUCA,Colombia,COL,Valle del Cauca,4,3,3.8,-76.5,"approximate, manual - verify",True
+CRI-ALAJUELA,Costa Rica,CRI,Alajuela,1,1,,,,False
+CRI-SAN-JOSE,Costa Rica,CRI,San Jose,1,1,,,,False
+CIV-BAS-SASSANDRA,Côte d'Ivoire,CIV,Bas-Sassandra,2,1,5.3,-6.6,"approximate, manual - verify",True
+CIV-GOH-DJIBOUA,Côte d'Ivoire,CIV,Goh-Djiboua,3,2,6.0,-5.6,"approximate, manual - verify",True
+CIV-ZANZAN,Côte d'Ivoire,CIV,Zanzan,3,1,8.5,-3.2,"approximate, manual - verify",True
+ECU-COTOPAXI,Ecuador,ECU,Cotopaxi,4,1,,,,False
+ECU-EL-ORO,Ecuador,ECU,El Oro,12,4,,,,False
+ETH-YEDEBUB-BIHEROCH-BIHERESEBOCH-NA-HIZBOCH,Ethiopia,ETH,YeDebub Biheroch Bihereseboch na Hizboch,1,1,,,,False
+GHA-AHAFO,Ghana,GHA,Ahafo,1,1,,,,False
+GTM-GUATEMALA,Guatemala,GTM,Guatemala,1,1,,,,False
+GTM-HUEHUETENANGO,Guatemala,GTM,Huehuetenango,14,2,,,,False
+GTM-JALAPA,Guatemala,GTM,Jalapa,1,1,,,,False
+GTM-QUICHE,Guatemala,GTM,Quiche,2,1,,,,False
+GTM-SACATEPEQUEZ,Guatemala,GTM,Sacatepequez,1,1,,,,False
+GTM-SOLOLA,Guatemala,GTM,Solola,1,1,,,,False
+HTI-ARTIBONITE,Haiti,HTI,Artibonite,2,1,,,,False
+HND-COPAN,Honduras,HND,Copan,3,3,14.9,-88.9,"approximate, manual - verify",True
+HND-INTIBUCA,Honduras,HND,Intibuca,3,2,14.3,-88.2,"approximate, manual - verify",True
+HND-LA-PAZ,Honduras,HND,La Paz,4,2,14.1,-87.8,"approximate, manual - verify",True
+HND-LEMPIRA,Honduras,HND,Lempira,1,1,14.4,-88.5,"approximate, manual - verify",True
+HND-OCOTEPEQUE,Honduras,HND,Ocotepeque,6,3,14.5,-89.0,"approximate, manual - verify",True
+IND-ASSAM,India,IND,Assam,1,1,,,,False
+IND-KERALA,India,IND,Kerala,1,1,,,,False
+IND-TAMIL-NADU,India,IND,Tamil Nadu,2,1,,,,False
+IND-UTTAR-PRADESH,India,IND,Uttar Pradesh,1,1,,,,False
+IDN-ACEH,Indonesia,IDN,Aceh,5,2,,,,False
+IDN-BALI,Indonesia,IDN,Bali,2,1,,,,False
+IDN-MALUKU,Indonesia,IDN,Maluku,2,1,,,,False
+IDN-SULAWESI-UTARA,Indonesia,IDN,Sulawesi Utara,11,1,,,,False
+KEN-KERICHO,Kenya,KEN,Kericho,1,1,,,,False
+MEX-CHIAPAS,Mexico,MEX,Chiapas,3,2,16.5,-92.5,"approximate, manual - verify",True
+MEX-GUANAJUATO,Mexico,MEX,Guanajuato,1,1,21.0,-101.3,"approximate, manual - verify",True
+MEX-JALISCO,Mexico,MEX,Jalisco,1,1,20.6,-103.6,"approximate, manual - verify",True
+MEX-MICHOACAN-DE-OCAMPO,Mexico,MEX,Michoacan de Ocampo,5,1,19.2,-101.9,"approximate, manual - verify",True
+MEX-SINALOA,Mexico,MEX,Sinaloa,23,3,25.0,-107.5,"approximate, manual - verify",True
+MEX-SONORA,Mexico,MEX,Sonora,1,1,29.3,-110.7,"approximate, manual - verify",True
+MEX-YUCATAN,Mexico,MEX,Yucatan,1,1,20.7,-89.1,"approximate, manual - verify",True
+MAR-MARRAKECH-SAFI,Morocco,MAR,Marrakech-Safi,1,1,,,,False
+NZL-HAWKE-S-BAY,New Zealand,NZL,Hawke's Bay,2,1,,,,False
+NIC-BOACO,Nicaragua,NIC,Boaco,1,1,,,,False
+NIC-JINOTEGA,Nicaragua,NIC,Jinotega,2,2,,,,False
+NIC-MADRIZ,Nicaragua,NIC,Madriz,1,1,,,,False
+NIC-MASAYA,Nicaragua,NIC,Masaya,1,1,,,,False
+PRY-CORDILLERA,Paraguay,PRY,Cordillera,3,1,,,,False
+PRY-GUAIRA,Paraguay,PRY,Guaira,2,2,,,,False
+PER-AMAZONAS,Peru,PER,Amazonas,7,2,-5.0,-78.0,"approximate, manual - verify",True
+PER-ANCASH,Peru,PER,Ancash,1,1,-9.4,-77.7,"approximate, manual - verify",True
+PER-CAJAMARCA,Peru,PER,Cajamarca,12,6,-6.4,-78.7,"approximate, manual - verify",True
+PER-JUNIN,Peru,PER,Junin,6,5,-11.5,-75.0,"approximate, manual - verify",True
+PER-LAMBAYEQUE,Peru,PER,Lambayeque,1,1,-6.4,-79.8,"approximate, manual - verify",True
+PER-PASCO,Peru,PER,Pasco,1,1,-10.4,-75.5,"approximate, manual - verify",True
+PER-SAN-MARTIN,Peru,PER,San Martin,7,2,-7.0,-76.7,"approximate, manual - verify",True
+PHL-CAMARINES-NORTE,Philippines,PHL,Camarines Norte,2,2,,,,False
+PHL-DAVAO-DE-ORO,Philippines,PHL,Davao de Oro,2,1,,,,False
+PHL-DAVAO-DEL-NORTE,Philippines,PHL,Davao del Norte,1,1,,,,False
+PHL-DAVAO-DEL-SUR,Philippines,PHL,Davao del Sur,4,1,,,,False
+PHL-MINDORO-OCCIDENTAL,Philippines,PHL,Mindoro Occidental,1,1,,,,False
+PHL-QUEZON,Philippines,PHL,Quezon,2,1,,,,False
+PHL-SORSOGON,Philippines,PHL,Sorsogon,3,1,,,,False
+RWA-NORD,Rwanda,RWA,Nord,5,2,,,,False
+RWA-VILLE-DE-KIGALI,Rwanda,RWA,Ville de Kigali,1,1,,,,False
+SLB-WESTERN,Solomon Islands,SLB,Western,2,1,,,,False
+LKA-CENTRAL-PROVINCE,Sri Lanka,LKA,Central Province,3,1,,,,False
+LKA-NORTH-WESTERN-PROVINCE,Sri Lanka,LKA,North Western Province,2,1,,,,False
+LKA-SOUTHERN-PROVINCE,Sri Lanka,LKA,Southern Province,1,1,,,,False
+LKA-WESTERN-PROVINCE,Sri Lanka,LKA,Western Province,1,1,,,,False
+THA-KRUNG-THEP-MAHA-NAKHON,Thailand,THA,Krung Thep Maha Nakhon,1,1,,,,False
+VNM-BINH-DUONG,Vietnam,VNM,Binh Duong,1,1,,,,False
+VNM-HA-NOI,Vietnam,VNM,Ha Noi,1,1,,,,False
+VNM-HO-CHI-MINH,Vietnam,VNM,Ho Chi Minh,1,1,,,,False
+VNM-HUNG-YEN,Vietnam,VNM,Hung Yen,1,1,,,,False
+VNM-KHANH-HOA,Vietnam,VNM,Khanh Hoa,1,1,,,,False
+ALA-JOMALA,Åland Islands,ALA,Jomala,1,1,,,,False

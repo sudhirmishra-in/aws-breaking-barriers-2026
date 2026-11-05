@@ -1,0 +1,19 @@
+account_sk,account_category_name,product_category_name,account_type_name,certification_scope_name,certification_status_name,country_name,raw_supply_chain_role_txt,structure_txt
+SYN-42-01,Coffee,Coffee,Producer,Producer,Certified,Colombia,Producer,Independent Smallholder
+SYN-42-01-PA,Coffee,Coffee,Producer,Producer,Certified,Colombia,Producer,Independent Smallholder
+SYN-42-01-PB,Coffee,Coffee,Producer,Producer,Certified,Colombia,Producer,1st Grade
+SYN-42-02,Coffee,Coffee,Producer,Producer,Certified,Peru,Producer,1st Grade
+SYN-42-02-PA,Coffee,Coffee,Producer,Producer,Certified,Peru,Producer,1st Grade
+SYN-42-02-PB,Coffee,Coffee,Producer,Producer,Certified,Peru,Producer,Independent Smallholder
+SYN-42-03,Coffee,Coffee,Producer,Producer,Certified,Mexico,Producer,1st Grade
+SYN-42-03-PA,Coffee,Coffee,Producer,Producer,Certified,Mexico,Producer,1st Grade
+SYN-42-03-PB,Coffee,Coffee,Producer,Producer,Certified,Mexico,Producer,Independent Smallholder
+SYN-42-04,Bananas,Bananas,Producer,Producer,Certified,Honduras,Producer,Estate
+SYN-42-04-PA,Bananas,Bananas,Producer,Producer,Certified,Honduras,Producer,Estate
+SYN-42-04-PB,Bananas,Bananas,Producer,Producer,Certified,Honduras,Producer,1st Grade
+SYN-42-05,Cocoa,Cocoa,Producer,Producer,Certified,Côte d'Ivoire,Producer,1st Grade
+SYN-42-05-PA,Cocoa,Cocoa,Producer,Producer,Certified,Côte d'Ivoire,Producer,1st Grade
+SYN-42-05-PB,Cocoa,Cocoa,Producer,Producer,Certified,Côte d'Ivoire,Producer,1st Grade
+SYN-42-06,Coffee,Coffee,Producer,Factory,Certified,Mexico,Factory,Factory
+SYN-42-06-PA,Coffee,Coffee,Producer,Factory,Certified,Mexico,Factory,Factory
+SYN-42-06-PB,Coffee,Coffee,Producer,Producer,Certified,Mexico,Producer,1st Grade

@@ -1,0 +1,54 @@
+# Component 3 data catalog (CAT-1).
+# Describes the data; never contains it (CAT-5). {placeholders} are filled from
+# catalog_stats.json, which the item builder writes on every load, so coverage
+# stays true when the full export replaces the sample (CAT-6).
+# `fields` keys may name several attributes separated by " / ".
+version: 2
+datasets:
+  - name: producers
+    grain: one item per producer (account_sk)
+    description: Fair Trade certified organizations - profile only.
+    answers: what the session producer grows, where it is, its entity type, which certification standard applies
+    cannot_answer: names of people; certification audit details (out of scope for the agent); other producers' survey data
+    coverage: "{n_producers} producers; entity_type unknown for {n_unknown_entity}; {n_with_survey} have survey data"
+    fields:
+      display_id: short alias for display (not a join key)
+      org_name_fictional: generated organization name - the source has no names
+      entity_type: cooperative | smallholder | estate | processing_operation | unknown
+      org_level: 1 = first-grade organization, 2 = second-grade union
+      primary_crop / crops: coffee, cocoa, banana, tea, ...
+      country / region: region = most frequent region among the producer's projects
+      primary_language: language assumed from country (es, fr, pt, en, ...)
+      applicable_standard: APS for farms, FPS (Factory Production Standard) for processing operations
+      project_count: number of Premium projects
+      has_survey / survey_years: whether survey summaries exist, and for which years
+
+  - name: projects
+    grain: one item per Premium-funded project
+    description: Environmental projects funded by the Fair Trade Premium, including the need each one responded to.
+    answers: what the session producer has already done; what comparable producers did (peer examples)
+    cannot_answer: market, labor, education or health projects (the export is Environmental only); budgets; beneficiary counts
+    coverage: "{n_projects} projects from {n_project_producers} producers; {n_peer_eligible} usable as peer examples; top countries {top_countries}"
+    fields:
+      project_id: citation ID
+      name / description: what was done (English translation)
+      reason: the need or challenge the project responds to
+      primary_goal: expected result
+      challenge_tags / primary_tag: 1-3 of the 11 challenge tags, primary first
+      status: completed | in_progress | in_planning
+      start_date / end_date / start_year: dates (blank when unknown)
+      country / region: location
+      crop / entity_type / org_name_fictional: owner's profile (for peer matching)
+
+  - name: survey_summaries
+    grain: one item per producer per survey year - aggregated, never row-level
+    description: Household survey aggregates - harvest change and its reasons, conservation practices, water access, borrowing.
+    answers: share of members reporting a harvest decrease and the reasons given; conservation practices; drinking-water access; borrowing and income sources
+    cannot_answer: any individual household's answers; anything for producers without survey data
+    coverage: "{n_with_survey} of {n_producers} producers; years {survey_years}; any percentage with n < {min_n} is blank"
+    fields:
+      summary_id: citation ID
+      survey_year: year of responses
+      n_responses: responses kept after the quality filter
+      metrics: pct_* = percentage, n_* = valid answers behind it
+      top_choices: harvest_change_reasons, borrow_sources, income_sources, ft_benefits - top choices with shares
