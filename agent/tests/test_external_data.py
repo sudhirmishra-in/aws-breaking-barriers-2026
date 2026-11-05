@@ -92,7 +92,7 @@ def test_supplied_facts_appear_in_the_closing_turn_and_stand_ins_do_not():
     good = {"dataset": "open_meteo", "indicator": "ytd_rainfall_mm", "value": 2831.3, "unit": "mm", "period": "2026 YTD", "baselineValue": 2487.0, "baselineDeltaPct": 13.8, "baselinePeriod": "1991-2020 (same window)", "is_stand_in": False}
     bad = {"dataset": "open_meteo", "indicator": "other", "value": None, "unit": "mm", "period": "2026", "is_stand_in": True}
     p = system_prompt(TrustedContext.model_validate({**base, "externalFacts": [good, bad]}))
-    assert "2831.3 mm" in p and "+13.8 %" in p and "1991-2020" in p and "other = None" not in p and "reference point" in p
+    assert "13.8% above its 1991-2020 average" in p and "not your farm" in p and "EXACTLY" in p and "= None" not in p and "reference point for Colombia" in p
 
 
 def test_external_data_is_context_never_proof():
@@ -127,7 +127,20 @@ def test_supplied_facts_are_available_to_every_mode_so_the_agent_never_claims_to
     for mode in ("intake", "ask", "guidance", "followup"):
         p = system_prompt(TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": mode, "allowPlayback": False, "confirmedAccount": "x", "externalFacts": [good],
                                                        "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee", "country": "Colombia"}}))
-        assert "2831.3 mm" in p and "+21.9 %" in p, mode
+        assert "21.9% above its 1991-2020 average" in p and "EXACTLY" in p and "add no interpretation" in p or mode == "followup" and "EXACTLY" in p, mode
     none = system_prompt(TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": "intake", "allowPlayback": False, "externalFacts": [{**good, "is_stand_in": True, "value": None}],
                                                        "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee"}}))
-    assert "2831.3" not in none and "Regional facts supplied" not in none
+    assert "2831.3" not in none and "Regional rainfall fact" not in none
+
+
+def test_fact_sentence_is_built_in_code_with_sign_country_and_no_interpretation():
+    from exchange.prompts import fact_sentences
+    mk = lambda d, country="Peru": TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": "ask", "allowPlayback": False,
+        "externalFacts": [{"dataset": "open_meteo", "indicator": "ytd_rainfall_mm", "value": 1.0, "baselineDeltaPct": d, "baselinePeriod": "1991-2020 (same window)", "period": "2026 YTD"}],
+        "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee", "country": country}})
+    up, down = fact_sentences(mk(38.9))[0], fact_sentences(mk(-13.3, "Vietnam"))[0]
+    assert "38.9% above its 1991-2020 average" in up and "reference point for Peru" in up and "not your farm" in up
+    assert "13.3% below" in down and "Vietnam" in down
+    assert not any(w in up + down for w in ("wetter", "drier", "explains", "regionally", "pattern"))
+    assert fact_sentences(TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": "ask", "allowPlayback": False, "externalFacts": [{"is_stand_in": True, "value": None}],
+        "producer": {"producerId": "P", "entityType": "c", "location": "L", "crop": "coffee"}})) == []

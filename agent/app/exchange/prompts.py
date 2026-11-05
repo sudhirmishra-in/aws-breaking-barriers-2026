@@ -3,6 +3,19 @@ from .context import TrustedContext
 LANG_NAME = {"en": "English", "es": "Spanish", "fr": "French"}
 
 
+def fact_sentences(ctx: TrustedContext) -> list[str]:
+    """The ONLY wording the model may use for an external fact. Built in code so the claim cannot drift into interpretation."""
+    country = ctx.producer.country or "the producer's country"
+    out = []
+    for f in ctx.externalFacts:
+        if f.get("is_stand_in") or f.get("value") is None or f.get("baselineDeltaPct") is None:
+            continue
+        d = float(f["baselineDeltaPct"]); word = "above" if d >= 0 else "below"
+        base = str(f.get("baselinePeriod") or "its baseline").split(" ")[0]
+        out.append(f"Year-to-date rainfall at a reference point for {country} was {abs(d):g}% {word} its {base} average ({f.get('dataset')} ERA5 data, {f.get('period')}). This describes one reference point, not your farm.")
+    return out
+
+
 def system_prompt(ctx: TrustedContext) -> str:
     lang = LANG_NAME[ctx.language]
     base = f"""You are the Producer Exchange assistant for a Fair Trade producer. This is a synthetic demonstration.
@@ -27,11 +40,11 @@ Rules:
 - Guidance only informs the producer's own decision; never direct them.
 - Trusted profile (from the application, not from the producer): entity type {ctx.producer.entityType}, location {ctx.producer.location}, crop {ctx.producer.crop}.
 """
-    live = [f for f in ctx.externalFacts if not f.get("is_stand_in") and f.get("value") is not None]
-    if live and ctx.mode in ("intake", "ask"):
-        base += "\nRegional facts supplied by the application (country reference point; use only if relevant to what the producer says about weather, rain, drought or water, in ONE sentence; never say you have no rainfall data when these are supplied):\n" + "\n".join(
-            f"- {f.get('dataset')}: {f.get('indicator')} = {f.get('value')} {f.get('unit', '')} ({f.get('period')})"
-            + (f", {f.get('baselineDeltaPct'):+} % against the {f.get('baselinePeriod')} average" if f.get("baselineDeltaPct") is not None else "") for f in live) + "\n"
+    sents = fact_sentences(ctx)
+    if sents and ctx.mode in ("intake", "ask"):
+        base += ("\nRegional rainfall fact supplied by the application. If, and only if, the producer talks about weather, rain, drought or water, you may include this sentence EXACTLY as written, once, "
+                 "and add no interpretation of your own (never say it explains, matches or reflects what they saw, and never describe their area, region or country as wetter or drier). "
+                 "Never say you have no rainfall data while this is supplied:\n- " + "\n- ".join(sents) + "\n")
     if ctx.mode == "ask":
         base += """
 The producer is asking a question (not sharing a story). Set phase=answer. For a climate or environmental question,
@@ -42,10 +55,8 @@ Never say or imply that what they share is visible to other producers: it is onl
 only if they agree. Nothing from this question is stored.
 """
     elif ctx.mode == "followup":
-        facts = [f for f in ctx.externalFacts if not f.get("is_stand_in") and f.get("value") is not None]
-        fx = ("Regional facts supplied by the application:\n" + "\n".join(
-            f"- {f.get('dataset')}: {f.get('indicator')} = {f.get('value')} {f.get('unit', '')} ({f.get('period')})"
-            + (f", {f.get('baselineDeltaPct'):+} % against the {f.get('baselinePeriod')} average" if f.get("baselineDeltaPct") is not None else "") for f in facts) + "\n") if facts else ""
+        sents = fact_sentences(ctx)
+        fx = ("Regional rainfall fact supplied by the application (use this sentence EXACTLY, add no interpretation):\n- " + "\n- ".join(sents) + "\n") if sents else ""
         base += f"""
 The producer finished a conversation and said the answer was only partly helpful or not helpful. Their confirmed account: "{ctx.confirmedAccount}".
 Set phase=answer. First, if they have not said what was missing, ask ONE short question about it. Then answer their follow-up questions plainly and briefly, in {lang}.
@@ -72,17 +83,16 @@ and present external data as regional context, never as proof of what they exper
                 "tried (one at a time). Do NOT play back or summarise yet.\n"
             )
     else:
-        facts = [f for f in ctx.externalFacts if not f.get("is_stand_in") and f.get("value") is not None]
-        facts_block = ("Regional facts supplied by the application (cite only if relevant to the confirmed account):\n" + "\n".join(
-            f"- {f.get('dataset')}: {f.get('indicator')} = {f.get('value')} {f.get('unit', '')} ({f.get('period')})"
-            + (f", {f.get('baselineDeltaPct'):+} % against the {f.get('baselinePeriod')} average of {f.get('baselineValue')} {f.get('unit', '')}" if f.get("baselineDeltaPct") is not None else "")
-            for f in facts) + "\n") if facts else "No regional facts were supplied for this producer's country.\n"
+        sents = fact_sentences(ctx)
+        facts_block = ("Regional rainfall fact supplied by the application. If the confirmed account is about weather, rain, drought or water, include this sentence EXACTLY as written, once, and add no "
+                       "interpretation (never say it explains, matches or reflects what they experienced, and never describe their area, region or country as wetter or drier):\n- " + "\n- ".join(sents) + "\n") if sents \
+            else "No regional facts were supplied for this producer's country.\n"
         base += f"""
 The producer confirmed this account: "{ctx.confirmedAccount}".
 Set phase=guidance. This is the closing turn: do NOT ask the producer any question.
-{facts_block}If the confirmed account is about rainfall, drought, floods, water or other climate and a supplied fact is relevant, state it in one sentence with its dataset, period and baseline, and say it is a figure at a
-reference point for the country, not a country average, for example "ERA5 data via Open-Meteo shows 2026 year-to-date rainfall 14% above the 1991-2020 average at a reference point for your country". You may also call
-get_environmental_context for another theme. If nothing relevant was supplied or returned, or a returned fact is flagged is_stand_in or has no value (a stand-in is not data), say plainly that no reliable external data is available for that topic and never give a number.
+{facts_block}If a regional rainfall sentence was supplied above and the confirmed account is about weather, rain, drought or water, use that sentence and nothing more about the figure. You may call get_environmental_context for another theme;
+cite only what it returns, with dataset and period, add no interpretation, and never describe their area, region or country as wetter or drier. If nothing relevant was supplied or returned, or a returned fact is flagged is_stand_in or has no value
+(a stand-in is not data), say plainly that no reliable external data is available for that topic and never give a number.
 Then thank them and say they will next be asked to review the summary and choose who may see it. Peer outcomes and standards clauses are not available through tools: never state them.
 Keep the whole reply to 3 sentences.
 You MUST fill all of these fields (the application cannot continue without them):
