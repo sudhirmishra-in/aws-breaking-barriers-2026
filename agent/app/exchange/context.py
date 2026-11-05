@@ -30,6 +30,8 @@ class TrustedContext(BaseModel):
     forcePlayback: bool = False  # set by the application after several turns so intake cannot go on indefinitely
     producer: ProducerRef
     confirmedAccount: str | None = None
+    # Regional facts the APPLICATION already looked up for the producer's own country (stand-ins removed). The closing turn cites these without having to decide to call a tool.
+    externalFacts: list[dict] = Field(default_factory=list, max_length=8)
 
 
 class ChatMessage(BaseModel):

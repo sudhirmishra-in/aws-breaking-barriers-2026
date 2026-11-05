@@ -55,7 +55,7 @@ describe("evidence endpoint with external facts", () => {
   it("uses the organization's country and the record's own tags, and returns the real fact as external evidence", async () => {
     const { svc, id, calls } = await world("Colombia", [fact()]);
     const r = await svc.evidence(ana, id);
-    expect(calls).toEqual([{ country: "Colombia", themes: ["climate"] }]); expect(r.facts).toHaveLength(1); expect(r.facts[0].finding).toContain("812.4 mm"); expect(r.limitation).toBeNull();
+    expect(calls.at(-1)).toEqual({ country: "Colombia", themes: ["climate"] }); expect(r.facts).toHaveLength(1); expect(r.facts[0].finding).toContain("812.4 mm"); expect(r.limitation).toBeNull();
   });
   it("drops a stand-in (failed fetch) and a missing value instead of showing a number", async () => {
     const { svc, id } = await world("Colombia", [fact({ isStandIn: true, value: null }), fact({ indicator: "x", value: null })]);
@@ -69,5 +69,20 @@ describe("evidence endpoint with external facts", () => {
     const h = (await svc.playback(ana, id, { requestId: "req-4-yyyyyyyy", decision: "confirm" })).confirmation!.summaryHash;
     await svc.finalize(ana, id, { requestId: "req-5-yyyyyyyy", summaryHash: h, sharing: "ftusa_only", identityPermitted: false });
     expect((await svc.evidence(ana, id)).facts).toEqual([]);
+  });
+});
+
+describe("facts handed to the agent's closing turn", () => {
+  it("only the producer's own country, only real values, never a stand-in", async () => {
+    const seen: { externalFacts?: unknown[] }[] = [];
+    const store = new MemoryStore(); store.orgs.set("ORG", org("Colombia")); store.profiles.set("s", prof);
+    const agent = new Stub(); const orig = agent.turn.bind(agent); agent.turn = async (req) => { if (req.context.mode === "guidance") seen.push(req.context as never); return orig(req); };
+    const calls: string[] = [];
+    const svc = new ServiceV2({ store, agent, facts: { forCountry: async (c) => { calls.push(String(c)); return [fact(), fact({ indicator: "x", isStandIn: true, value: null }), fact({ indicator: "p", isProjection: true })]; } } });
+    const id = (await svc.create(ana, undefined, "req-1-zzzzzzzz")).conversation.conversationId;
+    await svc.message(ana, id, "req-2-zzzzzzzz", "a"); await svc.message(ana, id, "req-3-zzzzzzzz", "b");
+    await svc.playback(ana, id, { requestId: "req-4-zzzzzzzz", decision: "confirm" });
+    expect(calls).toEqual(["Colombia"]); expect(seen[0].externalFacts).toHaveLength(1);
+    expect(JSON.stringify(seen[0].externalFacts)).toContain("812.4");
   });
 });

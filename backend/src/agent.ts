@@ -10,6 +10,7 @@ export interface AgentTurnRequest {
     forcePlayback?: boolean;
     producer: { producerId: string; entityType: string; location: string; crop: string; country?: string };
     confirmedAccount?: string | null;
+    externalFacts?: { dataset: string; indicator: string; value: number | null; unit: string; period: string; baselineValue: number | null; baselineDeltaPct: number | null; baselinePeriod: string | null }[];
   };
   messages: { role: "user" | "assistant"; text: string }[];
 }

@@ -103,6 +103,14 @@ export class Service {
     };
   }
 
+  protected async factsForAgent(profile: ProducerProfile) {
+    const country = await this.countryOf(profile);
+    if (!country || !this.d.facts) return [];
+    const all = await this.d.facts.forCountry(country, ["climate", "water", "soil_land", "market", "biodiversity", "tenure", "elevation"]).catch(() => []);
+    return all.filter((f) => !f.isStandIn && f.value !== null && !f.isProjection).slice(0, 8)
+      .map((f) => ({ dataset: f.dataset, indicator: f.indicator, value: f.value, unit: f.unit, period: f.period, baselineValue: f.baselineValue, baselineDeltaPct: f.baselineDeltaPct, baselinePeriod: f.baselinePeriod }));
+  }
+
   /** The producer's country, from the organization record (server side). Used by the agent's external-data tool; never taken from free text. */
   protected async countryOf(profile: ProducerProfile): Promise<string | undefined> {
     const org = profile.organizationId ? await this.d.store.getOrganization(profile.organizationId) : undefined;
@@ -217,6 +225,8 @@ export class Service {
           // Trusted: built from the server-side profile, never from the request.
           producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop, country: await this.countryOf(profile) },
           confirmedAccount: c.confirmedAccount ?? null,
+          // The application looks up the producer's own country's cached facts; the closing turn cites them. Stand-ins (failed fetches) never reach the model.
+          ...(mode === "guidance" ? { externalFacts: await this.factsForAgent(profile) } : {}),
         },
         messages: [...history.map((m) => ({ role: m.role, text: m.text })), { role: "user" as const, text: newUser }],
       }, runtimeSessionIdFor(c.conversationId), p.sub);

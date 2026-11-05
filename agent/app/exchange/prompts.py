@@ -12,9 +12,8 @@ Scope: only the producer's business challenge and what has helped. Politely decl
 (certification status, complaints about workers, legal or financial advice) and say nothing is recorded for it.
 
 Rules:
-- Regional climate and environmental data (rainfall, drought, floods, water, soil, forests, protected areas,
-  farm-gate prices) IS available: call get_environmental_context and cite the real figure with its dataset and
-  baseline, e.g. "rainfall in your country was 14% above the 1981-2010 average this year". If it returns no data
+- Regional climate data may be available for the producer's country (today: year-to-date rainfall for a few countries). For rainfall, drought, floods or water questions call get_environmental_context and cite the real figure with its dataset and
+  baseline, e.g. "rainfall at a reference point for your country was 14% above the 1981-2010 average this year" (it is one reference point, not a country average). If it returns no data
   for the topic, say plainly there is none.
 - Peer outcomes and Fair Trade standards clauses are NOT yet available: their tools still return "unavailable", so
   if you consult them, say honestly that this information is not available yet.
@@ -55,12 +54,17 @@ only if they agree. Nothing from this question is stored.
                 "tried (one at a time). Do NOT play back or summarise yet.\n"
             )
     else:
+        facts = [f for f in ctx.externalFacts if not f.get("is_stand_in") and f.get("value") is not None]
+        facts_block = ("Regional facts supplied by the application (cite only if relevant to the confirmed account):\n" + "\n".join(
+            f"- {f.get('dataset')}: {f.get('indicator')} = {f.get('value')} {f.get('unit', '')} ({f.get('period')})"
+            + (f", {f.get('baselineDeltaPct'):+} % against the {f.get('baselinePeriod')} average of {f.get('baselineValue')} {f.get('unit', '')}" if f.get("baselineDeltaPct") is not None else "")
+            for f in facts) + "\n") if facts else "No regional facts were supplied for this producer's country.\n"
         base += f"""
 The producer confirmed this account: "{ctx.confirmedAccount}".
 Set phase=guidance. This is the closing turn: do NOT ask the producer any question.
-If the topic is rainfall, drought, floods, water or other climate, FIRST call get_environmental_context with matching challenge tags. When it returns a fact that is not a stand-in,
-state it in one sentence with its dataset, period and baseline, and say it is a regional figure, for example "in the 2026 year-to-date record for your country's reference point, rainfall is
-14% above the 1981-2010 average (ERA5 via Open-Meteo)". If it returns nothing or only a stand-in, say plainly that no external data is available for that topic and never give a number.
+{facts_block}If the confirmed account is about rainfall, drought, floods, water or other climate and a supplied fact is relevant, state it in one sentence with its dataset, period and baseline, and say it is a figure at a
+reference point for the country, not a country average, for example "ERA5 data via Open-Meteo shows 2026 year-to-date rainfall 14% above the 1981-2010 average at a reference point for your country". You may also call
+get_environmental_context for another theme. If nothing relevant was supplied or returned, or a returned fact is flagged is_stand_in or has no value (a stand-in is not data), say plainly that no reliable external data is available for that topic and never give a number.
 Then thank them and say they will next be asked to review the summary and choose who may see it. Peer outcomes and standards clauses are not available through tools: never state them.
 Keep the whole reply to 3 sentences.
 You MUST fill all of these fields (the application cannot continue without them):
