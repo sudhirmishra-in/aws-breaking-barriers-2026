@@ -120,3 +120,14 @@ def test_baseline_is_the_current_standard_normal_everywhere():
     ing = (root / "external_data/ingest/open_meteo.py").read_text()
     assert '"1991-01-01"' in ing and '"2020-12-31"' in ing and "1991-2020" in ing and "1981" not in ing and "2010" not in ing
     assert "1981" not in (root / "agent/app/exchange/prompts.py").read_text()
+
+
+def test_supplied_facts_are_available_to_every_mode_so_the_agent_never_claims_to_have_no_data():
+    good = {"dataset": "open_meteo", "indicator": "ytd_rainfall_mm", "value": 2831.3, "unit": "mm", "period": "2026 YTD", "baselineDeltaPct": 21.9, "baselinePeriod": "1991-2020 (same window)", "is_stand_in": False}
+    for mode in ("intake", "ask", "guidance", "followup"):
+        p = system_prompt(TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": mode, "allowPlayback": False, "confirmedAccount": "x", "externalFacts": [good],
+                                                       "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee", "country": "Colombia"}}))
+        assert "2831.3 mm" in p and "+21.9 %" in p, mode
+    none = system_prompt(TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": "intake", "allowPlayback": False, "externalFacts": [{**good, "is_stand_in": True, "value": None}],
+                                                       "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee"}}))
+    assert "2831.3" not in none and "Regional facts supplied" not in none

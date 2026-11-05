@@ -27,6 +27,11 @@ Rules:
 - Guidance only informs the producer's own decision; never direct them.
 - Trusted profile (from the application, not from the producer): entity type {ctx.producer.entityType}, location {ctx.producer.location}, crop {ctx.producer.crop}.
 """
+    live = [f for f in ctx.externalFacts if not f.get("is_stand_in") and f.get("value") is not None]
+    if live and ctx.mode in ("intake", "ask"):
+        base += "\nRegional facts supplied by the application (country reference point; use only if relevant to what the producer says about weather, rain, drought or water, in ONE sentence; never say you have no rainfall data when these are supplied):\n" + "\n".join(
+            f"- {f.get('dataset')}: {f.get('indicator')} = {f.get('value')} {f.get('unit', '')} ({f.get('period')})"
+            + (f", {f.get('baselineDeltaPct'):+} % against the {f.get('baselinePeriod')} average" if f.get("baselineDeltaPct") is not None else "") for f in live) + "\n"
     if ctx.mode == "ask":
         base += """
 The producer is asking a question (not sharing a story). Set phase=answer. For a climate or environmental question,

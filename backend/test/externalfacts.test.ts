@@ -82,7 +82,7 @@ describe("facts handed to the agent's closing turn", () => {
     const id = (await svc.create(ana, undefined, "req-1-zzzzzzzz")).conversation.conversationId;
     await svc.message(ana, id, "req-2-zzzzzzzz", "a"); await svc.message(ana, id, "req-3-zzzzzzzz", "b");
     await svc.playback(ana, id, { requestId: "req-4-zzzzzzzz", decision: "confirm" });
-    expect(calls).toEqual(["Colombia"]); expect(seen[0].externalFacts).toHaveLength(1);
+    expect([...new Set(calls)]).toEqual(["Colombia"]); expect(seen[0].externalFacts).toHaveLength(1); // every turn looks up only the producer's own country
     expect(JSON.stringify(seen[0].externalFacts)).toContain("812.4");
   });
 });

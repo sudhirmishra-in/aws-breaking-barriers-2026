@@ -226,7 +226,7 @@ export class Service {
           producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop, country: await this.countryOf(profile) },
           confirmedAccount: c.confirmedAccount ?? null,
           // The application looks up the producer's own country's cached facts; the closing turn cites them. Stand-ins (failed fetches) never reach the model.
-          ...(mode === "guidance" || mode === "followup" ? { externalFacts: await this.factsForAgent(profile) } : {}),
+          externalFacts: await this.factsForAgent(profile), // every turn: the agent should never claim to have no data when the app already holds it
         },
         messages: [...history.map((m) => ({ role: m.role, text: m.text })), { role: "user" as const, text: newUser }],
       }, runtimeSessionIdFor(c.conversationId), p.sub);
