@@ -19,6 +19,7 @@ class ProducerRef(BaseModel):
     entityType: str
     location: str
     crop: str
+    country: str | None = None  # from the organization record (server side); the tool never has to guess it from a free-text location
 
 
 class TrustedContext(BaseModel):

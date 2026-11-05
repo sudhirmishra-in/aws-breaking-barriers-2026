@@ -43,7 +43,7 @@ const en = {
     review: "Fair Trade USA review", reviewSt: { pending: "Waiting for review", approved: "Approved", corrected: "Reviewed with edits" } as Record<string, string>, sharingL: "Sharing", nameShown: "Name shown", yes: "Yes", no: "No",
     reviewerEdit: "A reviewer suggests this wording. It is shared only if you agree.", useEdited: "Use the edited wording", keepOrig: "Keep my original", stop: "Stop sharing with other producers", hide: "Hide my name",
     reqDel: "Request deletion", askDel: "Ask Fair Trade USA to delete this record?", yesDel: "Yes, request deletion", delDone: "Deletion requested. This case is no longer shared.",
-    data: "What the data shows", projects: "Similar project records from public source data", curated: "Information curated by Fair Trade USA", noCurated: "Nothing curated by Fair Trade USA is available for this case yet.",
+    data: "What the data shows", facts: "Regional climate data (external)", projects: "Similar project records from public source data", curated: "Information curated by Fair Trade USA", noCurated: "Nothing curated by Fair Trade USA is available for this case yet.",
     others: "What others have done", helpful: "Was this helpful?", partly: "Partly", thanksFb: "Thank you. You answered: {a}. You can change your answer.", noEvidence: "No prepared evidence matches this topic and location.",
     noClose: "No close match yet for this problem.", loadFail: "Evidence could not be loaded just now.", thanksDone: "Thank you. Your confirmed summary was sent to Fair Trade USA for review.",
     stoppedDone: "This conversation was stopped. It is kept for now and you can still read it or ask for deletion." },
@@ -53,7 +53,7 @@ const en = {
     noteFact: "Dated entries are what members told us. Advice or a finished conversation never marks an issue resolved.", memory: "From your organization's memory", memoryNote: "Derived from the records above, not an original record.", mem: { synced: "Memory updated", pending_retry: "Memory update will be retried", disabled: "Memory not configured" }, synthetic: "Synthetic" },
   landing: { choice: "You decide who can see your case. Fair Trade USA can keep and review the conversation." },
   ev: { external: "EXTERNAL", ftusa: "FAIR TRADE USA", certified: "FAIR TRADE CERTIFIED DATA", illustrative: "Illustrative data", illTip: "This value is a placeholder for testing. It is not real data.", older: "Older data",
-    status: "Recorded status", result: "Result", topic: "Topic", outcomeNot: "Outcome not reported" },
+    status: "Recorded status", method: "How it was measured", result: "Result", topic: "Topic", outcomeNot: "Outcome not reported" },
 };
 type Dict = typeof en;
 const es: Dict = {
@@ -95,7 +95,7 @@ const es: Dict = {
     review: "Revisión de Fair Trade USA", reviewSt: { pending: "A la espera de revisión", approved: "Aprobado", corrected: "Revisado con ediciones" }, sharingL: "Uso compartido", nameShown: "Nombre visible", yes: "Sí", no: "No",
     reviewerEdit: "Un revisor sugiere esta redacción. Solo se comparte si usted está de acuerdo.", useEdited: "Usar la redacción editada", keepOrig: "Mantener mi versión", stop: "Dejar de compartir con otros productores", hide: "Ocultar mi nombre",
     reqDel: "Solicitar eliminación", askDel: "¿Pedir a Fair Trade USA que elimine este registro?", yesDel: "Sí, solicitar eliminación", delDone: "Eliminación solicitada. Este caso ya no se comparte.",
-    data: "Lo que muestran los datos", projects: "Proyectos similares de datos públicos de origen", curated: "Información curada por Fair Trade USA", noCurated: "Todavía no hay información curada por Fair Trade USA para este caso.",
+    data: "Lo que muestran los datos", facts: "Datos climáticos regionales (externos)", projects: "Proyectos similares de datos públicos de origen", curated: "Información curada por Fair Trade USA", noCurated: "Todavía no hay información curada por Fair Trade USA para este caso.",
     others: "Lo que otros han hecho", helpful: "¿Le fue útil?", partly: "En parte", thanksFb: "Gracias. Respondió: {a}. Puede cambiar su respuesta.", noEvidence: "No hay evidencia preparada que coincida con este tema y ubicación.",
     noClose: "Todavía no hay una coincidencia cercana para este problema.", loadFail: "No se pudo cargar la evidencia en este momento.", thanksDone: "Gracias. Su resumen confirmado se envió a Fair Trade USA para revisión.",
     stoppedDone: "Esta conversación se detuvo. Se conserva por ahora y puede leerla o pedir su eliminación." },
@@ -105,7 +105,7 @@ const es: Dict = {
     noteFact: "Las entradas con fecha son lo que los miembros nos contaron. Un consejo o una conversación terminada nunca marca un problema como resuelto.", memory: "De la memoria de su organización", memoryNote: "Derivada de los registros anteriores, no es un registro original.", mem: { synced: "Memoria actualizada", pending_retry: "La actualización de memoria se reintentará", disabled: "Memoria no configurada" }, synthetic: "Sintético" },
   landing: { choice: "Usted decide quién puede ver su caso. Fair Trade USA puede conservar y revisar la conversación." },
   ev: { external: "EXTERNO", ftusa: "FAIR TRADE USA", certified: "DATOS CERTIFICADOS FAIR TRADE", illustrative: "Datos ilustrativos", illTip: "Este valor es un marcador de prueba. No son datos reales.", older: "Datos antiguos",
-    status: "Estado registrado", result: "Resultado", topic: "Tema", outcomeNot: "Resultado no informado" },
+    status: "Estado registrado", method: "Cómo se midió", result: "Resultado", topic: "Tema", outcomeNot: "Resultado no informado" },
 };
 const fr: Dict = {
   skip: "Aller au contenu", home: "Accueil", askAi: "Demander à l'IA", corrections: "Corrections", logout: "Se déconnecter", themeLight: "Passer au thème clair", themeDark: "Passer au thème sombre",
@@ -146,7 +146,7 @@ const fr: Dict = {
     review: "Examen de Fair Trade USA", reviewSt: { pending: "En attente d'examen", approved: "Approuvé", corrected: "Examiné avec modifications" }, sharingL: "Partage", nameShown: "Nom affiché", yes: "Oui", no: "Non",
     reviewerEdit: "Un réviseur suggère cette formulation. Elle n'est partagée que si vous êtes d'accord.", useEdited: "Utiliser la formulation modifiée", keepOrig: "Garder ma version", stop: "Ne plus partager avec les autres producteurs", hide: "Masquer mon nom",
     reqDel: "Demander la suppression", askDel: "Demander à Fair Trade USA de supprimer cet enregistrement ?", yesDel: "Oui, demander la suppression", delDone: "Suppression demandée. Ce cas n'est plus partagé.",
-    data: "Ce que montrent les données", projects: "Projets similaires issus de données publiques", curated: "Informations sélectionnées par Fair Trade USA", noCurated: "Aucune information sélectionnée par Fair Trade USA n'est disponible pour ce cas.",
+    data: "Ce que montrent les données", facts: "Données climatiques régionales (externes)", projects: "Projets similaires issus de données publiques", curated: "Informations sélectionnées par Fair Trade USA", noCurated: "Aucune information sélectionnée par Fair Trade USA n'est disponible pour ce cas.",
     others: "Ce que d'autres ont fait", helpful: "Cela vous a-t-il aidé ?", partly: "En partie", thanksFb: "Merci. Vous avez répondu : {a}. Vous pouvez modifier votre réponse.", noEvidence: "Aucune donnée préparée ne correspond à ce sujet et à ce lieu.",
     noClose: "Pas encore de correspondance proche pour ce problème.", loadFail: "Les données n'ont pas pu être chargées pour le moment.", thanksDone: "Merci. Votre résumé confirmé a été envoyé à Fair Trade USA pour examen.",
     stoppedDone: "Cette conversation a été arrêtée. Elle est conservée pour l'instant ; vous pouvez la relire ou demander sa suppression." },
@@ -156,7 +156,7 @@ const fr: Dict = {
     noteFact: "Les entrées datées sont ce que les membres nous ont dit. Un conseil ou une conversation terminée ne marque jamais un problème comme résolu.", memory: "De la mémoire de votre organisation", memoryNote: "Dérivée des enregistrements ci-dessus, ce n'est pas un enregistrement d'origine.", mem: { synced: "Mémoire mise à jour", pending_retry: "La mise à jour de la mémoire sera retentée", disabled: "Mémoire non configurée" }, synthetic: "Synthétique" },
   landing: { choice: "Vous décidez qui peut voir votre cas. Fair Trade USA peut conserver et examiner la conversation." },
   ev: { external: "EXTERNE", ftusa: "FAIR TRADE USA", certified: "DONNÉES CERTIFIÉES FAIR TRADE", illustrative: "Données illustratives", illTip: "Cette valeur est un espace réservé pour les tests. Ce ne sont pas des données réelles.", older: "Données anciennes",
-    status: "Statut enregistré", result: "Résultat", topic: "Sujet", outcomeNot: "Résultat non communiqué" },
+    status: "Statut enregistré", method: "Méthode de mesure", result: "Résultat", topic: "Sujet", outcomeNot: "Résultat non communiqué" },
 };
 const DICT: Record<Lang, Dict> = { en, es, fr };
 export const L = (l: Lang | undefined): Dict => DICT[l ?? "en"] ?? en;

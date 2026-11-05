@@ -61,6 +61,13 @@ export class ExchangeStack extends cdk.Stack {
         { indexName: "org-index", partitionKey: { name: "organizationId", type: ddb.AttributeType.STRING }, sortKey: { name: "createdAt", type: ddb.AttributeType.STRING } },
       ],
     });
+    // Component 5: pre-extracted environmental/climate facts. Read-only at
+    // runtime (the agent queries it); populated by an offline ingest (manual).
+    const environmentalFacts = new ddb.TableV2(this, "EnvironmentalFacts", {
+      tableName: n("environmental-facts"), partitionKey: { name: "region_key", type: ddb.AttributeType.STRING }, sortKey: { name: "fact_key", type: ddb.AttributeType.STRING },
+      billing: ddb.Billing.onDemand(), encryption: ddb.TableEncryptionV2.customerManagedKey(key),
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: false }, removalPolicy: removal,
+    });
 
     // ---- web hosting (private bucket + CloudFront OAC) --------------------
     const webBucket = new s3.Bucket(this, "WebBucket", {
@@ -140,6 +147,8 @@ export class ExchangeStack extends cdk.Stack {
     runtimeRole.addToPolicy(new iam.PolicyStatement({ actions: ["logs:PutResourcePolicy"], resources: [`arn:${this.partition}:logs:${this.region}:${this.account}:log-group:/aws/bedrock-agentcore/runtimes/*`] }));
     runtimeRole.addToPolicy(new iam.PolicyStatement({ actions: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"], resources: ["*"] }));
     runtimeRole.addToPolicy(new iam.PolicyStatement({ actions: ["cloudwatch:PutMetricData"], resources: ["*"], conditions: { StringEquals: { "cloudwatch:namespace": "bedrock-agentcore" } } }));
+    // Component 5: the agent's get_environmental_context tool queries this table.
+    environmentalFacts.grantReadData(runtimeRole);
 
     const runtime = new agentcore.CfnRuntime(this, "Runtime", {
       agentRuntimeName: `ftusa_exchange_${p.envName}`.replace(/[^A-Za-z0-9_]/g, "_"),
@@ -149,7 +158,7 @@ export class ExchangeStack extends cdk.Stack {
       networkConfiguration: { networkMode: "PUBLIC" },
       protocolConfiguration: "HTTP",
       lifecycleConfiguration: { idleRuntimeSessionTimeout: 900, maxLifetime: 3600 },
-      environmentVariables: { AGENT_OBSERVABILITY_ENABLED: "true", OTEL_PYTHON_DISTRO: "aws_distro", OTEL_PYTHON_CONFIGURATOR: "aws_configurator", OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf", OTEL_RESOURCE_ATTRIBUTES: `service.name=ftusa-exchange-agent-${p.envName}`, MODEL_ID: p.modelId, GUARDRAIL_ID: guardrail.attrGuardrailId, GUARDRAIL_VERSION: guardrailVersion.attrVersion, ENV_NAME: p.envName, DEPLOYED_COMMIT: p.gitSha },
+      environmentVariables: { AGENT_OBSERVABILITY_ENABLED: "true", OTEL_PYTHON_DISTRO: "aws_distro", OTEL_PYTHON_CONFIGURATOR: "aws_configurator", OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf", OTEL_RESOURCE_ATTRIBUTES: `service.name=ftusa-exchange-agent-${p.envName}`, ENVIRONMENTAL_FACTS_TABLE: environmentalFacts.tableName, MODEL_ID: p.modelId, GUARDRAIL_ID: guardrail.attrGuardrailId, GUARDRAIL_VERSION: guardrailVersion.attrVersion, ENV_NAME: p.envName, DEPLOYED_COMMIT: p.gitSha },
     });
     runtime.node.addDependency(runtimeRole);
 
@@ -196,13 +205,13 @@ export class ExchangeStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64, memorySize: 512, timeout: cdk.Duration.seconds(60), logGroup: apiLogs, reservedConcurrentExecutions: undefined,
       environment: {
         CONVERSATIONS_TABLE: conversations.tableName, OUTCOMES_TABLE: outcomes.tableName, AGENT_RUNTIME_ARN: runtime.attrAgentRuntimeArn,
-        USER_POOL_CLIENT_ID: client.userPoolClientId, ALLOWED_CLIENT_IDS: [client.userPoolClientId, ...(ciClient ? [ciClient.userPoolClientId] : [])].join(","), ISSUER: issuer, NODE_OPTIONS: "--enable-source-maps", MEMORY_PERSONAL_ID: memId(memPersonal), MEMORY_ORG_ID: memId(memOrg), MEMORY_PUBLISHED_ID: memId(memPublished), ...(kbId ? { KNOWLEDGE_BASE_ID: kbId } : {}),
+        USER_POOL_CLIENT_ID: client.userPoolClientId, ALLOWED_CLIENT_IDS: [client.userPoolClientId, ...(ciClient ? [ciClient.userPoolClientId] : [])].join(","), ISSUER: issuer, NODE_OPTIONS: "--enable-source-maps", ENVIRONMENTAL_FACTS_TABLE: environmentalFacts.tableName, MEMORY_PERSONAL_ID: memId(memPersonal), MEMORY_ORG_ID: memId(memOrg), MEMORY_PUBLISHED_ID: memId(memPublished), ...(kbId ? { KNOWLEDGE_BASE_ID: kbId } : {}),
       },
       bundling: { minify: true, sourceMap: true, target: "node22" },
       depsLockFilePath: path.join(__dirname, "../../package-lock.json"),
       projectRoot: path.join(__dirname, "../.."),
     });
-    conversations.grantReadWriteData(fn); outcomes.grantReadWriteData(fn); key.grantEncryptDecrypt(fn);
+    conversations.grantReadWriteData(fn); outcomes.grantReadWriteData(fn); environmentalFacts.grantReadData(fn); key.grantEncryptDecrypt(fn);
     if (kbId) fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["bedrock:Retrieve"], resources: [`arn:${this.partition}:bedrock:${this.region}:${this.account}:knowledge-base/${kbId}`] }));
     fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["bedrock-agentcore:CreateEvent", "bedrock-agentcore:RetrieveMemoryRecords"],
       resources: [memPersonal, memOrg, memPublished].map((m) => m.memoryRef.memoryArn) }));
@@ -271,6 +280,7 @@ export class ExchangeStack extends cdk.Stack {
     new cdk.CfnOutput(this, "ConversationsTable", { value: conversations.tableName });
     new cdk.CfnOutput(this, "MemoryOrgId", { value: memId(memOrg) }); new cdk.CfnOutput(this, "MemoryPersonalId", { value: memId(memPersonal) }); new cdk.CfnOutput(this, "MemoryPublishedId", { value: memId(memPublished) });
     new cdk.CfnOutput(this, "DashboardName", { value: dashboard.dashboardName });
+    new cdk.CfnOutput(this, "EnvironmentalFactsTable", { value: environmentalFacts.tableName });
     new cdk.CfnOutput(this, "GuardrailId", { value: guardrail.attrGuardrailId });
   }
 }

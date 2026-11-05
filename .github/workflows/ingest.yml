@@ -1,0 +1,71 @@
+name: Ingest environmental facts
+
+# Populates the environmental-facts DynamoDB table from the Open-Meteo (ERA5)
+# archive: current-year year-to-date rainfall at each country's centroid, plus the
+# same-window 1981-2010 baseline. Runs three ways:
+#   - on a schedule (daily) to keep the year-to-date snapshot fresh
+#   - after a successful "Deploy sandbox" run (workflow_run), so a first deploy
+#     self-populates the table instead of waiting for the next scheduled run
+#   - manually (workflow_dispatch)
+# It reuses the main-branch smoke role (data plane) to read the table name from the
+# live stack outputs and write the rows. It deliberately has NO `environment:`, so
+# its OIDC sub claim is the branch (`ref:refs/heads/main`) the smoke role trusts —
+# not `environment:sandbox` — and a scheduled run is not held behind an approval.
+# A failed per-country fetch writes a flagged stand-in (ING-5) rather than failing
+# the run, so the agent says "no reliable data" for that country instead of a number.
+on:
+  schedule:
+    - cron: "17 3 * * *" # daily, off-peak, off the :00 stampede
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Deploy sandbox]
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+# One ingest at a time; a queued run waits instead of double-writing the table.
+concurrency:
+  group: ingest-environmental-facts
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    name: Ingest Open-Meteo rainfall
+    # Always run on schedule/dispatch; on workflow_run, only if the deploy succeeded.
+    if: >-
+      (github.event_name != 'workflow_run') ||
+      (github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.13'
+      - run: uv sync --locked --group ingest   # shapely builds the country geometry; it is not an agent runtime dependency
+        working-directory: agent
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_SMOKE_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: gha-ingest-${{ github.run_id }}
+      - name: Read the facts table name from the deployed stack outputs
+        id: table
+        run: |
+          set -euo pipefail
+          TABLE=$(aws cloudformation describe-stacks --stack-name FtusaExchange-sandbox \
+            --query "Stacks[0].Outputs[?OutputKey=='EnvironmentalFactsTable'].OutputValue" --output text)
+          [ "$TABLE" != "None" ] || { echo "::error::EnvironmentalFactsTable output not found on FtusaExchange-sandbox"; exit 1; }
+          echo "table=$TABLE" >> "$GITHUB_OUTPUT"
+      - name: Run the Open-Meteo (ERA5) ingest into the facts table
+        env:
+          ENVIRONMENTAL_FACTS_TABLE: ${{ steps.table.outputs.table }}
+        run: uv run --project agent python -m external_data.ingest.open_meteo

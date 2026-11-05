@@ -77,7 +77,7 @@ export interface RelatedData {
 }
 export interface EvidenceItem { evidenceId: string; geography: string; period: string; tag: string; finding: string; source: string;
   origin: "external_imported" | "ftusa_authored"; curationStatus: "ftusa_curated" | "not_curated"; illustrative: boolean; stale?: boolean; standards: string[];
-  kind?: "project_record"; title?: string; recordedStatus?: string; taxonomy?: string; outcome?: string;
+  kind?: "project_record" | "external_fact"; method?: string; title?: string; recordedStatus?: string; taxonomy?: string; outcome?: string;
   citation?: { label: string; projectId: string; dataVersion: string; contentHash: string } }
 export type IssueStatus = "open" | "action_planned" | "action_in_progress" | "resolved" | "recurring" | "unknown";
 export interface IssueEventDto { eventId: string; type: string; at: string; text: string | null; source: string; synthetic: boolean; supersedes: string | null; superseded: boolean }

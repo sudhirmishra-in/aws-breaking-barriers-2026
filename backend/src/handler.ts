@@ -6,6 +6,7 @@ import { DdbStore } from "./ddbStore";
 import { BedrockAgentRuntimeClient, RetrieveCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 import { KnowledgeBaseRetriever, LocalProjectRetriever, type ProjectRetriever } from "./projectEvidence";
 import { AgentCoreMemory } from "./memory";
+import { DdbFacts } from "./externalFacts";
 import { emf } from "./metrics";
 import { PollySpeaker } from "./speech";
 import { TranscribeStreamingTranscriber } from "./transcribe";
@@ -115,6 +116,7 @@ const getSvc = () => (svc ??= new ServiceV2({
   transcriber: new TranscribeStreamingTranscriber(),
   speaker: new PollySpeaker(),
   projects: projectRetriever(),
+  facts: process.env.ENVIRONMENTAL_FACTS_TABLE ? new DdbFacts(process.env.ENVIRONMENTAL_FACTS_TABLE) : undefined,
   memory: process.env.MEMORY_PERSONAL_ID && process.env.MEMORY_ORG_ID && process.env.MEMORY_PUBLISHED_ID
     ? new AgentCoreMemory({ personal: process.env.MEMORY_PERSONAL_ID, organization: process.env.MEMORY_ORG_ID, published: process.env.MEMORY_PUBLISHED_ID }) : undefined,
   metric: emf,

@@ -15,6 +15,7 @@ const l = useL();
     </div>
     <h4 v-if="item.title" class="ev-title">{{ item.title }}</h4>
     <p>{{ item.finding }}</p>
+    <dl v-if="item.kind === 'external_fact'" class="kv"><dt>{{ l.ev.method }}</dt><dd class="hint">{{ item.method }}</dd></dl>
     <dl v-if="item.kind === 'project_record'" class="kv"><dt>{{ l.ev.status }}</dt><dd>{{ item.recordedStatus }}</dd><dt>{{ l.ev.result }}</dt><dd class="hint">{{ l.ev.outcomeNot }}</dd>
       <dt>{{ l.ev.topic }}</dt><dd>{{ item.taxonomy }}</dd></dl>
     <div class="chips"><span class="chip">{{ item.source }}</span><span class="chip">{{ item.geography }}</span><span class="chip">{{ item.period }}</span>

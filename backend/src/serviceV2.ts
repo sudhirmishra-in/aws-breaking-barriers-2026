@@ -3,6 +3,7 @@ import type { Language, CorrectionRecord, CorrectableField, Organization, Outcom
 import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, notFound } from "./errors";
 import { evidenceFor } from "./evidence";
+import { factEvidence, themesFor } from "./externalFacts";
 import { deriveStatus, issueView, matchIssue, withEvent } from "./issues";
 import type { IssueEvent, IssueRecord } from "./contracts";
 import type { MemoryHit } from "./memory";
@@ -415,7 +416,10 @@ export class ServiceV2 extends Service {
     const hits = await (this.d.projects ?? new LocalProjectRetriever()).search({ text: `${o.summaryEn ?? ""} ${(o.challengeTags ?? []).join(" ")}`,
       countryIso2: isoOf(org?.info.countryName), crop: (o.crop ?? profile.crop) || null, limit: 3 }).catch(() => []);
     const projects = hits.map((h) => projectEvidence(h.project));
-    return { items, projects, limitation: items.length || projects.length ? null : "No prepared evidence matches this topic and location.", syntheticDemo: true };
+    // External environmental facts: country from the organization record, theme from the record's own tags. A stand-in from a failed fetch is dropped, never shown as a figure.
+    const country = org?.info.countryName ?? null;
+    const facts = country && this.d.facts ? (await this.d.facts.forCountry(country, themesFor(o.challengeTags ?? [])).catch(() => [])).filter((f) => !f.isStandIn && f.value !== null).map((f) => factEvidence(f, country)) : [];
+    return { items, projects, facts, limitation: items.length || projects.length || facts.length ? null : "No prepared evidence matches this topic and location.", syntheticDemo: true };
   }
 
   /** The producer switched the interface language during an open conversation: later agent replies use it. Only this conversation changes; the profile preference never does. */

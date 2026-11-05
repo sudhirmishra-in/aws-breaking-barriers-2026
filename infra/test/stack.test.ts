@@ -18,6 +18,18 @@ const kbStack = new ExchangeStack(new cdk.App(), "K", {
 });
 const kt = Template.fromStack(kbStack);
 
+describe("external environmental data", () => {
+  it("a facts table keyed by region, encrypted with the CMK, readable by the agent runtime and the API", () => {
+    t.hasResourceProperties("AWS::DynamoDB::GlobalTable", Match.objectLike({ TableName: "ftusa-environmental-facts-test", KeySchema: [{ AttributeName: "region_key", KeyType: "HASH" }, { AttributeName: "fact_key", KeyType: "RANGE" }] }));
+    const json = JSON.stringify(t.toJSON());
+    expect(json).toContain("ENVIRONMENTAL_FACTS_TABLE");
+    const policies = Object.values(t.findResources("AWS::IAM::Policy")) as { Properties: { PolicyName: string; PolicyDocument: { Statement: { Action: string | string[] }[] } } }[];
+    const readers = policies.filter((p) => JSON.stringify(p.Properties.PolicyDocument).includes("EnvironmentalFacts"));
+    expect(readers.length).toBeGreaterThanOrEqual(2); // runtime role and API function
+    for (const p of readers) for (const st of p.Properties.PolicyDocument.Statement) expect([st.Action].flat().some((a) => /PutItem|DeleteItem|UpdateItem|BatchWrite/.test(a)) && JSON.stringify(st).includes("EnvironmentalFacts")).toBe(false);
+  });
+});
+
 describe("memory and observability", () => {
   it("three separate AgentCore Memory resources, each with its own namespace, one semantic strategy and bounded event expiry", () => {
     const mems = Object.values(t.findResources("AWS::BedrockAgentCore::Memory")) as { Properties: { Name: string; EventExpiryDuration: number; MemoryStrategies: { SemanticMemoryStrategy: { NamespaceTemplates: string[] } }[] } }[];

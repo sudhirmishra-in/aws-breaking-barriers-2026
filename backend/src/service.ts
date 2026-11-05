@@ -25,6 +25,8 @@ export interface Deps {
   projects?: import("./projectEvidence").ProjectRetriever;
   /** Derived memory (AgentCore Memory). Absent in unit tests and when no memory resources are provisioned. */
   memory?: import("./memory").MemoryPort;
+  /** Cached external environmental facts (country level). */
+  facts?: import("./externalFacts").FactsPort;
   /** Metrics sink (CloudWatch EMF in production). */
   metric?: (name: string, value?: number, unit?: string, dims?: Record<string, string>) => void;
 }
@@ -99,6 +101,12 @@ export class Service {
       syntheticDemo: true,
       syntheticLabel: SYNTHETIC_LABEL,
     };
+  }
+
+  /** The producer's country, from the organization record (server side). Used by the agent's external-data tool; never taken from free text. */
+  protected async countryOf(profile: ProducerProfile): Promise<string | undefined> {
+    const org = profile.organizationId ? await this.d.store.getOrganization(profile.organizationId) : undefined;
+    return org?.info.countryName ?? undefined;
   }
 
   protected async profileFor(p: Principal): Promise<ProducerProfile> {
@@ -207,7 +215,7 @@ export class Service {
         context: {
           conversationId: c.conversationId, language: c.language, mode, allowPlayback, forcePlayback: allowPlayback && c.userTurns + 1 >= FORCE_PLAYBACK_TURN,
           // Trusted: built from the server-side profile, never from the request.
-          producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop },
+          producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop, country: await this.countryOf(profile) },
           confirmedAccount: c.confirmedAccount ?? null,
         },
         messages: [...history.map((m) => ({ role: m.role, text: m.text })), { role: "user" as const, text: newUser }],
@@ -471,7 +479,7 @@ export class Service {
     try {
       r = await this.d.agent.turn({
         context: { conversationId: `ask-${randomUUID()}`, language, mode: "ask", allowPlayback: false,
-          producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop }, confirmedAccount: null },
+          producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop, country: await this.countryOf(profile) }, confirmedAccount: null },
         messages: [{ role: "user", text }],
       }, `ftusa-ask-${p.sub}`, p.sub);
     } catch (e) {

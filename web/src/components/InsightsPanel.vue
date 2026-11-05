@@ -14,9 +14,9 @@ const props = defineProps<{ view: ConversationView }>();
 const l = useL();
 const emit = defineEmits<{ changed: []; ask: [caseId: string] }>();
 const rec = computed<RecordStateDto | null>(() => props.view.record ?? null);
-const evidence = ref<EvidenceItem[]>([]); const projects = ref<EvidenceItem[]>([]); const limitation = ref("");
+const evidence = ref<EvidenceItem[]>([]); const projects = ref<EvidenceItem[]>([]); const facts = ref<EvidenceItem[]>([]); const limitation = ref("");
 const curated = computed(() => evidence.value.filter((e) => e.curationStatus === "ftusa_curated"));
-onMounted(async () => { try { const r = await api.evidence(props.view.conversation.conversationId); evidence.value = r.items; projects.value = r.projects ?? []; limitation.value = r.limitation ? l.value.ins.noEvidence : ""; } catch { limitation.value = l.value.ins.loadFail; } });
+onMounted(async () => { try { const r = await api.evidence(props.view.conversation.conversationId); evidence.value = r.items; projects.value = r.projects ?? []; facts.value = r.facts ?? []; limitation.value = r.limitation ? l.value.ins.noEvidence : ""; } catch { limitation.value = l.value.ins.loadFail; } });
 const msg = ref(""); const busy = ref(false); const confirmDelete = ref(false);
 async function act(fn: () => Promise<unknown>) { busy.value = true; msg.value = ""; try { await fn(); emit("changed"); } catch (e) { msg.value = (e as ApiFailure).message; } finally { busy.value = false; } }
 const fbBusy = ref(false);
@@ -49,10 +49,12 @@ const deletion = () => act(async () => { const r = await api.requestDeletion(pro
       <p v-if="msg" class="hint" role="status">{{ msg }}</p></div>
     <IssueHistory :conversation-id="view.conversation.conversationId" />
     <div class="card"><h3>{{ l.ins.data }}</h3>
+      <h4 v-if="facts.length" class="ev-sub">{{ l.ins.facts }}</h4>
+      <EvidenceCard v-for="e in facts" :key="e.evidenceId" :item="e" />
       <EvidenceCard v-for="e in evidence" :key="e.evidenceId" :item="e" />
       <h4 v-if="projects.length" class="ev-sub">{{ l.ins.projects }}</h4>
       <EvidenceCard v-for="e in projects" :key="e.evidenceId" :item="e" />
-      <p v-if="!evidence.length && !projects.length" class="hint">{{ limitation || l.loading }}</p></div>
+      <p v-if="!evidence.length && !projects.length && !facts.length" class="hint">{{ limitation || l.loading }}</p></div>
     <div class="card"><h3>{{ l.ins.curated }}</h3>
       <EvidenceCard v-for="e in curated" :key="e.evidenceId" :item="e" />
       <p v-if="!curated.length" class="hint">{{ l.ins.noCurated }}</p></div>

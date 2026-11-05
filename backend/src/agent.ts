@@ -8,7 +8,7 @@ export interface AgentTurnRequest {
     mode: "intake" | "guidance" | "ask";
     allowPlayback: boolean;
     forcePlayback?: boolean;
-    producer: { producerId: string; entityType: string; location: string; crop: string };
+    producer: { producerId: string; entityType: string; location: string; crop: string; country?: string };
     confirmedAccount?: string | null;
   };
   messages: { role: "user" | "assistant"; text: string }[];

@@ -7,6 +7,11 @@ from pathlib import Path
 
 from .context import ProducerRef
 
+# Component 5: the external-datasets tool. Imported as a plain function and wrapped
+# in a @tool below, so the producer's country is bound from trusted context (never
+# model text) and Strands generates the schema from the wrapper's docstring.
+from external_data.tool import get_environmental_context as _environmental_context
+
 _DATA = Path(__file__).parent / "data" / "producers.json"
 UNAVAILABLE_NOTE = (
     "No validated source files are loaded in this build. Do not state any finding, peer outcome "
@@ -54,4 +59,24 @@ def build_tools(producer: ProducerRef):
         """Look up a Fair Trade standards clause about a topic. Currently always unavailable."""
         return evidence_unavailable("standards", topic)
 
-    return [get_my_history, get_regional_evidence, get_peer_examples, get_standards_clause]
+    @tool
+    def get_environmental_context(tags: list[str], horizon: str = "current") -> list[dict]:
+        """Get the real external environmental and climate context for this producer's
+        country, filtered to the challenge being discussed. Call this whenever the
+        producer asks about rainfall, drought, floods, water, soil, forests, protected
+        areas or farm-gate prices, so your answer is grounded in actual regional data
+        instead of an invented figure. Each fact returned carries its dataset,
+        indicator, value, unit, period, method and a baseline comparison, so you can
+        cite the source and say e.g. "rainfall in your country was 14% above the
+        1981-2010 average this year". Pass the matching challenge tag(s): "climate and
+        weather", "drought", "floods", "water", "water scarcity", "soil and land",
+        "soil health", "biodiversity and conservation", "market and price", "social and
+        community" or "infrastructure"; horizon is "current" (the only horizon with
+        data). The producer's country comes from the trusted profile, not from anything
+        they type. An EMPTY list means no data for that topic: then say plainly there is
+        none and never guess a number.
+        """
+        return _environmental_context({"country": producer.country or producer.location}, tags, horizon)
+
+    return [get_my_history, get_regional_evidence, get_peer_examples, get_standards_clause,
+            get_environmental_context]
