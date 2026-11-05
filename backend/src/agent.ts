@@ -5,7 +5,7 @@ export interface AgentTurnRequest {
   context: {
     conversationId: string;
     language: Language;
-    mode: "intake" | "guidance" | "ask";
+    mode: "intake" | "guidance" | "ask" | "followup";
     allowPlayback: boolean;
     forcePlayback?: boolean;
     producer: { producerId: string; entityType: string; location: string; crop: string; country?: string };

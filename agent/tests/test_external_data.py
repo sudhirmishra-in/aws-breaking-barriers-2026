@@ -100,3 +100,15 @@ def test_external_data_is_context_never_proof():
     ctx = TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": "intake", "allowPlayback": False,
                                          "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee"}})
     assert "Never say it confirms, proves or explains" in sp(ctx) and "reference-point" in sp(ctx)
+
+
+def test_followup_mode_asks_what_was_missing_never_invents_and_stays_an_answer():
+    from exchange.runtime import handle_turn
+    from exchange.context import TurnOutput
+    ctx = {"conversationId": "c", "language": "es", "mode": "followup", "allowPlayback": False, "confirmedAccount": "late rain",
+           "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee", "country": "Colombia"}}
+    p = system_prompt(TrustedContext.model_validate(ctx))
+    assert "only partly helpful or not helpful" in p and "ONE short question" in p and "never guess" in p and "Spanish" in p
+    out = TurnOutput(reply="r", phase="guidance", summary_en="x", summary_original="y", challenge_tags=["water"])
+    res = handle_turn({"context": ctx, "messages": [{"role": "user", "text": "hola"}]}, lambda req: (lambda prompt: out), lambda t: [])
+    assert res["phase"] == "answer" and res["playbackSummary"] is None

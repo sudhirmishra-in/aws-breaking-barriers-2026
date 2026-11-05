@@ -1,7 +1,7 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { ZodError } from "zod";
 import { AgentCoreClient } from "./agent";
-import { CorrectionCreateReq, CorrectionDecisionReq, FinalizeReq, FeedbackReq, IssueEventReq, IssueLinkReq, SetLanguageReq, PeerQuery, ReconfirmReq, SharingUpdateReq, AskReq, ReviewPatchReq, ReviewProducersQuery, TranscribeReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
+import { CorrectionCreateReq, CorrectionDecisionReq, FinalizeReq, FeedbackReq, FollowupReq, IssueEventReq, IssueLinkReq, SetLanguageReq, PeerQuery, ReconfirmReq, SharingUpdateReq, AskReq, ReviewPatchReq, ReviewProducersQuery, TranscribeReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
 import { DdbStore } from "./ddbStore";
 import { BedrockAgentRuntimeClient, RetrieveCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 import { KnowledgeBaseRetriever, LocalProjectRetriever, type ProjectRetriever } from "./projectEvidence";
@@ -88,6 +88,7 @@ export async function route(svc: ServiceV2, p: Principal, method: string, path: 
     if (r1 && method === "POST" && r2 === "finalize") { const q = FinalizeReq.parse(body); return svc.finalize(p, r1, q); }
     if (r1 && method === "POST" && r2 === "language") { const q = SetLanguageReq.parse(body); return svc.setConversationLanguage(p, r1, q.requestId, q.language); }
     if (r1 && method === "POST" && r2 === "issue-link") { const q = IssueLinkReq.parse(body); return svc.linkIssue(p, r1, q); }
+    if (r1 && method === "POST" && r2 === "followup") { const q = FollowupReq.parse(body); return svc.followup(p, r1, q.requestId, q.text); }
     if (r1 && method === "POST" && r2 === "feedback") return svc.feedback(p, r1, FeedbackReq.parse(body));
     if (r1 && method === "POST" && r2 === "sharing") return svc.updateSharing(p, r1, SharingUpdateReq.parse(body));
     if (r1 && method === "POST" && r2 === "reconfirm") return svc.reconfirm(p, r1, ReconfirmReq.parse(body));

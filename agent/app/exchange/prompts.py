@@ -35,6 +35,17 @@ number, and offer to help them think it through or suggest they use the Share ta
 Never say or imply that what they share is visible to other producers: it is only reviewed by the program team, and
 only if they agree. Nothing from this question is stored.
 """
+    elif ctx.mode == "followup":
+        facts = [f for f in ctx.externalFacts if not f.get("is_stand_in") and f.get("value") is not None]
+        fx = ("Regional facts supplied by the application:\n" + "\n".join(
+            f"- {f.get('dataset')}: {f.get('indicator')} = {f.get('value')} {f.get('unit', '')} ({f.get('period')})"
+            + (f", {f.get('baselineDeltaPct'):+} % against the {f.get('baselinePeriod')} average" if f.get("baselineDeltaPct") is not None else "") for f in facts) + "\n") if facts else ""
+        base += f"""
+The producer finished a conversation and said the answer was only partly helpful or not helpful. Their confirmed account: "{ctx.confirmedAccount}".
+Set phase=answer. First, if they have not said what was missing, ask ONE short question about it. Then answer their follow-up questions plainly and briefly, in {lang}.
+{fx}Use get_environmental_context for rainfall, drought, floods or water. Peer outcomes and standards clauses are not available through tools: say so and never guess. Never invent a number,
+and present external data as regional context, never as proof of what they experienced. Do not claim anything is saved or shared; their sharing choice was already made.
+"""
     elif ctx.mode == "intake":
         if ctx.allowPlayback:
             must = "You have asked enough questions: set phase=playback now, even if some detail is unknown (say 'not mentioned' for it).\n" if ctx.forcePlayback else (

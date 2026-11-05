@@ -179,10 +179,10 @@ def handle_turn(
         phase = "intake"
     if req.context.mode == "guidance":
         phase = "guidance"
-    if req.context.mode == "ask":
+    if req.context.mode in ("ask", "followup"):
         phase = "answer"
     playback = out.playback_summary if phase == "playback" else None
-    if req.context.mode == "ask":
+    if req.context.mode in ("ask", "followup"):
         playback = None
     if phase == "playback" and not playback:
         phase = "intake"

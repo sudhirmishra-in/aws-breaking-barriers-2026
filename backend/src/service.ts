@@ -216,7 +216,7 @@ export class Service {
     }
   }
 
-  private async runAgent(c: Conversation, profile: ProducerProfile, mode: "intake" | "guidance", history: Message[], newUser: string, allowPlayback: boolean, p: Principal): Promise<AgentTurnResponse> {
+  protected async runAgent(c: Conversation, profile: ProducerProfile, mode: "intake" | "guidance" | "followup", history: Message[], newUser: string, allowPlayback: boolean, p: Principal): Promise<AgentTurnResponse> {
     const t0 = Date.now();
     try {
       const out = await this.d.agent.turn({
@@ -226,7 +226,7 @@ export class Service {
           producer: { producerId: profile.producerId, entityType: profile.entityType, location: profile.location, crop: profile.crop, country: await this.countryOf(profile) },
           confirmedAccount: c.confirmedAccount ?? null,
           // The application looks up the producer's own country's cached facts; the closing turn cites them. Stand-ins (failed fetches) never reach the model.
-          ...(mode === "guidance" ? { externalFacts: await this.factsForAgent(profile) } : {}),
+          ...(mode === "guidance" || mode === "followup" ? { externalFacts: await this.factsForAgent(profile) } : {}),
         },
         messages: [...history.map((m) => ({ role: m.role, text: m.text })), { role: "user" as const, text: newUser }],
       }, runtimeSessionIdFor(c.conversationId), p.sub);

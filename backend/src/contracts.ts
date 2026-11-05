@@ -85,6 +85,7 @@ export const ISSUE_EVENT_TYPES = ["action_planned", "action", "outcome", "resolu
 export const IssueEventReq = z.object({ requestId: RequestId, type: z.enum(ISSUE_EVENT_TYPES), text: z.string().trim().min(1).max(500).optional(), supersedes: z.string().min(3).max(120).optional() }).strict()
   .refine((v) => v.type === "resolution_confirmed" || !!v.text, { message: "text required" });
 export const IssueLinkReq = z.object({ requestId: RequestId, issueId: z.string().min(3).max(160).optional(), same: z.boolean() }).strict().refine((v) => !v.same || !!v.issueId, { message: "issueId required to link" });
+export const FollowupReq = z.object({ requestId: RequestId, text: z.string().trim().min(1).max(1500) }).strict();
 export const ReconfirmReq = z.object({ requestId: RequestId, summaryHash: z.string().length(64), accept: z.boolean() }).strict();
 export const PeerQuery = z.object({ scope: z.enum(["organization", "other", "all"]).optional() }).strict();
 

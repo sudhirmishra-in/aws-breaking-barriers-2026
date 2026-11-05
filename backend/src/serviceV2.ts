@@ -24,6 +24,7 @@ const flat = (v: string | string[] | null | undefined): string | null => (Array.
 const sha = (...parts: string[]) => createHash("sha256").update(JSON.stringify(parts)).digest("hex");
 const OPEN_CORRECTION: CorrectionRecord["status"][] = ["pending", "accepted_awaiting_source_update"];
 
+export const MAX_FOLLOWUP_TURNS = 12;
 export const DELETION_NOTE = "Publication is withdrawn now and no new answers will use this case. FTUSA will review deletion of the retained record. Answers already given are not recalled.";
 export const VISIBILITY_NOTE = "You see the summaries of colleagues in your organization, whatever they chose to share, but never their conversations. Producers in other organizations appear only if they chose to share and FTUSA approved. Names appear only when the producer allowed it.";
 
@@ -404,6 +405,28 @@ export class ServiceV2 extends Service {
     await this.d.store.updateOutcome(o.outcomeId, null, { feedback: { helpful: req.helpful, ...(req.comment ? { comment: req.comment } : {}), at: this.iso() } });
     this.log({ event: "feedback", helpful: req.helpful });
     return { helpful: req.helpful };
+  }
+
+  /**
+   * Follow-up questions after feedback "partly" or "no". The transcript keeps growing (stage "feedback") and stays under the same retention. Only the owner, only after the
+   * feedback was recorded, and bounded so it cannot run forever. "yes" ends the conversation.
+   */
+  async followup(p: Principal, id: string, requestId: string, text: string) {
+    return this.guarded(p, id, requestId, async (c) => {
+      if (c.status !== "completed") throw conflict("wrong_state", "Follow-up questions are available after the conversation is finished.");
+      const o = await this.d.store.getOutcome(`rec-${id}`);
+      if (!o || (o.feedback?.helpful !== "partly" && o.feedback?.helpful !== "no")) throw conflict("followup_not_open", "Tell us the answer was only partly helpful, or not helpful, to ask follow-up questions.");
+      const history = await this.d.store.listMessages(id);
+      const turns = history.filter((m) => m.stage === "feedback" && m.role === "user").length;
+      if (turns >= MAX_FOLLOWUP_TURNS) throw conflict("followup_limit", "You have reached the follow-up limit for this conversation. Please start a new one.");
+      const profile = await this.profileFor(p);
+      const prior = history.filter((m) => m.stage === "feedback");
+      const r = await this.runAgent({ ...c, confirmedAccount: confirmedSummary(o).en }, profile, "followup", prior, text, false, p);
+      const count = await this.append(c, [{ role: "user", text, stage: "feedback" }, { role: "assistant", text: r.reply, stage: "feedback" }]);
+      const saved = await this.save(c, { messageCount: count, userTurns: c.userTurns + 1, piiFlag: c.piiFlag || r.piiFlag, piiTypes: [...new Set([...c.piiTypes, ...r.piiTypes])], expiresAt: c.expiresAt });
+      await this.d.store.retainMessages(id, c.expiresAt); // new messages must expire with the conversation (90 days), not with the default 8-day message TTL
+      return this.view(saved);
+    });
   }
 
   /** Evidence for one of the caller's own finalized conversations. Missing evidence is reported as a limitation, never invented. */

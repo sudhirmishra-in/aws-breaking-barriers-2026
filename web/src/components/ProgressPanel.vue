@@ -6,12 +6,14 @@ import { state } from "../session";
 import { t } from "../lib/i18n";
 import type { Stage } from "../types";
 
-const props = defineProps<{ stage: Stage; outcome: "saved" | "declined" | null; reached: Stage[]; variant: "panel" | "inline" }>();
+const props = defineProps<{ stage: Stage; outcome: "saved" | "declined" | null; reached: Stage[]; variant: "panel" | "inline"; feedback?: "yes" | "partly" | "no" | null }>();
 const emit = defineEmits<{ jump: [stage: Stage] }>();
 const s = computed(() => t(state.ui));
 const ORDER: Stage[] = ["intake", "playback", "response", "consent", "feedback"];
 const current = computed(() => ORDER.indexOf(props.stage));
-const isDone = (i: number) => (props.outcome ? i <= 3 : i < current.value);
+// "yes" completes the last step and ends the timeline; "partly" or "no" keeps it open for follow-up questions.
+const isDone = (i: number) => (props.outcome ? i <= 3 || (i === 4 && props.feedback === "yes") : i < current.value);
+const isNow = (i: number) => (props.outcome ? i === 4 && (props.feedback === "partly" || props.feedback === "no") : i === current.value);
 const stepLabel = computed(() => s.value.stepOf.replace("{n}", String(current.value + 1)));
 const expanded = ref(false);
 </script>
@@ -30,14 +32,14 @@ const expanded = ref(false);
         <span v-else class="pp-step">{{ stepLabel }}</span>
       </div>
       <ol class="pp-list">
-        <li v-for="(st, i) in ORDER" :key="st" :class="{ 'pp-done': isDone(i), 'pp-now': !outcome && i === current }" :aria-current="!outcome && i === current ? 'step' : undefined">
+        <li v-for="(st, i) in ORDER" :key="st" :class="{ 'pp-done': isDone(i), 'pp-now': isNow(i) }" :aria-current="isNow(i) ? 'step' : undefined">
           <span class="pp-mark" aria-hidden="true"><Check v-if="isDone(i)" :size="13" :stroke-width="3" /><template v-else>{{ i + 1 }}</template></span>
           <div class="pp-body">
             <button v-if="isDone(i) && reached.includes(st)" type="button" class="pp-name link-btn" :title="s.jumpTo" @click="emit('jump', st)">{{ s.stageNames[st] }}</button>
             <span v-else class="pp-name">{{ s.stageNames[st] }}</span>
             <span class="pp-desc">{{ s.stageDesc[st] }}</span>
-            <span v-if="!outcome && i === current" class="pp-here">{{ s.youAreHere }}</span>
-            <span v-if="st === 'feedback'" class="pp-desc pp-muted">{{ s.notYet }}</span>
+            <span v-if="isNow(i)" class="pp-here">{{ s.youAreHere }}</span>
+            <span v-if="st === 'feedback' && !feedback" class="pp-desc pp-muted">{{ s.notYet }}</span>
           </div>
         </li>
       </ol>

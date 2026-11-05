@@ -43,6 +43,7 @@ export const api = {
   linkIssue: (conversationId: string, same: boolean, issueId?: string) => call<IssueContext>("POST", `/conversations/${conversationId}/issue-link`, { requestId: newRequestId(), same, ...(issueId ? { issueId } : {}) }),
   addIssueEvent: (issueId: string, type: "action_planned" | "action" | "outcome" | "resolution_confirmed" | "recurrence", text?: string) =>
     call<IssueDto>("POST", `/issues/${encodeURIComponent(issueId)}/events`, { requestId: newRequestId(), type, ...(text ? { text } : {}) }),
+  followup: (id: string, requestId: string, text: string) => call<ConversationView>("POST", `/conversations/${id}/followup`, { requestId, text }),
   producerInfo: () => call<ProducerInfo>("GET", "/producer-info"),
   submitCorrection: (requestId: string, changes: { field: InfoKey; proposed: string }[], explanation?: string) => call<CorrectionDto>("POST", "/corrections", { requestId, changes, ...(explanation ? { explanation } : {}) }),
   peers: (scope: "organization" | "other" | "all") => call<{ items: PeerCase[]; visibility: string }>("GET", `/peers/summaries?scope=${scope}`),

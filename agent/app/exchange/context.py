@@ -7,7 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 Language = Literal["en", "es", "fr"]
-Mode = Literal["intake", "guidance", "ask"]
+Mode = Literal["intake", "guidance", "ask", "followup"]
 ChallengeTag = Literal[
     "climate_weather", "water", "soil_land", "market_price", "labor_migration", "financial_capital",
     "education", "health", "infrastructure", "biodiversity_conservation", "social_community",

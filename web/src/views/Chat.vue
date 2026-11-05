@@ -43,7 +43,13 @@ const box = ref<HTMLTextAreaElement | null>(null);
 
 const STAGE_OF: Record<ConversationDto["workflow"], Stage> = { intake: "intake", playback_pending: "playback", guidance_pending: "response", consent_pending: "consent", closed: "consent" };
 const closed = computed(() => conv.value?.workflow === "closed");
-const stage = computed<Stage>(() => STAGE_OF[conv.value?.workflow ?? "intake"]);
+const feedback = computed(() => (view.value?.record?.feedback?.helpful ?? null) as "yes" | "partly" | "no" | null);
+const stage = computed<Stage>(() => (closed.value && feedback.value ? "feedback" : STAGE_OF[conv.value?.workflow ?? "intake"]));
+// Follow-up questions open after "partly" or "no"; "yes" ends the conversation.
+const followupOpen = computed(() => conv.value?.status === "completed" && (feedback.value === "partly" || feedback.value === "no"));
+const mainMsgs = computed(() => messages.value.filter((m) => m.stage !== "feedback"));
+const followMsgs = computed(() => messages.value.filter((m) => m.stage === "feedback"));
+const followDraft = ref("");
 const outcome = computed(() => (!closed.value ? null : conv.value?.status === "completed" ? "saved" : "declined") as "saved" | "declined" | null);
 const stopped = computed(() => conv.value?.status === "stopped");
 const view = ref<ConversationView | null>(null);
@@ -144,6 +150,13 @@ async function send() {
 }
 // Enter sends, Shift+Enter adds a line; Enter while composing accented or non-Latin text must not send (spec CHAT-20).
 function onEnter(e: KeyboardEvent) { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); void send(); }
+async function sendFollowup() {
+  const text = followDraft.value.trim(); if (!text || !conv.value || busy.value) return;
+  const id = conv.value.conversationId; const before = followDraft.value; followDraft.value = "";
+  messages.value = [...messages.value, { seq: -1, role: "user", text, at: "", stage: "feedback" }]; scrollDown(); // shown at once; the server response replaces the list
+  if (!(await run((rid) => api.followup(id, rid, text)))) { messages.value = messages.value.filter((m) => m.seq !== -1); followDraft.value = before; }
+}
+function onFollowEnter(e: KeyboardEvent) { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); void sendFollowup(); }
 function addDictation(text: string) { draft.value = (draft.value.trim() + " " + text).trim(); nextTick(() => box.value?.focus()); }
 function pick(text: string) { draft.value = text; nextTick(() => box.value?.focus()); }
 const confirm = async () => { await syncLanguage(); return run((rid) => api.playback(conv.value!.conversationId, rid, { decision: "confirm" })); };
@@ -192,7 +205,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
             <button type="button" class="btn sm" @click="endNow">{{ s.end }}</button><button type="button" class="btn sm" @click="confirmEnd = false">{{ s.cancel }}</button></span>
         </template>
       </header>
-      <ProgressPanel v-if="conv" class="only-narrow" variant="inline" :stage="stage" :outcome="outcome" :reached="reached" @jump="jump" />
+      <ProgressPanel v-if="conv" class="only-narrow" variant="inline" :stage="stage" :outcome="outcome" :reached="reached" :feedback="feedback" @jump="jump" />
 
       <div v-if="loading" class="chat-body" role="status"><span class="pill">…</span></div>
 
@@ -221,9 +234,9 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
       <template v-else>
         <div v-if="view?.referencedCaseCard" class="banner info" role="note" style="margin:.5rem"><b>{{ L(state.ui).peer.askingAbout }}</b><br />{{ view.referencedCaseCard.challenge }}<span v-if="view.referencedCaseCard.action"> · {{ view.referencedCaseCard.action }}</span></div>
         <div ref="log" class="log chat-body" role="log" aria-live="polite" aria-label="Messages">
-          <template v-for="(m, i) in messages" :key="m.seq">
-            <div v-if="m.role === 'user'" class="bubble-u fade-up" :data-stage="m.stage !== messages[i - 1]?.stage ? m.stage : undefined">{{ m.text }}</div>
-            <div v-else class="row-a fade-up" :data-stage="m.stage !== messages[i - 1]?.stage ? m.stage : undefined">
+          <template v-for="(m, i) in mainMsgs" :key="m.seq">
+            <div v-if="m.role === 'user'" class="bubble-u fade-up" :data-stage="m.stage !== mainMsgs[i - 1]?.stage ? m.stage : undefined">{{ m.text }}</div>
+            <div v-else class="row-a fade-up" :data-stage="m.stage !== mainMsgs[i - 1]?.stage ? m.stage : undefined">
               <span class="av brand-gradient"><Bot :size="16" aria-hidden="true" /><span class="sr">{{ s.assistant }}</span></span>
               <div style="min-width:0;flex:1">
                 <div class="md" v-html="renderMarkdown(m.text)" />
@@ -286,8 +299,20 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
             <div><button type="button" class="btn primary" @click="newConversation"><Plus :size="16" aria-hidden="true" />{{ s.newConversation }}</button></div>
           </div>
           <InsightsPanel v-if="closed && outcome === 'saved' && view" :view="view" @changed="reload" @ask="askAbout" />
+          <template v-for="m in followMsgs" :key="m.seq">
+            <div v-if="m.role === 'user'" class="bubble-u fade-up">{{ m.text }}</div>
+            <div v-else class="row-a fade-up"><span class="av brand-gradient"><Bot :size="16" aria-hidden="true" /><span class="sr">{{ s.assistant }}</span></span><div style="min-width:0;flex:1"><div class="md" v-html="renderMarkdown(m.text)" /></div></div>
+          </template>
         </div>
 
+        <div v-if="followupOpen" class="dock">
+          <p class="hint" style="margin:0 0 .4rem">{{ L(state.ui).ins.fbAsk }}</p>
+          <form class="composer" @submit.prevent="sendFollowup">
+            <label for="fmsg" class="sr">{{ s.messageLabel }}</label>
+            <textarea id="fmsg" v-model="followDraft" rows="1" maxlength="1500" :placeholder="s.placeholder" :disabled="busy" @keydown.enter.exact="onFollowEnter" />
+            <button class="send" type="submit" :disabled="busy || !followDraft.trim()" :aria-label="s.send"><SendHorizontal :size="18" aria-hidden="true" /></button>
+          </form>
+        </div>
         <div v-if="conv.workflow === 'intake'" class="dock">
           <div v-if="showChips" class="fade-up"><p style="margin:0 0 .4rem;font-size:.8rem;color:var(--muted)">{{ s.chipsTitle }}</p>
             <div class="chips"><button v-for="c in s.chips" :key="c" class="chip" type="button" @click="pick(c)">{{ c }}</button></div></div>
@@ -302,7 +327,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
     </section>
 
     <aside v-if="conv" class="chat-progress only-wide" :aria-label="s.progressTitle">
-      <ProgressPanel variant="panel" :stage="stage" :outcome="outcome" :reached="reached" @jump="jump" />
+      <ProgressPanel variant="panel" :stage="stage" :outcome="outcome" :reached="reached" :feedback="feedback" @jump="jump" />
     </aside>
   </div>
 </template>

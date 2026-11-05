@@ -60,7 +60,8 @@ const deletion = () => act(async () => { const r = await api.requestDeletion(pro
       <p v-if="!curated.length" class="hint">{{ l.ins.noCurated }}</p></div>
     <PeerCases scope="all" :title="l.ins.others" :related-to="view.conversation.conversationId" @ask="(id) => emit('ask', id)" />
     <div v-if="rec" class="card" role="group" aria-label="Feedback"><h3>{{ l.ins.helpful }}</h3>
-      <p v-if="rec.feedback" class="hint" role="status">{{ l.ins.thanksFb.replace("{a}", { yes: l.ins.yes, partly: l.ins.partly, no: l.ins.no }[rec.feedback.helpful]) }}</p>
+      <p v-if="rec.feedback?.helpful === 'yes'" class="hint" role="status">{{ l.ins.fbYes }}</p>
+      <p v-else-if="rec.feedback" class="hint" role="status">{{ l.ins.fbMore }}</p>
       <div class="row"><button v-for="o in [['yes', l.ins.yes], ['partly', l.ins.partly], ['no', l.ins.no]] as const" :key="o[0]" class="btn sm" :class="{ primary: rec.feedback?.helpful === o[0] }" :aria-pressed="rec.feedback?.helpful === o[0]" :disabled="fbBusy" @click="sendFeedback(o[0])">{{ o[1] }}</button></div></div>
   </section>
 </template>

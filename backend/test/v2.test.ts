@@ -337,6 +337,27 @@ describe("agent matching", () => {
   });
 });
 
+describe("follow-up after feedback", () => {
+  it("opens only after 'partly' or 'no'; 'yes' ends it; messages stay in the transcript under the same retention; bounded; owner only", async () => {
+    const { svc, store } = setup(); const id = await finalized(svc, ana, "ftusa_only");
+    expect(await code(svc.followup(ana, id, rid(), "q"))).toBe("followup_not_open");                 // no feedback yet
+    await svc.feedback(ana, id, { helpful: "yes" });
+    expect(await code(svc.followup(ana, id, rid(), "q"))).toBe("followup_not_open");                 // yes: finished
+    await svc.feedback(ana, id, { helpful: "partly" });
+    const r = rid(); const v = await svc.followup(ana, id, r, "What about prices?");
+    expect(v.messages.slice(-2).map((m) => [m.role, m.stage])).toEqual([["user", "feedback"], ["assistant", "feedback"]]);
+    expect((await svc.followup(ana, id, r, "What about prices?")).messages.length).toBe(v.messages.length);   // retry: no duplicate turn
+    expect(await code(svc.followup(mateo, id, rid(), "q"))).toBe("not_found");
+    for (let i = 0; i < 20 && (await code(svc.followup(ana, id, rid(), "more"))) === "ok"; i++);
+    expect(await code(svc.followup(ana, id, rid(), "one more"))).toBe("followup_limit");
+    expect((await store.getConversation(id))!.status).toBe("completed");
+  });
+  it("cannot start a follow-up on an active conversation", async () => {
+    const { svc } = setup(); const id = (await svc.create(ana, undefined, rid())).conversation.conversationId;
+    expect(await code(svc.followup(ana, id, rid(), "q"))).toBe("wrong_state");
+  });
+});
+
 describe("feedback", () => {
   it("owner records helpfulness (replaceable); reviewers see it; others cannot", async () => {
     const { svc } = setup(); const id = await finalized(svc, ana, "ftusa_only");
