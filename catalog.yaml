@@ -34,6 +34,98 @@ datasets:
       theme:             the dataset theme (climate, water, soil_land, ...)
       retrieved_at:      when the fact was ingested
 
+  # ---- Component 3: FTUSA producer records. Read by the API Lambda, never by the agent. The Lambda
+  # resolves the caller's FTUSA account server-side (ftusa_producer_map.json) and never returns
+  # account_sk. Built by ftusa-data/export_lambda.py; tables and rules in ftusa-data/out/DATA_DICTIONARY.md.
+  - name: producer_accounts
+    grain: one row per Fair Trade certified organization (account_sk)
+    description: >-
+      FTUSA producer accounts, profile only: entity type, crops, country and region,
+      applicable standard and certification status. Organization names are fictional.
+    answers: >-
+      what this producer grows, where it is, its entity type and which standard applies —
+      e.g. "a coffee cooperative in Huila, Colombia, under the Agricultural Production Standard"
+    source_store: Lambda bundle backend/src/data/ftusa/ftusa_producers.json (read by backend/src/ftusaRecords.ts)
+    fields:
+      accountSk:           join key, internal only (never returned by the API)
+      displayId:           stable public id (PRD-<ISO3>-<n>)
+      orgNameFictional:    fictional organization name
+      entityType:          cooperative / smallholder / estate / processing_operation / unknown
+      crops:               all crops (primaryCrop is the first)
+      country:             country name (countryIso3 alongside)
+      region:              first-level region (regionId alongside)
+      primaryLanguage:     en / es / fr
+      applicableStandard:  APS (farms) or FPS (processing operations)
+      certificationStatus: recorded status (Certified, Authorized, Suspended, ...)
+      projectCount:        number of Premium projects
+      surveyYears:         years with a survey summary
+
+  - name: premium_projects
+    grain: one row per Premium-funded project
+    description: >-
+      Projects an organization funded with Fair Trade Premium: what was planned, why, and
+      the recorded status. The source records no measured outcome.
+    answers: >-
+      what this producer (or comparable producers) did with Premium funds for a challenge —
+      e.g. "2021: rainwater tanks, completed; outcome not reported"
+    source_store: Lambda bundle backend/src/data/ftusa/ftusa_projects.json (read by backend/src/ftusaRecords.ts)
+    fields:
+      projectId:      stable id derived from source fields (PRJ-...)
+      accountSk:      join key to producer_accounts, internal only
+      name:           project name
+      description:    what the project does
+      primaryGoal:    stated goal
+      status:         completed / in_progress / in_planning (recorded, not an outcome)
+      startDate:      start date (startYear alongside); endDate when recorded
+      challengeTags:  1-3 of the 11 challenge tags (climate_weather, water, ...)
+      subcategory:    FTUSA project category
+      peerEligible:   may be shown to other producers (no PII flag, usable text)
+      contentHash:    hash of the project text, for citations
+
+  - name: survey_summaries
+    grain: one row per producer per survey year, aggregated (never row-level answers)
+    description: >-
+      Household survey results aggregated per producer and year: shares with their
+      denominators, and top choices. Labels are provisional (no survey codebook).
+    answers: >-
+      what this producer's members reported in a given year —
+      e.g. "2023, 149 responses: 10.7% reported a lower harvest"
+    source_store: Lambda bundle backend/src/data/ftusa/ftusa_surveys.json (read by backend/src/ftusaRecords.ts)
+    fields:
+      summaryId:    citation id (SRVSUM-...)
+      accountSk:    join key to producer_accounts, internal only
+      surveyYear:   survey year
+      nResponses:   responses in this summary
+      metrics:      indicator -> {pct, n}; pct is null when n is 0
+      topChoices:   question -> [{label, pct}] for multiple-choice questions
+
+  # ---- Component 4: Fair Trade USA standards. Read by the API Lambda (backend/src/standards.ts). Scope is
+  # decided in code from the caller's own record: APS for farms, FPS for processing operations, plus the
+  # amendment variants that apply. A clause states a requirement; it never says whether a producer complies.
+  - name: standard_clauses
+    grain: one row per standard clause (base clause or amendment variant)
+    description: >-
+      Fair Trade USA Agricultural Production Standard (APS) and Factory Production
+      Standard (FPS) criteria, parsed from the published workbooks. APS text in English,
+      Spanish and French; FPS in English.
+    answers: >-
+      what the applicable standard requires on a topic, with the clause id to cite —
+      e.g. "APS 1.1.2.b: the Premium Committee is elected by the members"
+    source_store: Lambda bundle backend/src/data/ftusa/standard_clauses.json (read by backend/src/standards.ts)
+    fields:
+      clauseId:     citation id (<standard>-<code>, e.g. APS-1.1.2.b, APS-4.2.2.b_vEUDR)
+      standard:     APS or FPS
+      module:       module name (subModule alongside)
+      objective:    the objective the clause serves
+      question:     requirement text by language {en, es?, fr?}
+      intent:       explanation of the requirement by language
+      appliesTo:    entity types the clause applies to
+      isVariant:    true for an amendment variant
+      showFor:      amendments that switch a variant on
+      hideFor:      amendments that hide a base clause
+      timeline:     when the clause applies (e.g. Year 0, Year 3)
+      tags:         challenge tags derived from the text (keyword rules, unreviewed)
+
 # Theme -> challenge-tag map (Component 5 section 4). Data-driven so the model
 # never has to know which dataset backs which tag. The tool maps a conversation
 # tag to the theme(s) it supports, then returns only matching facts.

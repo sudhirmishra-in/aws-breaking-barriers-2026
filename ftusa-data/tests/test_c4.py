@@ -50,11 +50,14 @@ def test_matches_main_placeholder_keys():
     pydantic = pytest.importorskip("pydantic")  # noqa: F841
     if not MAIN_TOOLS.exists():
         pytest.skip("agent/ not in this checkout")
-    sys.path.insert(0, str(MAIN_TOOLS.parents[1]))
+    roots = [str(MAIN_TOOLS.parents[1]), str(ROOT.parent)]  # agent/app, and the repo root for external_data (C5)
+    sys.path[:0] = roots
     try:
         from exchange.tools import evidence_unavailable
+    except ModuleNotFoundError as e:
+        pytest.skip(f"agent tools not importable here: {e}")
     finally:
-        sys.path.pop(0)
+        del sys.path[:len(roots)]
     main = evidence_unavailable("standards", "x")
     ours = call(local_standards_access(CLAUSES), COOP_COFFEE, "")
     assert ours["status"] == "unavailable" and set(main) <= set(ours) and ours["kind"] == main["kind"]

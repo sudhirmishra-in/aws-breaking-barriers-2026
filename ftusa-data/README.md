@@ -65,7 +65,7 @@ Implements `docs/COMPONENT_3_DATA.md` v2.0. It runs on the output of the pipelin
 python -m ftusa_data.run --raw <ftusa files> --out out    # Stage A
 python -m c3.smoke --backend memory                        # call all four tools locally
 python -m c3.load --tables out/tables --dry-run            # Stage B without AWS: build + validate payloads
-pytest -q                                                  # 54 pass, 11 skip without FTUSA_RAW
+pytest -q                                                  # Python: 59 pass, 13 skip without FTUSA_RAW / boto3
 ```
 
 | File | Role | Tested here |
@@ -80,40 +80,17 @@ pytest -q                                                  # 54 pass, 11 skip wi
 | `load.py` | Stage B: create tables/index, upsert, embed, stale sweep, S3 + Athena; `--dry-run` | dry-run yes, AWS **no** |
 | `smoke.py` | one call per tool against `memory` or `aws` | memory yes |
 
-## Wiring into the agent (C2)
+## Serving: the API Lambda reads the data
 
-This branch ships plain functions whose names and model arguments match
-main's tools; the agent wraps them in `build_tools(producer)` and binds the trusted `ProducerRef` by closure.
-`agent/` is not changed on this branch. `tests/test_agent_contract.py` reads main's `build_tools` with AST and
-fails if a name, argument list or result key drifts.
+C3 and C4 are served by the API Lambda, not by agent tools: `python export_lambda.py` writes JSON bundles to
+`backend/src/data/ftusa/`, read by `backend/src/ftusaRecords.ts` (producer records) and
+`backend/src/standards.ts` (standards clauses). Scope is decided in backend code from the caller's server-side
+record. The datasets are described in the repository's `catalog.yaml`. Details, wiring and the list of missing
+data: [docs/LAMBDA_DATA.md](docs/LAMBDA_DATA.md).
 
-| main tool (model args) | function here |
-|---|---|
-| `get_my_history()` | `c3.tools.get_my_history(producer)` |
-| `get_peer_examples(topic: str)` | `c3.tools.get_peer_examples(producer, topic)` |
-| `get_standards_clause(topic: str)` | `c4.tools.get_standards_clause(producer, topic)` |
-| `get_regional_evidence(topic: str)` | not ours (Component 5) |
-
-```python
-# agent/app/exchange/tools.py, inside build_tools(producer) (to do in a separate agent PR)
-from c3.tools import get_my_history as _history, get_peer_examples as _peers
-from c4.tools import get_standards_clause as _standards
-
-@tool
-def get_peer_examples(topic: str) -> dict:
-    """<model-facing docstring>"""
-    return _peers(producer, topic)
-```
-
-Also needed in that PR: `cp -R ../ftusa-data/{c3,c4,ftusa_data} build/pkg/` plus the data files in
-`scripts/build_agent.sh`, `"../ftusa-data"` in pytest `pythonpath`, env vars (`FTUSA_C3_BACKEND`,
-`FTUSA_C3_TABLE_PREFIX`, `FTUSA_C3_VECTOR_BUCKET`, `STANDARDS_CLAUSES`, `STANDARDS_VECTOR_BUCKET`, optional
-`FTUSA_PRODUCER_MAP`), read grants on the C3 tables / vector bucket, and the prompt rules that still call peer
-examples and standards "unavailable".
-
-`ProducerRef.producerId` is used as the FTUSA `account_sk` (or mapped through `FTUSA_PRODUCER_MAP`). The app's
-demo producers (`SYN-P-00x`) are not in the FTUSA data: they get an empty history and peer examples matched on
-crop / entity type.
+The Python functions named after the agent's tools (`c3.tools.get_my_history`, `get_peer_examples`,
+`c4.tools.get_standards_clause`) stay as the reference implementation and are covered by
+`tests/test_agent_contract.py`; they are not the integration path.
 
 ## Before the first AWS run
 

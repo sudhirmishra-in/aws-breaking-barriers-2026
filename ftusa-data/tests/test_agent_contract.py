@@ -21,7 +21,7 @@ TABLES = Path(os.environ.get("C3_TABLES", ROOT / "out" / "tables"))
 CLAUSES = ROOT / "out" / "standards" / "standard_clauses.jsonl"
 OURS = {"get_my_history": c3tools.get_my_history, "get_peer_examples": c3tools.get_peer_examples,
         "get_standards_clause": c4tools.get_standards_clause}
-NOT_OURS = {"get_regional_evidence"}  # Component 5
+NOT_OURS = {"get_regional_evidence", "get_environmental_context"}  # Component 5
 DEMO = SimpleNamespace(producerId="SYN-P-001", entityType="cooperative", location="x", crop="coffee")
 
 pytestmark = pytest.mark.skipif(not MAIN_TOOLS.exists(), reason="agent/ not in this checkout")
@@ -54,11 +54,14 @@ def test_same_name_and_model_args(name):
 @pytest.fixture(scope="module")
 def main_module():
     pytest.importorskip("pydantic")
-    sys.path.insert(0, str(MAIN_TOOLS.parents[1]))
+    roots = [str(MAIN_TOOLS.parents[1]), str(ROOT.parent)]  # agent/app, and the repo root for external_data (C5)
+    sys.path[:0] = roots
     try:
         from exchange import tools
+    except ModuleNotFoundError as e:  # C5's ingest dependencies (shapely, boto3) are optional here
+        pytest.skip(f"agent tools not importable here: {e}")
     finally:
-        sys.path.pop(0)
+        del sys.path[:len(roots)]
     return tools
 
 

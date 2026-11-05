@@ -40,12 +40,11 @@ python -m c4.load --clauses out/standards/standard_clauses.jsonl --region us-eas
   --vector-bucket ftusa-c3-vectors --create          # NOT RUN in the build environment
 ```
 
-## Wiring into main (not done on this branch)
+## Serving (API Lambda)
 
-`c4.tools.get_standards_clause(producer, topic)` is a plain function. In
-`agent/app/exchange/tools.py::build_tools`, replace the placeholder body with
-`return _standards(producer, topic)` (import `get_standards_clause as _standards` from `c4.tools`). See the
-README "Wiring into the agent" section for packaging, env vars and prompt changes.
+The API Lambda serves the clauses: `export_lambda.py` writes `backend/src/data/ftusa/standard_clauses.json` and
+`backend/src/standards.ts` implements the same scope rules and ranking in TypeScript (`standardsFor`). See
+[LAMBDA_DATA.md](LAMBDA_DATA.md). The Python tool function below is the reference implementation.
 
 ## Tests
 
