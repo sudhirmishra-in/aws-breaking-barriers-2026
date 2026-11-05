@@ -99,7 +99,7 @@ def test_external_data_is_context_never_proof():
     from exchange.prompts import system_prompt as sp
     ctx = TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": "intake", "allowPlayback": False,
                                          "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee"}})
-    assert "Never say it confirms, proves or explains" in sp(ctx) and "reference-point" in sp(ctx) and "regional pattern, trend" in sp(ctx)
+    assert "Never say it confirms, proves or explains" in sp(ctx) and "reference-point" in sp(ctx) and "regional pattern, trend" in sp(ctx) and "region-wide" in sp(ctx)
 
 
 def test_followup_mode_asks_what_was_missing_never_invents_and_stays_an_answer():
