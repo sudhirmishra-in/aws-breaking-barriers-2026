@@ -266,11 +266,14 @@ export class Service {
       await this.d.store.setCurrent(p.sub, id, this.now());
       // Real agent opener; deterministic fallback so a model outage cannot block starting.
       let opener = OPENER[language];
-      try {
-        // A natural first turn; when asking about a colleague's case, the (already authorized, projected) case summary is part of what the producer says.
-        const r = await this.runAgent(conv, profile, "intake", [], ref?.challenge ? `${GREETING[language]}. I would like to talk about this case: ${ref.challenge}` : GREETING[language], false, p);
-        opener = r.reply;
-      } catch { this.d.metric?.("OpenerFallback"); this.log({ event: "opener_fallback", conversationId: id }); }
+      // The plain opener is deterministic and localized: a bare greeting makes the guardrail intervene (seen live), so calling the model for it only added latency and a failed call.
+      // When asking about a colleague's case, the (already authorized, projected) case summary is part of what the producer says and the model answers it.
+      if (ref?.challenge) {
+        try {
+          const r = await this.runAgent(conv, profile, "intake", [], `${GREETING[language]}. I would like to talk about this case: ${ref.challenge}`, false, p);
+          opener = r.reply;
+        } catch { this.d.metric?.("OpenerFallback"); this.log({ event: "opener_fallback", conversationId: id }); }
+      }
       const count = await this.append(conv, [{ role: "assistant", text: opener }]);
       const result = await this.view(await this.save(conv, { messageCount: count }));
       await this.d.store.putIdem(scope, requestId, result, Math.floor(this.now() / 1000) + IDEM_TTL_S);

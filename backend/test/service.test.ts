@@ -121,7 +121,9 @@ describe("conversation flow", () => {
   });
   it("Spanish flow passes language to the agent", async () => {
     const { svc, agent } = setup(); const v = await svc.create(alice, "es", rid());
-    expect(agent.calls[0].context.language).toBe("es"); expect(v.messages[0].text).toBe("respuesta");
+    expect(agent.calls).toHaveLength(0); expect(v.messages[0].text).toBe("¿Qué ha sido difícil últimamente?"); // the plain opener is deterministic and localized, no model call
+    await svc.message(alice, v.conversation.conversationId, rid(), "hola");
+    expect(agent.calls[0].context.language).toBe("es");
   });
   it("opener falls back deterministically when the agent fails", async () => {
     const { svc, agent } = setup(); agent.fail = true;
@@ -362,8 +364,8 @@ describe("French", () => {
     await svc.playback(alice, id, { requestId: rid(), decision: "confirm" }); return id;
   }
   it("passes French to the agent and uses the French opener when the agent is down", async () => {
-    const { svc, agent } = setup(); await svc.create(alice, "fr", rid());
-    expect(agent.calls[0].context.language).toBe("fr");
+    const { svc, agent } = setup(); const v = await svc.create(alice, "fr", rid());
+    await svc.message(alice, v.conversation.conversationId, rid(), "bonjour"); expect(agent.calls[0].context.language).toBe("fr");
     agent.fail = true;
     expect((await svc.create(alice, "fr", rid())).messages[0].text).toBe("Qu'est-ce qui a été difficile ces derniers temps ?");
   });
@@ -422,7 +424,7 @@ describe("read aloud", () => {
 describe("synthetic producer turns are natural phrases", () => {
   it("opens with a greeting and confirms with a plain sentence in the conversation language", async () => {
     const { svc, agent } = setup(); const id = (await svc.create(alice, "es", rid())).conversation.conversationId;
-    expect(agent.calls[0].messages.at(-1)!.text).toBe("Hola");
+    expect(agent.calls).toHaveLength(0); // no model call for the plain opener
     await svc.message(alice, id, rid(), "a"); await svc.message(alice, id, rid(), "b");
     await svc.playback(alice, id, { requestId: rid(), decision: "confirm" });
     expect(agent.calls.at(-1)!.messages.at(-1)!.text).toBe("Sí, es correcto.");

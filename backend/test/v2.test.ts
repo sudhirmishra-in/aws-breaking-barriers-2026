@@ -371,7 +371,7 @@ describe("conversation language", () => {
     const r = rid(); const v = await svc.setConversationLanguage(ana, id, r, "fr");
     expect(v.conversation.language).toBe("fr"); expect((await svc.setConversationLanguage(ana, id, r, "fr")).conversation.language).toBe("fr"); // retry safe
     await svc.message(ana, id, rid(), "bonjour");
-    expect(langs.slice(0, 2)).toEqual(["es", "es"]); expect(langs.at(-1)).toBe("fr");
+    expect(langs).toEqual(["es", "fr"]);
     expect((await store.getProfileBySub("s-ana"))!.preferredLanguage).toBe("es");
     expect(await code(svc.setConversationLanguage(mateo, id, rid(), "en"))).toBe("not_found");
     await svc.end(ana, id, rid()); expect(await code(svc.setConversationLanguage(ana, id, rid(), "en"))).toBe("conversation_closed");
@@ -387,7 +387,7 @@ describe("playback is forced after enough turns", () => {
     const svc = new ServiceV2({ store, agent });
     const id = (await svc.create(ana, undefined, rid())).conversation.conversationId;
     for (const t of ["a", "b", "c", "d"]) await svc.message(ana, id, rid(), t);
-    expect(seen.slice(1)).toEqual([false, false, false, true]); // messages 1-3 never forced (playback allowed from 2); message 4 must
+    expect(seen).toEqual([false, false, false, true]); // messages 1-3 never forced (playback allowed from 2); message 4 must
   });
 });
 
