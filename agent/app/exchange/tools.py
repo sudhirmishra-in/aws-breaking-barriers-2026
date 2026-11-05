@@ -68,7 +68,7 @@ def build_tools(producer: ProducerRef):
         instead of an invented figure. Each fact returned carries its dataset,
         indicator, value, unit, period, method and a baseline comparison, so you can
         cite the source and say e.g. "rainfall in your country was 14% above the
-        1981-2010 average this year". Pass the matching challenge tag(s): "climate and
+        1991-2020 average this year". Pass the matching challenge tag(s): "climate and
         weather", "drought", "floods", "water", "water scarcity", "soil and land",
         "soil health", "biodiversity and conservation", "market and price", "social and
         community" or "infrastructure"; horizon is "current" (the only horizon with

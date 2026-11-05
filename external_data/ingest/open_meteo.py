@@ -1,9 +1,9 @@
 """Ingest module: Open-Meteo historical precipitation (ERA5 reanalysis).
 
 Dataset theme: ``climate``. Provides country-level annual rainfall — the
-current year's total and its delta against the 1981–2010 climatology — so the
+current year's total and its delta against the 1991–2020 climatology — so the
 agent can say "in your country, rainfall was X mm in 2025, Y% below the
-1981–2010 average" (OPEN-10 → snapshot + baseline comparison).
+1991–2020 average" (OPEN-10 → snapshot + baseline comparison).
 
 Source note (honest attribution): the CHIRPS raster portal is a JS app with no
 stable scriptable GeoTIFF URLs, so per the agreed fallback this ingest uses
@@ -28,7 +28,7 @@ THEME = "climate"
 INDICATOR = "ytd_rainfall_mm"      # year-to-date total (renamed from annual_rainfall_mm)
 OLD_INDICATOR = "annual_rainfall_mm"  # superseded; cleared on re-ingest
 HORIZON = "current"
-BASELINE_PERIOD = "1981-2010 (same window)"
+BASELINE_PERIOD = "1991-2020 (same window)"
 DELAY_BUFFER_DAYS = 7  # safely past the ~5-day ERA5 archive delay
 API = "https://archive-api.open-meteo.com/v1/archive"
 UA = {"User-Agent": "ftusa-ingest/1.0 (hackathon)"}
@@ -103,10 +103,10 @@ def ingest_country(country: str, profile: str | None = None) -> dict | None:
         cur_pairs = _fetch(pt.y, pt.x, start.isoformat(), end.isoformat())
         current_total = round(sum(p for _, p in cur_pairs), 1)
 
-        # baseline: the SAME calendar window, averaged over 1981-2010 — a fair
+        # baseline: the SAME calendar window, averaged over 1991-2020 — a fair
         # comparison (a partial year vs a full-year mean would falsely look dry)
         window: dict[str, float] = {}
-        for d, p in _fetch(pt.y, pt.x, "1981-01-01", "2010-12-31"):
+        for d, p in _fetch(pt.y, pt.x, "1991-01-01", "2020-12-31"):
             if (int(d[5:7]), int(d[8:10])) <= (em, ed):
                 window[d[:4]] = window.get(d[:4], 0.0) + p
         baseline = round(sum(window.values()) / len(window), 1)
@@ -115,14 +115,14 @@ def ingest_country(country: str, profile: str | None = None) -> dict | None:
         access.put_fact(
             rk, DATASET, INDICATOR, HORIZON,
             value=current_total, unit="mm", period=period,
-            method="ERA5 reanalysis via Open-Meteo archive API; YTD at country centroid vs same-window 1981-2010 average",
+            method="ERA5 reanalysis via Open-Meteo archive API; YTD at country centroid vs same-window 1991-2020 average",
             theme=THEME, baseline_value=baseline, baseline_delta_pct=delta_pct,
             baseline_period=BASELINE_PERIOD, profile=profile,
         )
         # clear the superseded annual figure so the region holds one rainfall fact
         access.delete_fact(rk, DATASET, OLD_INDICATOR, HORIZON, profile=profile)
         print(f"  {country:10} {period}={current_total} mm | "
-              f"1981-2010 same-window={baseline} mm | {delta_pct:+.1f}%")
+              f"1991-2020 same-window={baseline} mm | {delta_pct:+.1f}%")
     except Exception as e:  # noqa: BLE001 - stand-in instead of failing (ING-5)
         _write_stand_in(rk, period, f"fetch failed: {e}", profile)
         print(f"  {country:10} STAND-IN (fetch failed: {e})")

@@ -89,17 +89,17 @@ def test_deployed_zip_ships_the_tool_but_not_the_geospatial_pieces():
 def test_supplied_facts_appear_in_the_closing_turn_and_stand_ins_do_not():
     base = {"conversationId": "c", "language": "en", "mode": "guidance", "allowPlayback": False, "confirmedAccount": "heavy rain",
             "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee", "country": "Colombia"}}
-    good = {"dataset": "open_meteo", "indicator": "ytd_rainfall_mm", "value": 2831.3, "unit": "mm", "period": "2026 YTD", "baselineValue": 2487.0, "baselineDeltaPct": 13.8, "baselinePeriod": "1981-2010 (same window)", "is_stand_in": False}
+    good = {"dataset": "open_meteo", "indicator": "ytd_rainfall_mm", "value": 2831.3, "unit": "mm", "period": "2026 YTD", "baselineValue": 2487.0, "baselineDeltaPct": 13.8, "baselinePeriod": "1991-2020 (same window)", "is_stand_in": False}
     bad = {"dataset": "open_meteo", "indicator": "other", "value": None, "unit": "mm", "period": "2026", "is_stand_in": True}
     p = system_prompt(TrustedContext.model_validate({**base, "externalFacts": [good, bad]}))
-    assert "2831.3 mm" in p and "+13.8 %" in p and "1981-2010" in p and "other = None" not in p and "reference point" in p
+    assert "2831.3 mm" in p and "+13.8 %" in p and "1991-2020" in p and "other = None" not in p and "reference point" in p
 
 
 def test_external_data_is_context_never_proof():
     from exchange.prompts import system_prompt as sp
     ctx = TrustedContext.model_validate({"conversationId": "c", "language": "en", "mode": "intake", "allowPlayback": False,
                                          "producer": {"producerId": "P", "entityType": "cooperative", "location": "L", "crop": "coffee"}})
-    assert "Never say it confirms, proves or explains" in sp(ctx) and "reference-point" in sp(ctx)
+    assert "Never say it confirms, proves or explains" in sp(ctx) and "reference-point" in sp(ctx) and "regional pattern, trend" in sp(ctx)
 
 
 def test_followup_mode_asks_what_was_missing_never_invents_and_stays_an_answer():
@@ -112,3 +112,11 @@ def test_followup_mode_asks_what_was_missing_never_invents_and_stays_an_answer()
     out = TurnOutput(reply="r", phase="guidance", summary_en="x", summary_original="y", challenge_tags=["water"])
     res = handle_turn({"context": ctx, "messages": [{"role": "user", "text": "hola"}]}, lambda req: (lambda prompt: out), lambda t: [])
     assert res["phase"] == "answer" and res["playbackSummary"] is None
+
+
+def test_baseline_is_the_current_standard_normal_everywhere():
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parents[2]
+    ing = (root / "external_data/ingest/open_meteo.py").read_text()
+    assert '"1991-01-01"' in ing and '"2020-12-31"' in ing and "1991-2020" in ing and "1981" not in ing and "2010" not in ing
+    assert "1981" not in (root / "agent/app/exchange/prompts.py").read_text()

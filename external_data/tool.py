@@ -57,7 +57,7 @@ def get_environmental_context(
     stress, soil, forest, protected areas, prices — instead of inventing a
     figure. Every returned fact carries its dataset, period, method, and a
     baseline comparison, so you can cite the source and say "X% below the
-    1981-2010 average".
+    1991-2020 average".
 
     Args:
         location: {"country": str, "region": str (optional)} — the session's

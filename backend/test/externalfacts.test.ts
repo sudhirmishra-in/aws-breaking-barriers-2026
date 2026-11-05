@@ -19,12 +19,12 @@ describe("country keys (parity with external_data/keys.py)", () => {
 });
 
 const fact = (over: Partial<ExternalFact> = {}): ExternalFact => ({ dataset: "open_meteo", theme: "climate", indicator: "ytd_rainfall_mm", value: 812.4, unit: "mm", period: "2026 YTD (01-01 to 10-28)", method: "ERA5 via Open-Meteo at the country centroid",
-  baselineValue: 700, baselineDeltaPct: 16.1, baselinePeriod: "1981-2010 (same window)", isProjection: false, isStandIn: false, retrievedAt: "2026-11-04T03:17:00Z", ...over });
+  baselineValue: 700, baselineDeltaPct: 16.1, baselinePeriod: "1991-2020 (same window)", isProjection: false, isStandIn: false, retrievedAt: "2026-11-04T03:17:00Z", ...over });
 describe("projection", () => {
   it("states the figure, the baseline and that it is a reference point, labelled external and not curated", () => {
     const e = factEvidence(fact(), "Colombia");
     expect(e).toMatchObject({ kind: "external_fact", origin: "external_imported", curationStatus: "not_curated", illustrative: false, standards: [] });
-    expect(e.finding).toContain("812.4 mm"); expect(e.finding).toContain("+16.1%"); expect(e.finding).toContain("1981-2010"); expect(e.finding).toContain("reference point");
+    expect(e.finding).toContain("812.4 mm"); expect(e.finding).toContain("+16.1%"); expect(e.finding).toContain("1991-2020"); expect(e.finding).toContain("reference point");
     expect(e.finding).not.toMatch(/country average of/i); expect(e.source).toBe("ERA5 reanalysis via Open-Meteo"); expect(e.citation.dataVersion).toBe("2026-11-04T03:17:00Z");
   });
   it("a negative delta carries its sign", () => { expect(factEvidence(fact({ baselineDeltaPct: -9.5 }), "Peru").finding).toContain("-9.5%"); });
