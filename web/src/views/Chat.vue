@@ -15,7 +15,7 @@ import { renderMarkdown } from "../lib/markdown";
 import { audioSupported, playMp3, stopAudio, unlockAudio } from "../lib/speech";
 import { markExpired, state } from "../session";
 import { t } from "../lib/i18n";
-import { ApiFailure, type ConversationDto, type ConversationView, type Lang, type Message, type Stage } from "../types";
+import { ApiFailure, type ConversationDto, type ConversationView, type Message, type Stage } from "../types";
 
 const s = computed(() => t(state.ui));
 const route = useRoute();
@@ -27,8 +27,6 @@ const loading = ref(true);
 const missing = ref(false);
 const error = ref<{ text: string; retry?: () => Promise<void> } | null>(null);
 const draft = ref("");
-// New conversations start in the producer's preferred language (from /me); picking another here is temporary and never changes the profile.
-const startLang = ref<Lang>(state.me?.preferred_language ?? "en");
 const correcting = ref(false);
 const corr = ref({ text: "", location: "", entity: "" });
 const confirmEnd = ref(false);
@@ -127,16 +125,18 @@ async function run(action: (requestId: string) => Promise<ConversationView>, req
   } finally { busy.value = false; }
 }
 // Switching the interface language during an open conversation also switches the language of the agent's later replies (this conversation only; the profile is never changed).
-watch(() => state.ui, async (ui) => {
-  startLang.value = ui;
-  const cur = conv.value;
-  if (!cur || cur.status !== "active" || cur.language === ui || busy.value) return;
-  try { const v = await api.setLanguage(cur.conversationId, newRequestId(), ui); if (conv.value?.conversationId === cur.conversationId) conv.value = v.conversation; } catch { /* the next message still uses the saved language */ }
-});
-const start = () => run((rid) => api.create(startLang.value, rid, typeof route.query.case === "string" ? route.query.case : undefined));
+/** Makes the open conversation use the interface language. Called when the dropdown changes AND before every agent turn, so a conversation started in another language (or a failed earlier switch) cannot keep answering in the old one. */
+async function syncLanguage(): Promise<void> {
+  const cur = conv.value; const ui = state.ui;
+  if (!cur || cur.status !== "active" || cur.language === ui) return;
+  try { const v = await api.setLanguage(cur.conversationId, newRequestId(), ui); if (conv.value?.conversationId === cur.conversationId) conv.value = v.conversation; } catch { /* the turn still proceeds in the saved language */ }
+}
+watch(() => state.ui, () => { if (!busy.value) void syncLanguage(); });
+const start = () => run((rid) => api.create(state.ui, rid, typeof route.query.case === "string" ? route.query.case : undefined));
 async function send() {
   const text = draft.value.trim(); if (!text || !conv.value || busy.value) return;
   const id = conv.value.conversationId;
+  await syncLanguage();
   // Show the producer's message immediately (optimistic); the server response replaces the list.
   messages.value = [...messages.value, { seq: -1, role: "user", text, at: "", stage: stage.value }]; scrollDown();
   const before = draft.value; draft.value = "";
@@ -146,8 +146,9 @@ async function send() {
 function onEnter(e: KeyboardEvent) { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); void send(); }
 function addDictation(text: string) { draft.value = (draft.value.trim() + " " + text).trim(); nextTick(() => box.value?.focus()); }
 function pick(text: string) { draft.value = text; nextTick(() => box.value?.focus()); }
-const confirm = () => run((rid) => api.playback(conv.value!.conversationId, rid, { decision: "confirm" }));
+const confirm = async () => { await syncLanguage(); return run((rid) => api.playback(conv.value!.conversationId, rid, { decision: "confirm" })); };
 async function sendCorrection() {
+  await syncLanguage();
   const body: Parameters<typeof api.playback>[2] = { decision: "correct" };
   if (corr.value.text.trim()) body.correction = corr.value.text.trim();
   const field = corr.value.entity ? ({ field: "entityType", value: corr.value.entity } as const) : corr.value.location.trim() ? ({ field: "location", value: corr.value.location.trim() } as const) : undefined;
