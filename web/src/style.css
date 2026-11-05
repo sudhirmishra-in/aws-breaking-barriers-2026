@@ -236,3 +236,53 @@ a { color:var(--link); }
 .chat-hd { flex-wrap:wrap; row-gap:.4rem; }
 .chat-titlebar { order:10; flex-basis:100%; display:flex; align-items:center; gap:.5rem; min-width:0; }
 .chat-titlebar .chat-title { white-space:normal; flex:0 1 auto; }
+
+/* ---- Dark theme. Declared last and with html.dark (more specific than :root) so the light-theme
+        type tokens above cannot leak into dark mode. Contrast targets WCAG AA on --surface. ---- */
+html.dark {
+  --bg:#0e1330; --surface:#161c42; --surface-2:#1f2756; --border:#323d78;
+  --fg:#eef1ff; --muted:#b7bfe6; --nav-ink:#eef1ff; --link:#7cc7ff;
+  --accent:#b3c0ff; --brand:#4a5bb8; --lime:#93d73b; --on-lime:#203a16;
+  --ok:#86e08f; --warn:#f2c14e; --err:#ff9a9a;
+}
+html.dark body { background:var(--bg); color:var(--fg); }
+html.dark h1, html.dark h2, html.dark h3, html.dark .serif, html.dark .hero h1, html.dark .page-title,
+html.dark .chat-title, html.dark .pp-step, html.dark .card h2, html.dark .card h3, html.dark .tile b { color:var(--fg); }
+html.dark .logo { color:var(--fg); }
+html.dark .hero h1 { color:var(--accent); }
+html.dark .nav a { color:var(--muted); } html.dark .nav a:hover, html.dark .nav a.router-link-exact-active { color:var(--fg); }
+/* Icons sitting on lime: dark green ink, never the light accent */
+html.dark .logo-mark, html.dark .feat .ic, html.dark .action .ic, html.dark .av.brand-gradient,
+html.dark .done-ic, html.dark .done .big, html.dark .pp-list li.pp-done .pp-mark { color:var(--on-lime) !important; }
+/* Pills and badges */
+html.dark .pill { color:var(--fg); border-color:var(--border); }
+html.dark .pill.warn { background:color-mix(in srgb,var(--lime) 22%,transparent); border-color:color-mix(in srgb,var(--lime) 55%,transparent); color:#d8f5b4; }
+html.dark .pill.ok { color:var(--ok); border-color:color-mix(in srgb,var(--ok) 50%,transparent); }
+/* Controls */
+html.dark select.sel, html.dark .fld input, html.dark .fld textarea, html.dark .fld select, html.dark .composer, html.dark .composer textarea { background:var(--surface-2); color:var(--fg); border-color:var(--border); }
+html.dark .seg { background:var(--surface-2); border-color:var(--border); }
+html.dark .seg button { color:var(--muted); } html.dark .seg button[aria-pressed=true] { background:var(--lime); color:var(--on-lime); }
+html.dark .btn { background:transparent; color:var(--fg); border-color:var(--lime); }
+html.dark .btn:hover:not(:disabled) { background:color-mix(in srgb,var(--lime) 14%,transparent); color:#fff; border-color:var(--lime); }
+html.dark .btn.primary { background:var(--lime); color:var(--on-lime); border-color:var(--lime); }
+html.dark .btn.primary:hover:not(:disabled) { background:#b4e86f; border-color:#b4e86f; color:var(--on-lime); }
+html.dark .btn:focus-visible { outline-color:var(--lime); }
+html.dark .send { background:var(--lime); color:var(--on-lime); } html.dark .send:hover:not(:disabled) { background:#b4e86f; color:var(--on-lime); }
+html.dark .chip { color:var(--fg); border-color:color-mix(in srgb,var(--lime) 60%,transparent); } html.dark .chip:hover { background:color-mix(in srgb,var(--lime) 18%,transparent); }
+html.dark .mode-seg button { color:var(--muted); } html.dark .mode-seg button[aria-pressed="true"] { background:var(--lime); color:var(--on-lime); }
+html.dark .act-btn { color:var(--muted); } html.dark .act-btn:hover { color:var(--fg); }
+html.dark .act-btn.on { color:var(--on-lime); background:var(--lime); }
+/* Cards, panels, conversation */
+html.dark .card, html.dark .chat-main, html.dark .chat-progress, html.dark .hist-pop, html.dark .tile, html.dark .list a.item { background:var(--surface); border-color:var(--border); }
+html.dark .decision { background:var(--surface-2); border-color:color-mix(in srgb,var(--lime) 45%,transparent); }
+html.dark .quote, html.dark .hist-summary { background:color-mix(in srgb,var(--surface-2) 70%,#000 0%); }
+html.dark .bubble-u { background:var(--brand); color:#fff; }
+html.dark .hdr { background:var(--surface); box-shadow:0 2px 10px rgb(0 0 0 / .35); }
+html.dark .foot { color:var(--muted); border-color:var(--border); }
+html.dark .pp-mark { background:var(--surface); border-color:var(--border); color:var(--muted); }
+html.dark .pp-list li.pp-now .pp-mark { border-color:var(--lime); color:var(--fg); }
+html.dark .pp-list li.pp-now .pp-name { color:var(--fg); }
+html.dark .pp-here { background:color-mix(in srgb,var(--lime) 30%,transparent); color:#d8f5b4; }
+html.dark .link-btn { color:var(--link); }
+html.dark .banner.info { color:#a9d8ff; border-color:color-mix(in srgb,#a9d8ff 40%,transparent); }
+html.dark .hist-dot { background:var(--warn); }

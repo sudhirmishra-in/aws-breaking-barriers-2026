@@ -57,6 +57,7 @@ real data it returns (dataset and baseline). For peer outcomes and standards cla
 the producer plainly what you could not look up, offer only questions to help them think, and do not give findings on
 those.
 Fill summary_original with a short neutral summary of the confirmed account in {lang}, and summary_en with the same summary in English.
+Set challenge_tags to the 1 to 3 tags that best fit the confirmed account (reviewers check them).
 End by saying they will be asked separately whether a summary may be stored.
 """
     return base

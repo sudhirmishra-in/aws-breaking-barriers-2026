@@ -1,52 +1,72 @@
 {
-  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional producers, places and notes. Not real FTUSA data.",
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Producers mirror the team's synthetic dataset (data/team-synthetic). Not FTUSA data.",
   "producers": [
     {
-      "producerId": "SYN-P-001",
+      "producerId": "P-MX-004",
       "seedUsername": "producer.demo1@example.com",
       "preferredLanguage": "en",
-      "displayName": "Synthetic Producer One",
+      "displayName": "Unión Sierra Madre",
       "entityType": "cooperative",
-      "location": "Synthetic Highlands (fictional region)",
+      "location": "Chiapas, Mexico",
       "crop": "coffee",
       "history": [
         {
-          "period": "synthetic-year-1",
-          "note": "Synthetic record: invested a Premium in a shared drying patio."
+          "period": "2022",
+          "note": "Synthetic record: Premium project \"Community compost plant\" (completed). Adopted by roughly two-thirds of members."
         },
         {
-          "period": "synthetic-year-2",
-          "note": "Synthetic record: reported lower yield after a late rainy season."
+          "period": "2023",
+          "note": "Synthetic record: Premium project \"Scholarship program\" (completed). Members report fewer lost harvest days."
+        },
+        {
+          "period": "2024",
+          "note": "Synthetic record: Premium project \"Scholarship program\" (in progress). Ongoing."
         }
       ]
     },
     {
-      "producerId": "SYN-P-002",
+      "producerId": "P-CO-001",
       "seedUsername": "productor.demo2@example.com",
       "preferredLanguage": "es",
-      "displayName": "Productor Sintetico Dos",
+      "displayName": "Finca Alto Mirador",
       "entityType": "smallholder",
-      "location": "Valle Sintetico (region ficticia)",
-      "crop": "cacao",
+      "location": "Cauca, Colombia",
+      "crop": "coffee",
       "history": [
         {
-          "period": "synthetic-year-1",
-          "note": "Synthetic record: Premium used for fermentation boxes."
+          "period": "2022",
+          "note": "Synthetic record: Premium project \"Rainwater catchment tanks\" (completed). Members report fewer lost harvest days."
+        },
+        {
+          "period": "2023",
+          "note": "Synthetic record: Premium project \"Shade-tree planting\" (completed). Members report fewer lost harvest days."
+        },
+        {
+          "period": "2024",
+          "note": "Synthetic record: Premium project \"Community center\" (in progress). Ongoing."
         }
       ]
     },
     {
-      "producerId": "SYN-P-003",
+      "producerId": "P-CI-005",
       "seedUsername": "producteur.demo3@example.com",
       "preferredLanguage": "fr",
-      "displayName": "Coopérative Synthétique Trois",
+      "displayName": "Coopérative Espoir de Soubré",
       "entityType": "cooperative",
-      "location": "Région Synthétique (région fictive)",
+      "location": "Nawa (Soubré), Côte d'Ivoire",
       "crop": "cocoa",
       "history": [
         {
-          "period": "synthetic-year-1",
-          "note": "Synthetic record: Premium used for a shared cocoa drying area."
+          "period": "2022",
+          "note": "Synthetic record: Premium project \"Quality lab and cupping room\" (completed). Adopted by roughly two-thirds of members."
+        },
+        {
+          "period": "2023",
+          "note": "Synthetic record: Premium project \"Community compost plant\" (completed). Maintenance costs higher than planned."
+        },
+        {
+          "period": "2024",
+          "note": "Synthetic record: Premium project \"Riparian buffer reforestation\" (in progress). Ongoing."
         }
       ]
     }

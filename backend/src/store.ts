@@ -32,6 +32,8 @@ export interface Store {
   putOutcome(o: Outcome): Promise<void>;
   getOutcome(id: string): Promise<Outcome | undefined>;
   listRecords(): Promise<Outcome[]>;
+  /** Records and declined outcomes, newest first. */
+  listOutcomes(): Promise<Outcome[]>;
   /** Review update only if current reviewStatus === 'pending' (prevents double review). */
   reviewOutcome(id: string, patch: Partial<Outcome>): Promise<Outcome | undefined>;
 }
@@ -95,6 +97,7 @@ export class MemoryStore implements Store {
   async putOutcome(o: Outcome) { this.outcomes.set(o.outcomeId, structuredClone(o)); }
   async getOutcome(id: string) { const o = this.outcomes.get(id); return o && structuredClone(o); }
   async listRecords() { return [...this.outcomes.values()].filter((o) => o.kind === "record"); }
+  async listOutcomes() { return [...this.outcomes.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((o) => structuredClone(o)); }
   async reviewOutcome(id: string, patch: Partial<Outcome>) {
     const o = this.outcomes.get(id);
     if (!o || o.kind !== "record" || o.reviewStatus !== "pending") return undefined;

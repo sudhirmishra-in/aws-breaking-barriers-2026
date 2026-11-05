@@ -145,6 +145,18 @@ export class DdbStore implements Store {
       KeyConditionExpression: "gsiKind = :k", ExpressionAttributeValues: { ":k": "record" }, ScanIndexForward: false, Limit: 100 }));
     return (r.Items ?? []) as Outcome[];
   }
+  async listOutcomes() {
+    const out: Outcome[] = [];
+    for (const kind of ["record", "declined"]) {
+      let start: Record<string, unknown> | undefined;
+      do {
+        const r = await this.d.send(new QueryCommand({ TableName: this.outTable, IndexName: "kind-index", ExclusiveStartKey: start,
+          KeyConditionExpression: "gsiKind = :k", ExpressionAttributeValues: { ":k": kind }, ScanIndexForward: false }));
+        out.push(...((r.Items ?? []) as Outcome[])); start = r.LastEvaluatedKey;
+      } while (start && out.length < 5000);
+    }
+    return out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
   async reviewOutcome(id: string, patch: Partial<Outcome>) {
     const names: Record<string, string> = { "#rs": "reviewStatus" };
     const vals: Record<string, unknown> = { ":pending": "pending" };

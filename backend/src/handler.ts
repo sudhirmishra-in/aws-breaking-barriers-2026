@@ -1,12 +1,12 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { ZodError } from "zod";
 import { AgentCoreClient } from "./agent";
-import { AskReq, TranscribeReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
+import { AskReq, ReviewPatchReq, ReviewProducersQuery, TranscribeReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
 import { DdbStore } from "./ddbStore";
 import { PollySpeaker } from "./speech";
 import { TranscribeStreamingTranscriber } from "./transcribe";
 import { ApiError, invalid, notFound, unauthorized } from "./errors";
-import { Service, type Principal } from "./service";
+import { Service, requireReviewer, type Principal } from "./service";
 
 /** Claims arrive from the API Gateway JWT authorizer (signature, issuer, audience, exp already checked). We re-check use and client. */
 export function principalFromEvent(e: APIGatewayProxyEventV2, expected: { clientIds: string[]; issuer: string }, nowSec = Math.floor(Date.now() / 1000)): Principal {
@@ -17,7 +17,7 @@ export function principalFromEvent(e: APIGatewayProxyEventV2, expected: { client
   if (!claims.exp || Number(claims.exp) <= nowSec) throw unauthorized();
   const raw = claims["cognito:groups"] ?? "";
   const groups = raw.replace(/^\[|\]$/g, "").split(/[\s,]+/).filter(Boolean);
-  return { sub: claims.sub, groups };
+  return { sub: claims.sub, groups, name: claims.username ?? claims["cognito:username"] ?? undefined };
 }
 
 const json = (status: number, body: unknown, requestId: string): APIGatewayProxyStructuredResultV2 => ({
@@ -26,12 +26,24 @@ const json = (status: number, body: unknown, requestId: string): APIGatewayProxy
   body: JSON.stringify(body),
 });
 
-export async function route(svc: Service, p: Principal, method: string, path: string, body: unknown) {
+export async function route(svc: Service, p: Principal, method: string, path: string, body: unknown, query: Record<string, string | undefined> = {}) {
   const seg = path.replace(/^\/+|\/+$/g, "").split("/");
   if (seg[0] === "api") seg.shift();
   const [r0, r1, r2] = seg;
   if (method === "GET" && r0 === "me") return svc.me(p);
   if (method === "GET" && r0 === "overview") return svc.overview(p);
+  // Reviewer routes check the role before validating input, so a producer always gets 403, never a 400 that hints at the schema.
+  if (r0 === "review" || r0 === "records") requireReviewer(p);
+  if (r0 === "review") {
+    if (method === "GET" && r1 === "stats" && !r2) return svc.reviewStats(p);
+    if (method === "GET" && r1 === "producers" && !r2) return svc.reviewProducers(p, ReviewProducersQuery.parse(query));
+    if (method === "GET" && r1 === "producers" && r2 && seg[3] === "records" && !seg[4]) return svc.reviewProducerRecords(p, r2);
+    if (method === "GET" && r1 === "producers" && r2 && seg[3] === "related" && !seg[4]) return svc.reviewRelated(p, r2);
+  }
+  if (r0 === "records" && r1 && !r2) {
+    if (method === "GET") return svc.getRecord(p, r1);
+    if (method === "PATCH") return svc.patchRecord(p, r1, ReviewPatchReq.parse(body));
+  }
   if (method === "POST" && r0 === "transcribe") { const q = TranscribeReq.parse(body); return svc.transcribe(p, q.language, q.audio); }
   if (method === "POST" && r0 === "ask") { const q = AskReq.parse(body); return svc.ask(p, q.text, q.language); }
   if (r0 === "conversations") {
@@ -72,7 +84,7 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
     const p = principalFromEvent(event, { clientIds: (process.env.ALLOWED_CLIENT_IDS ?? process.env.USER_POOL_CLIENT_ID!).split(",").filter(Boolean), issuer: process.env.ISSUER! });
     let body: unknown;
     if (event.body) { try { body = JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, "base64").toString() : event.body); } catch { throw invalid("Body must be JSON."); } }
-    const out = await route(getSvc(), p, event.requestContext.http.method, event.rawPath, body);
+    const out = await route(getSvc(), p, event.requestContext.http.method, event.rawPath, body, event.queryStringParameters ?? {});
     return json(200, out, requestId);
   } catch (e) {
     if (e instanceof ZodError) return json(400, { error: { code: "validation_error", message: "Invalid request.", retryable: false, requestId } }, requestId);
