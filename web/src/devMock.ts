@@ -6,6 +6,11 @@ export function installDevMock(role: "producer" | "reviewer") {
   const profile = { displayName: "Synthetic Producer One", entityType: "cooperative", location: "Synthetic Highlands (fictional region)", crop: "coffee", preferredLanguage: "en" };
   const item = (id: string, st: string, pii = false) => ({ outcomeId: id, source: "agent conversation", producerId: "SYN-P-001", language: "es", summaryEn: "Late rains reduced yield.", summaryOriginal: "Las lluvias tardías redujeron la producción.", piiFlag: pii, piiTypes: pii ? ["PHONE"] : [], reviewStatus: st, createdAt: "2026-11-03T14:00:00Z" });
   const iso = (daysAgo: number) => new Date(Date.now() - daysAgo * 86_400_000).toISOString();
+  const rec = (id: string, st: string, pii = false) => ({ recordId: id, producerId: "P-CO-001", producerName: "Finca Alto Mirador", entityType: "smallholder", crop: "coffee", location: "Huila, Colombia",
+    language: "es", createdAt: iso(id === "rec-1" ? 0 : 1), outcome: "completed", reviewStatus: st, source: "agent conversation",
+    summaryOriginal: "Las lluvias tardías redujeron la producción cerca de 25 %. Los tanques de agua de lluvia ya no alcanzan.", summaryEn: "Late rains cut the harvest by about 25%. The rainwater tanks are no longer enough.",
+    challengeTags: ["water", "climate_weather"], agentChallengeTags: ["water", "climate_weather"], claims: [], evidenceStatus: "unavailable", piiFlag: pii, piiEntityTypes: pii ? ["PHONE"] : [],
+    feedbackHelpful: null, peerExampleOk: false, reasoningLogRef: null, reviewerNote: null, reviewedBy: null, reviewedAt: null });
   const sample = {
     conversation: { conversationId: "c-1", language: "es", workflow: "playback_pending", confirmation: "pending", consent: "unanswered", status: "active", title: "Lluvias irregulares y menor cosecha",
       playbackSummary: "Lluvias irregulares desde finales de 2023; cosecha cerca de 25 % menor; tanques de agua de lluvia desde 2021 ya no alcanzan.", createdAt: iso(0), updatedAt: iso(0), expiresAt: iso(-7) },
@@ -36,7 +41,20 @@ export function installDevMock(role: "producer" | "reviewer") {
     "GET /me": role === "producer" ? { roles: ["producer"], profile, syntheticDemo: true } : { roles: ["reviewer"], syntheticDemo: true },
     "GET /overview": role === "producer" ? { producer: { activeConversation: null } } : { reviewer: { pending: 2, approved: 1, corrected: 1, piiFlagged: 1, recent: [item("rec-1", "pending", true), item("rec-2", "approved")] } },
     "GET /conversations/current": sample,
-    "GET /reviews": { items: [item("rec-1", "pending", true), item("rec-2", "approved")] },
+    "GET /review/stats": { pending: 2, approved: 1, corrected: 0, declined: 1, piiFlagged: 1, conversationsToday: 3, asOf: iso(0) },
+    "GET /review/producers": { items: [
+      { producerId: "P-CO-001", producerName: "Finca Alto Mirador", entityType: "smallholder", crop: "coffee", location: "Huila, Colombia", recordCount: 3, pendingCount: 2, piiFlag: true, latestAt: iso(0), matchingRecords: 2 },
+      { producerId: "P-MX-004", producerName: "Unión Sierra Madre", entityType: "cooperative", crop: "coffee", location: "Chiapas, Mexico", recordCount: 1, pendingCount: 0, piiFlag: false, latestAt: iso(2), matchingRecords: 1 }] },
+    "GET /review/producers/P-CO-001/records": { items: [rec("rec-1", "pending", true), rec("rec-2", "pending"), { recordId: "rec-0", producerId: "P-CO-001", producerName: "Finca Alto Mirador", entityType: "smallholder", crop: "coffee", location: "Huila, Colombia", language: "es", createdAt: iso(3), outcome: "declined", reviewStatus: null }] },
+    "GET /review/producers/P-CO-001/related": { producerId: "P-CO-001", source: "Team synthetic dataset (fictional, not FTUSA data)", query: null,
+      premiumProjects: [{ year: 2022, title: "Rainwater catchment tanks", tags: ["water"], amountUsd: 5000, status: "completed", outcome: "Members report fewer lost harvest days." }],
+      surveys: [{ year: 2025, topConcern: "water", concerns: ["water", "climate and weather"], respondents: 1, incomeChangePct: -10, lowerYieldPct: 65 }],
+      certification: [{ standard: "Agricultural Production Standard", version: "1.1", status: "certified", lastAudit: "2025-03-14" }] },
+    "GET /review/producers/P-MX-004/records": { items: [{ ...rec("rec-7", "approved"), producerId: "P-MX-004", producerName: "Unión Sierra Madre", entityType: "cooperative", location: "Chiapas, Mexico", language: "en",
+      summaryOriginal: "Buyers paid less after the harvest.", summaryEn: "Buyers paid less after the harvest.", challengeTags: ["market_price"], agentChallengeTags: ["market_price"], reviewedBy: "reviewer.demo", reviewedAt: iso(1) }] },
+    "GET /review/producers/P-MX-004/related": { producerId: "P-MX-004", source: "Team synthetic dataset (fictional, not FTUSA data)", query: null, premiumProjects: [], surveys: [], certification: [] },
+    "PATCH /records/rec-1": { ...rec("rec-1", "approved", true), reviewedBy: "reviewer.demo", reviewedAt: iso(0) },
+    "PATCH /records/rec-2": { ...rec("rec-2", "corrected"), challengeTags: ["water", "market_price"], reviewedBy: "reviewer.demo", reviewedAt: iso(0) },
     "POST /transcribe": { text: "The rains came late this year and our harvest was smaller than usual.", language: "en" },
     "POST /ask": { answer: "I'm sorry, **peer examples** are not available yet.\n\n- I can help you think it through.", evidence: { status: "unavailable" }, piiFlag: false, language: "en", syntheticDemo: true },
   };

@@ -53,6 +53,13 @@ export class ExchangeStack extends cdk.Stack {
       pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true }, removalPolicy: removal,
       globalSecondaryIndexes: [{ indexName: "kind-index", partitionKey: { name: "gsiKind", type: ddb.AttributeType.STRING }, sortKey: { name: "createdAt", type: ddb.AttributeType.STRING } }],
     });
+    // Component 5: pre-extracted environmental/climate facts. Read-only at
+    // runtime (the agent queries it); populated by an offline ingest (manual).
+    const environmentalFacts = new ddb.TableV2(this, "EnvironmentalFacts", {
+      tableName: n("environmental-facts"), partitionKey: { name: "region_key", type: ddb.AttributeType.STRING }, sortKey: { name: "fact_key", type: ddb.AttributeType.STRING },
+      billing: ddb.Billing.onDemand(), encryption: ddb.TableEncryptionV2.customerManagedKey(key),
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: false }, removalPolicy: removal,
+    });
 
     // ---- web hosting (private bucket + CloudFront OAC) --------------------
     const webBucket = new s3.Bucket(this, "WebBucket", {
@@ -131,6 +138,8 @@ export class ExchangeStack extends cdk.Stack {
       resources: [`arn:${this.partition}:logs:${this.region}:${this.account}:log-group:/aws/bedrock-agentcore/runtimes/*`] }));
     runtimeRole.addToPolicy(new iam.PolicyStatement({ actions: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"], resources: ["*"] }));
     runtimeRole.addToPolicy(new iam.PolicyStatement({ actions: ["cloudwatch:PutMetricData"], resources: ["*"], conditions: { StringEquals: { "cloudwatch:namespace": "bedrock-agentcore" } } }));
+    // Component 5: the agent's get_environmental_context tool queries this table.
+    environmentalFacts.grantReadData(runtimeRole);
 
     const runtime = new agentcore.CfnRuntime(this, "Runtime", {
       agentRuntimeName: `ftusa_exchange_${p.envName}`.replace(/[^A-Za-z0-9_]/g, "_"),
@@ -140,7 +149,7 @@ export class ExchangeStack extends cdk.Stack {
       networkConfiguration: { networkMode: "PUBLIC" },
       protocolConfiguration: "HTTP",
       lifecycleConfiguration: { idleRuntimeSessionTimeout: 900, maxLifetime: 3600 },
-      environmentVariables: { MODEL_ID: p.modelId, GUARDRAIL_ID: guardrail.attrGuardrailId, GUARDRAIL_VERSION: guardrailVersion.attrVersion, ENV_NAME: p.envName, DEPLOYED_COMMIT: p.gitSha },
+      environmentVariables: { MODEL_ID: p.modelId, GUARDRAIL_ID: guardrail.attrGuardrailId, GUARDRAIL_VERSION: guardrailVersion.attrVersion, ENV_NAME: p.envName, DEPLOYED_COMMIT: p.gitSha, ENVIRONMENTAL_FACTS_TABLE: environmentalFacts.tableName },
     });
     runtime.node.addDependency(runtimeRole);
 
@@ -169,10 +178,10 @@ export class ExchangeStack extends cdk.Stack {
 
     const api = new apigw.HttpApi(this, "Api", {
       apiName: n("api"),
-      corsPreflight: { allowOrigins: [webUrl, ...p.extraCallbackUrls.map((u) => new URL(u).origin)], allowMethods: [apigw.CorsHttpMethod.GET, apigw.CorsHttpMethod.POST, apigw.CorsHttpMethod.PUT, apigw.CorsHttpMethod.DELETE], allowHeaders: ["authorization", "content-type"], maxAge: cdk.Duration.hours(1) },
+      corsPreflight: { allowOrigins: [webUrl, ...p.extraCallbackUrls.map((u) => new URL(u).origin)], allowMethods: [apigw.CorsHttpMethod.GET, apigw.CorsHttpMethod.POST, apigw.CorsHttpMethod.PUT, apigw.CorsHttpMethod.PATCH, apigw.CorsHttpMethod.DELETE], allowHeaders: ["authorization", "content-type"], maxAge: cdk.Duration.hours(1) },
       defaultAuthorizer: new authorizers.HttpJwtAuthorizer("CognitoJwt", issuer, { jwtAudience: [client.userPoolClientId, ...(ciClient ? [ciClient.userPoolClientId] : [])] }),
     });
-    api.addRoutes({ path: "/{proxy+}", methods: [apigw.HttpMethod.GET, apigw.HttpMethod.POST, apigw.HttpMethod.PUT, apigw.HttpMethod.DELETE], integration: new integrations.HttpLambdaIntegration("ApiIntegration", fn) });
+    api.addRoutes({ path: "/{proxy+}", methods: [apigw.HttpMethod.GET, apigw.HttpMethod.POST, apigw.HttpMethod.PUT, apigw.HttpMethod.PATCH, apigw.HttpMethod.DELETE], integration: new integrations.HttpLambdaIntegration("ApiIntegration", fn) });
     const stage = api.defaultStage!.node.defaultChild as apigw.CfnStage;
     stage.defaultRouteSettings = { throttlingBurstLimit: 20, throttlingRateLimit: 10 };
     const accessLogs = new logs.LogGroup(this, "ApiAccessLogs", { retention: logs.RetentionDays.ONE_MONTH, removalPolicy: cdk.RemovalPolicy.DESTROY });
@@ -203,6 +212,7 @@ export class ExchangeStack extends cdk.Stack {
     new cdk.CfnOutput(this, "AgentRuntimeArn", { value: runtime.attrAgentRuntimeArn });
     new cdk.CfnOutput(this, "OutcomesTable", { value: outcomes.tableName });
     new cdk.CfnOutput(this, "ConversationsTable", { value: conversations.tableName });
+    new cdk.CfnOutput(this, "EnvironmentalFactsTable", { value: environmentalFacts.tableName });
     new cdk.CfnOutput(this, "GuardrailId", { value: guardrail.attrGuardrailId });
   }
 }

@@ -71,7 +71,7 @@ def main() -> int:
     # 2. unauthenticated rejection
     st, _ = http("POST", api + "/transcribe", body={"requestId": uuid.uuid4().hex, "language": "en", "audio": "AAAA"})
     check("unauthenticated POST /transcribe rejected", st == 401, f"status={st}")
-    for path in ("/me", "/conversations/current", "/reviews"):
+    for path in ("/me", "/conversations/current", "/reviews", "/review/stats", "/review/producers"):
         st, _ = http("GET", api + path)
         check(f"unauthenticated GET {path} rejected", st == 401, f"status={st}")
     st, _ = http("GET", api + "/me", token="not-a-token")
@@ -165,8 +165,11 @@ def main() -> int:
         check("other producer cannot append", st == 404, f"status={st}")
         st, _ = http("POST", f"{api}/conversations/{cid}/end", tb, {"requestId": uuid.uuid4().hex})
         check("other producer cannot end it", st == 404, f"status={st}")
-        for method, path in (("GET", "/reviews"), ("GET", "/reviews/rec-x"), ("PUT", "/reviews/rec-x")):
-            st, _ = http(method, api + path, ta, {"requestId": uuid.uuid4().hex, "decision": "approve"} if method == "PUT" else None)
+        reviewer_ops = (("GET", "/reviews"), ("GET", "/reviews/rec-x"), ("PUT", "/reviews/rec-x"), ("GET", "/review/stats"), ("GET", "/review/producers"),
+                        ("GET", "/review/producers/P-CO-001/records"), ("GET", "/review/producers/P-CO-001/related"), ("GET", "/records/rec-x"), ("PATCH", "/records/rec-x"))
+        for method, path in reviewer_ops:
+            body = {"requestId": uuid.uuid4().hex, "decision": "approve"} if method == "PUT" else {"review_status": "approved"} if method == "PATCH" else None
+            st, _ = http(method, api + path, ta, body)
             check(f"producer cannot use reviewer operation {method} {path}", st == 403, f"status={st}")
         st, _ = http("POST", f"{api}/conversations/{cid}/messages", ta, {"requestId": uuid.uuid4().hex, "text": "x", "producerId": "SYN-CI-B"})
         check("request-supplied producerId is rejected", st == 400, f"status={st}")

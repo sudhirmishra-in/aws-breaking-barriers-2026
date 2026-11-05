@@ -4,8 +4,7 @@ import Login from "./views/Login.vue";
 import Home from "./views/Home.vue";
 import Ask from "./views/Ask.vue";
 import Chat from "./views/Chat.vue";
-import Reviews from "./views/Reviews.vue";
-import ReviewDetail from "./views/ReviewDetail.vue";
+import Review from "./views/Review.vue";
 import { isSignedIn } from "./lib/auth";
 import { ApiFailure } from "./types";
 import { loadMe, state } from "./session";
@@ -21,8 +20,8 @@ export const router = createRouter({
     { path: "/chat/:conversationId", component: Chat, meta: { role: "producer" } },
     { path: "/share", redirect: "/chat" },
     { path: "/ask", component: Ask, meta: { role: "producer" } },
-    { path: "/review", component: Reviews, meta: { role: "reviewer" } },
-    { path: "/review/:id", component: ReviewDetail, meta: { role: "reviewer" } },
+    { path: "/review", component: Review, meta: { role: "reviewer" } },
+    { path: "/review/:producerId", component: Review, meta: { role: "reviewer" } },
   ],
 });
 router.beforeEach(async (to) => {

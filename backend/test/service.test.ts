@@ -25,6 +25,7 @@ class StubAgent implements AgentClient {
       phase: req.context.mode === "guidance" ? "guidance" : playback ? "playback" : "intake",
       playbackSummary: playback ? "late rain hurt yield" : null, title: playback ? "Late rain and lower yield" : null,
       summaryEn: req.context.mode === "guidance" ? "EN summary" : null, summaryOriginal: req.context.mode === "guidance" ? (req.context.language === "en" ? "EN summary" : req.context.language === "fr" ? "FR résumé" : "ES resumen") : null,
+      challengeTags: req.context.mode === "guidance" ? ["water", "climate_weather", "not_a_tag"] : [],
       piiFlag: req.messages.at(-1)!.text.includes("555"), piiTypes: req.messages.at(-1)!.text.includes("555") ? ["PHONE"] : [],
       evidence: { status: "unavailable" },
     };
@@ -411,5 +412,78 @@ describe("synthetic producer turns are natural phrases", () => {
     await svc.playback(alice, id, { requestId: rid(), decision: "confirm" });
     expect(agent.calls.at(-1)!.messages.at(-1)!.text).toBe("Sí, es correcto.");
     expect(JSON.stringify(agent.calls)).not.toMatch(/Open the conversation|Please continue/);
+  });
+});
+
+describe("review screen API", () => {
+  const rv: Principal = { sub: "sub-rev", groups: ["reviewer"], name: "reviewer.demo@example.com" };
+  async function seed() {
+    let t = Date.parse("2026-11-04T10:00:00Z"); const { store, agent } = setup(); const svc = new Service({ store, agent, now: () => (t += 60_000) });
+    store.profiles.set("sub-alice", { ...profile("P-CO-001"), displayName: "Finca Alto Mirador", entityType: "smallholder", location: "Cauca, Colombia" });
+    const a = await toConsent(svc); await svc.consent(alice, a, rid(), true);           // Finca: saved, pending
+    const b = (await svc.create(bob, "en", rid())).conversation.conversationId; await svc.end(bob, b, rid()); // SYN-B: declined
+    const c = await toConsent(svc); await svc.consent(alice, c, rid(), true);           // Finca: second record
+    return { svc, store, a, b, c };
+  }
+  it("every review operation is reviewer-only", async () => {
+    const { svc, a } = await seed();
+    for (const f of [() => svc.reviewStats(alice), () => svc.reviewProducers(alice, {}), () => svc.reviewProducerRecords(alice, "P-CO-001"),
+      () => svc.reviewRelated(alice, "P-CO-001"), () => svc.getRecord(alice, `rec-${a}`), () => svc.patchRecord(alice, `rec-${a}`, { review_status: "approved" })])
+      expect(await code(f())).toBe("forbidden");
+  });
+  it("records carry valid agent tags and a trusted producer snapshot", async () => {
+    const { svc, a } = await seed();
+    expect(await svc.getRecord(rv, `rec-${a}`)).toMatchObject({ challengeTags: ["water", "climate_weather"], producerName: "Finca Alto Mirador",
+      entityType: "smallholder", outcome: "completed", reviewStatus: "pending", source: "agent conversation", peerExampleOk: false, claims: [] });
+  });
+  it("stats count pending, declined and today's outcomes", async () => {
+    const { svc } = await seed();
+    expect(await svc.reviewStats(rv)).toMatchObject({ pending: 2, approved: 0, corrected: 0, declined: 1, piiFlagged: 0, conversationsToday: 3 });
+  });
+  it("producer list: pending first, counts, and filters by status, outcome, PII and search", async () => {
+    const { svc } = await seed();
+    const all = (await svc.reviewProducers(rv, {})).items;
+    expect(all.map((x) => x.producerId)).toEqual(["P-CO-001", "SYN-B"]);
+    expect(all[0]).toMatchObject({ producerName: "Finca Alto Mirador", recordCount: 2, pendingCount: 2 });
+    expect((await svc.reviewProducers(rv, { outcome: "declined" })).items.map((x) => x.producerId)).toEqual(["SYN-B"]);
+    expect((await svc.reviewProducers(rv, { review_status: "approved" })).items).toEqual([]);
+    for (const [m, path, b] of [["PATCH", "/records/rec-x", { bogus: 1 }], ["GET", "/review/producers", undefined]] as const)
+      await expect(route(svc, alice, m, path, b, { review_status: "nonsense" })).rejects.toMatchObject({ status: 403 });
+    expect((await svc.reviewProducers(rv, { pii_only: "true" })).items).toEqual([]);
+    expect((await svc.reviewProducers(rv, { q: "alto" })).items.map((x) => x.producerId)).toEqual(["P-CO-001"]);
+    expect((await svc.reviewProducers(rv, { q: "climate_weather" })).items.map((x) => x.producerId)).toEqual(["P-CO-001"]);
+  });
+  it("producer records are newest first; declined records expose no narrative", async () => {
+    const { svc, b, c } = await seed();
+    expect((await svc.reviewProducerRecords(rv, "P-CO-001")).items[0].recordId).toBe(`rec-${c}`);
+    const dec = (await svc.reviewProducerRecords(rv, "SYN-B")).items[0];
+    expect(dec).toMatchObject({ recordId: `dec-${b}`, outcome: "declined", reviewStatus: null });
+    expect(Object.keys(dec)).not.toEqual(expect.arrayContaining(["summaryOriginal", "summaryEn", "challengeTags", "claims"]));
+  });
+  it("related data joins the team's synthetic Premium, survey and certification rows; no SQL without a warehouse", async () => {
+    const { svc } = await seed();
+    const r = await svc.reviewRelated(rv, "P-CO-001");
+    expect(r.premiumProjects.length).toBe(3); expect(r.premiumProjects[0].year).toBeGreaterThanOrEqual(r.premiumProjects[2].year);
+    expect(r.surveys.length).toBeGreaterThan(0); expect(r.certification.length).toBe(1); expect(r.query).toBeNull();
+    expect((await svc.reviewRelated(rv, "UNKNOWN")).premiumProjects).toEqual([]);
+  });
+  it("approve keeps content, records reviewer name and note; corrections change summary and tags; reviews happen once", async () => {
+    const { svc, a, c, b } = await seed();
+    expect(await svc.patchRecord(rv, `rec-${a}`, { review_status: "approved", reviewer_note: "Looks right" }))
+      .toMatchObject({ reviewStatus: "approved", reviewerNote: "Looks right", reviewedBy: "reviewer.demo@example.com", challengeTags: ["water", "climate_weather"] });
+    const cor = await svc.patchRecord(rv, `rec-${c}`, { review_status: "corrected", challenge_tags: ["water", "infrastructure"], summary_en: "Fixed." });
+    expect(cor).toMatchObject({ reviewStatus: "corrected", challengeTags: ["water", "infrastructure"], agentChallengeTags: ["water", "climate_weather"], summaryEn: "Fixed." });
+    expect((await svc.patchRecord(rv, `rec-${c}`, { review_status: "corrected", summary_en: "Fixed." })).reviewStatus).toBe("corrected"); // safe retry
+    expect(await code(svc.patchRecord({ ...rv, sub: "other" }, `rec-${c}`, { review_status: "approved" }))).toBe("already_reviewed");
+    expect(await code(svc.patchRecord(rv, `dec-${b}`, { review_status: "approved" }))).toBe("not_reviewable");
+    expect(await svc.reviewStats(rv)).toMatchObject({ pending: 0, approved: 1, corrected: 1 });
+  });
+  it("route validation: approve cannot change content, correct must, tags must be from the 11", async () => {
+    const { svc, a } = await seed();
+    await expect(route(svc, rv, "PATCH", `/records/rec-${a}`, { review_status: "approved", summary_en: "x" })).rejects.toThrow();
+    await expect(route(svc, rv, "PATCH", `/records/rec-${a}`, { review_status: "corrected" })).rejects.toThrow();
+    await expect(route(svc, rv, "PATCH", `/records/rec-${a}`, { review_status: "corrected", challenge_tags: ["weather"] })).rejects.toThrow();
+    await expect(route(svc, rv, "GET", "/review/producers", undefined, { review_status: "bogus" })).rejects.toThrow();
+    expect(await route(svc, rv, "GET", "/review/producers", undefined, { review_status: "pending" })).toHaveProperty("items");
   });
 });

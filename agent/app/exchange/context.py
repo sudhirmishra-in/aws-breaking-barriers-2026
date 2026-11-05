@@ -8,6 +8,10 @@ from pydantic import BaseModel, Field
 
 Language = Literal["en", "es", "fr"]
 Mode = Literal["intake", "guidance", "ask"]
+ChallengeTag = Literal[
+    "climate_weather", "water", "soil_land", "market_price", "labor_migration", "financial_capital",
+    "education", "health", "infrastructure", "biodiversity_conservation", "social_community",
+]
 
 
 class ProducerRef(BaseModel):
@@ -57,6 +61,9 @@ class TurnOutput(BaseModel):
         default=None, description="Summary proposal in the conversation language (guidance only)."
     )
     summary_en: str | None = Field(default=None, description="The same summary in English (guidance only).")
+    challenge_tags: list[ChallengeTag] = Field(
+        default_factory=list, description="Guidance only: 1 to 3 challenge tags that best describe the confirmed account."
+    )
 
 
 class TurnResponse(BaseModel):
@@ -66,6 +73,7 @@ class TurnResponse(BaseModel):
     title: str | None = None
     summaryOriginal: str | None = None
     summaryEn: str | None = None
+    challengeTags: list[ChallengeTag] = []
     piiFlag: bool = False
     piiTypes: list[str] = []
     evidence: Evidence = Evidence()

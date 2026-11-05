@@ -3,6 +3,12 @@ import { z } from "zod";
 export const Language = z.enum(["en", "es", "fr"]);
 export type Language = z.infer<typeof Language>;
 
+export const CHALLENGE_TAGS = ["climate_weather", "water", "soil_land", "market_price", "labor_migration", "financial_capital",
+  "education", "health", "infrastructure", "biodiversity_conservation", "social_community"] as const;
+export const ChallengeTag = z.enum(CHALLENGE_TAGS);
+export type ChallengeTag = z.infer<typeof ChallengeTag>;
+export const ENTITY_TYPES = ["smallholder", "cooperative", "estate", "processing_operation"] as const; // spec enumeration
+
 export const RequestId = z.string().min(8).max(64).regex(/^[A-Za-z0-9_-]+$/);
 
 export const CreateConversationReq = z.object({ requestId: RequestId, language: Language }).strict();
@@ -20,6 +26,24 @@ export const PlaybackReq = z
 export const AskReq = z.object({ requestId: RequestId, text: z.string().trim().min(1).max(1000), language: Language }).strict();
 // Raw 16 kHz, 16-bit, mono PCM, base64. 60 s is 1.92 MB, about 2.6 MB encoded.
 export const TranscribeReq = z.object({ requestId: RequestId, language: Language, audio: z.string().min(1).max(2_700_000) }).strict();
+// Review (spec REV-01..24). Approve changes nothing but the status (and an optional note); correct must change something.
+export const ReviewPatchReq = z.object({
+  requestId: RequestId.optional(),
+  review_status: z.enum(["approved", "corrected"]),
+  summary_original: z.string().trim().min(1).max(2000).optional(),
+  summary_en: z.string().trim().min(1).max(2000).optional(),
+  challenge_tags: z.array(ChallengeTag).max(11).optional(),
+  reviewer_note: z.string().trim().max(1000).optional(),
+}).strict().refine((v) => v.review_status === "approved"
+  ? v.summary_original === undefined && v.summary_en === undefined && v.challenge_tags === undefined
+  : v.summary_original !== undefined || v.summary_en !== undefined || v.challenge_tags !== undefined,
+  { message: "approve changes only the status; a correction must change the summary or tags" });
+export const ReviewProducersQuery = z.object({
+  q: z.string().trim().max(100).optional(),
+  review_status: z.enum(["pending", "approved", "corrected", "all"]).optional(),
+  outcome: z.enum(["completed", "declined", "out_of_scope", "all"]).optional(),
+  pii_only: z.enum(["true", "false"]).optional(),
+}).strict();
 export const ConsentReq = z.object({ requestId: RequestId, storeSummary: z.boolean() }).strict();
 export const EndReq = z.object({ requestId: RequestId }).strict();
 export const ReviewUpdateReq = z
@@ -64,6 +88,7 @@ export interface Conversation {
   producerAssertions?: { location?: string; entityType?: string }; // asserted, not trusted scope
   summaryOriginal?: string; // in the conversation language
   summaryEn?: string;
+  challengeTags?: ChallengeTag[];
   piiFlag: boolean;
   piiTypes: string[];
   messageCount: number;
@@ -94,6 +119,11 @@ export interface Outcome {
   summaryOriginal?: string; // producer's language (spec: summary_original)
   summaryEn?: string;
   summaryEs?: string; // legacy records written before French support
+  challengeTags?: string[];
+  agentChallengeTags?: string[]; // what the agent proposed, so reviewer changes can be shown (REV-07)
+  producerName?: string; crop?: string; location?: string; // trusted server-side snapshot of the producer profile
+  reviewerNote?: string;
+  reviewedByName?: string;
   piiFlag?: boolean;
   piiTypes?: string[];
   evidenceStatus?: "unavailable";
