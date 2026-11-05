@@ -1,4 +1,4 @@
-import type { Conversation, CorrectionRecord, Message, Organization, Outcome, ProducerProfile, PublicationStatus } from "./contracts";
+import type { IssueRecord, Conversation, CorrectionRecord, Message, Organization, Outcome, ProducerProfile, PublicationStatus } from "./contracts";
 
 /** Persistence port. DynamoDB in production; in-memory in unit tests (LOCAL MOCK). */
 export interface Store {
@@ -50,6 +50,12 @@ export interface Store {
   listPublishedRecords(): Promise<Outcome[]>;
   /** Conditional patch: applies only while publicationStatus is in `from` (null = any). Returns the new item. */
   updateOutcome(id: string, from: PublicationStatus[] | null, patch: Partial<Outcome>): Promise<Outcome | undefined>;
+  /** Issue history (one item per issue, optimistic version). */
+  putIssue(i: IssueRecord): Promise<boolean>;
+  getIssue(id: string): Promise<IssueRecord | undefined>;
+  listIssuesByOrganization(orgId: string): Promise<IssueRecord[]>;
+  /** Replaces the issue only if the stored version equals `expected`. */
+  updateIssue(next: IssueRecord, expected: number): Promise<boolean>;
 }
 
 export class MemoryStore implements Store {
@@ -130,6 +136,11 @@ export class MemoryStore implements Store {
     const o = this.outcomes.get(id); if (!o || (from && !from.includes(o.publicationStatus ?? "not_shared"))) return undefined;
     const n = { ...o, ...patch }; this.outcomes.set(id, n); return structuredClone(n);
   }
+  issues = new Map<string, IssueRecord>();
+  async putIssue(i: IssueRecord) { if (this.issues.has(i.issueId)) return false; this.issues.set(i.issueId, structuredClone(i)); return true; }
+  async getIssue(id: string) { const i = this.issues.get(id); return i && structuredClone(i); }
+  async listIssuesByOrganization(orgId: string) { return [...this.issues.values()].filter((i) => i.organizationId === orgId).map((i) => structuredClone(i)); }
+  async updateIssue(next: IssueRecord, expected: number) { const c = this.issues.get(next.issueId); if (!c || c.version !== expected) return false; this.issues.set(next.issueId, structuredClone(next)); return true; }
   async reviewOutcome(id: string, patch: Partial<Outcome>) {
     const o = this.outcomes.get(id);
     if (!o || o.kind !== "record" || o.reviewStatus !== "pending") return undefined;

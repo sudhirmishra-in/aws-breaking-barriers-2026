@@ -1,6 +1,6 @@
 import { DynamoDBClient, ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
-import type { Conversation, CorrectionRecord, Message, Organization, Outcome, ProducerProfile, PublicationStatus } from "./contracts";
+import type { IssueRecord, Conversation, CorrectionRecord, Message, Organization, Outcome, ProducerProfile, PublicationStatus } from "./contracts";
 import type { Store } from "./store";
 
 const META = "META";
@@ -236,5 +236,32 @@ export class DdbStore implements Store {
         ConditionExpression: cond, ExpressionAttributeNames: names, ExpressionAttributeValues: vals, ReturnValues: "ALL_NEW" }));
       return r.Attributes as Outcome;
     } catch (e) { if (isCCF(e)) return undefined; throw e; }
+  }
+  // ---- issue history ------------------------------------------------------------------------------------------------
+  async putIssue(i: IssueRecord) {
+    try {
+      await this.d.send(new PutCommand({ TableName: this.outTable, Item: { outcomeId: i.issueId, gsiKind: "issue", organizationId: i.organizationId, createdAt: i.firstReportedAt, issue: i }, ConditionExpression: "attribute_not_exists(outcomeId)" }));
+      return true;
+    } catch (e) { if (isCCF(e)) return false; throw e; }
+  }
+  async getIssue(id: string) {
+    const r = await this.d.send(new GetCommand({ TableName: this.outTable, Key: { outcomeId: id }, ConsistentRead: true }));
+    return r.Item?.gsiKind === "issue" ? (r.Item.issue as IssueRecord) : undefined;
+  }
+  async listIssuesByOrganization(orgId: string) {
+    const out: IssueRecord[] = []; let start: Record<string, unknown> | undefined;
+    do {
+      const r = await this.d.send(new QueryCommand({ TableName: this.outTable, IndexName: "org-index", ExclusiveStartKey: start, FilterExpression: "gsiKind = :k",
+        KeyConditionExpression: "organizationId = :o", ExpressionAttributeValues: { ":o": orgId, ":k": "issue" }, ScanIndexForward: false }));
+      out.push(...((r.Items ?? []).map((x) => x.issue as IssueRecord))); start = r.LastEvaluatedKey;
+    } while (start && out.length < 1000);
+    return out;
+  }
+  async updateIssue(next: IssueRecord, expected: number) {
+    try {
+      await this.d.send(new UpdateCommand({ TableName: this.outTable, Key: { outcomeId: next.issueId }, UpdateExpression: "SET issue = :n",
+        ConditionExpression: "gsiKind = :k AND issue.version = :v", ExpressionAttributeValues: { ":n": next, ":k": "issue", ":v": expected } }));
+      return true;
+    } catch (e) { if (isCCF(e)) return false; throw e; }
   }
 }

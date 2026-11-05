@@ -3,8 +3,11 @@ import type { Language, CorrectionRecord, CorrectableField, Organization, Outcom
 import { SYNTHETIC_LABEL } from "./contracts";
 import { ApiError, conflict, notFound } from "./errors";
 import { evidenceFor } from "./evidence";
+import { deriveStatus, issueView, matchIssue, withEvent } from "./issues";
+import type { IssueEvent, IssueRecord } from "./contracts";
+import type { MemoryHit } from "./memory";
 import { isoOf, LocalProjectRetriever, projectEvidence } from "./projectEvidence";
-import { isEligible, parseCaseId, projectCase, versionOf, type Viewer } from "./peers";
+import { confirmedSummary, isEligible, parseCaseId, projectCase, versionOf, type Viewer } from "./peers";
 import { RETENTION, requireProducer, requireReviewer, Service, summaryHashOf, type Principal } from "./service";
 
 /** Source columns for the producer-information view. Source meanings are preserved; the browser translates labels only. */
@@ -120,14 +123,141 @@ export class ServiceV2 extends Service {
       const profile = await this.profileFor(p);
       const now = this.iso();
       const v1: SummaryVersion = { version: 1, kind: "producer_confirmed", summaryOriginal: c.summaryOriginal, summaryEn: c.summaryEn, hash, at: now, by: profile.producerId };
-      return this.close(c, "granted", "declined_storage", {
+      const done = await this.close(c, "granted", "declined_storage", {
         organizationId: profile.organizationId, sharingChoice: req.sharing, identityPermitted: req.sharing === "share_conversation" && req.identityPermitted,
         confirmationHash: hash, confirmedAt: now, confirmedByProducerId: profile.producerId, confirmedByName: profile.displayName,
         summaryVersion: 1, versions: [v1], publicationStatus: req.sharing === "ftusa_only" ? "not_shared" : "awaiting_review",
         ttl: Math.floor(this.now() / 1000) + RETENTION.recordS,
       });
+      await this.afterFinalize(`rec-${c.conversationId}`, profile).catch((e) => this.log({ event: "after_finalize_failed", errorName: (e as Error).name }));
+      return done;
     });
   }
+
+  // ---- issue history and derived memory ---------------------------------------------------------------------------------------------
+  private issueIdFor(orgId: string, outcomeId: string) { return `issue-${orgId}-${sha(outcomeId).slice(0, 10)}`; }
+  private async newIssue(o: Outcome, orgId: string): Promise<IssueRecord> {
+    const at = o.confirmedAt ?? this.iso();
+    const base: IssueRecord = { issueId: this.issueIdFor(orgId, o.outcomeId), organizationId: orgId, reportingProducerIds: [], description: o.summaryEn ?? "", tags: o.challengeTags ?? [],
+      crop: o.crop ?? "", geography: o.location ?? "", firstReportedAt: at, lastReportedAt: at, status: "open", linkedConversations: [], events: [], evidenceRefs: [],
+      visibility: "organization", reviewStatus: "pending", version: 1 };
+    const issue = withEvent(base, { eventId: `evt-reported-${o.outcomeId}`, type: "reported", at, text: o.summaryEn, producerId: o.producerId, conversationId: o.conversationId, source: "conversation" });
+    await this.d.store.putIssue(issue);
+    return (await this.d.store.getIssue(issue.issueId)) ?? issue;
+  }
+  /** Runs once per finalized record: link to a clearly-the-same issue, ask when unsure, otherwise open a new one. Then sync derived memory. */
+  private async afterFinalize(outcomeId: string, profile: ProducerProfile) {
+    const o = await this.d.store.getOutcome(outcomeId); const orgId = profile.organizationId;
+    if (!o || !orgId) return;
+    const m = matchIssue(await this.d.store.listIssuesByOrganization(orgId), { producerId: o.producerId, tags: o.challengeTags ?? [], crop: o.crop ?? profile.crop, nowMs: this.now() });
+    if (m.link) {
+      const next = withEvent(m.link, { eventId: `evt-reported-${o.outcomeId}`, type: "reported", at: o.confirmedAt ?? this.iso(), text: o.summaryEn, producerId: o.producerId, conversationId: o.conversationId, source: "conversation" });
+      if (next !== m.link) await this.d.store.updateIssue(next, m.link.version);
+      await this.d.store.updateOutcome(outcomeId, null, { issueId: m.link.issueId, issueDecision: "linked" });
+    } else if (m.candidates.length) {
+      await this.d.store.updateOutcome(outcomeId, null, { issueCandidates: m.candidates.map((c) => c.issue.issueId), issueDecision: "pending" }); // the producer is asked; nothing is assumed
+    } else {
+      const i = await this.newIssue(o, orgId); await this.d.store.updateOutcome(outcomeId, null, { issueId: i.issueId, issueDecision: "none" });
+    }
+    await this.syncMemory(outcomeId);
+  }
+
+  /** One writer for all derived memory. Failure never breaks the user's action: the record is marked pending_retry and reconcile repeats it with the same client tokens. */
+  async syncMemory(outcomeId: string): Promise<"synced" | "pending_retry" | "disabled"> {
+    const mem = this.d.memory; const o = await this.d.store.getOutcome(outcomeId);
+    if (!mem?.enabled || !o || o.kind !== "record") return "disabled";
+    const at = new Date(o.confirmedAt ?? this.now()); const tags = (o.challengeTags ?? []).join(", "); const orgId = o.organizationId;
+    try {
+      const day = at.toISOString().slice(0, 10); const c = confirmedSummary(o);
+      await mem.write("personal", o.producerId, o.conversationId, `On ${day} the producer confirmed this account (${o.language}): ${c.en}. Challenge tags: ${tags}. Crop: ${o.crop ?? "n/a"}.`, `p-${o.outcomeId}-v${o.summaryVersion ?? 1}`, at);
+      if (orgId) await mem.write("organization", orgId, o.conversationId, `On ${day} a member of the organization reported: ${c.en}. Challenge tags: ${tags}. Crop: ${o.crop ?? "n/a"}. Source: confirmed producer account; no outcome recorded.`, `o-${o.outcomeId}-v${o.summaryVersion ?? 1}`, at);
+      if (orgId && o.issueId) { const i = await this.d.store.getIssue(o.issueId); if (i) for (const e of i.events.filter((x) => x.type !== "reported")) await this.writeIssueEvent(i, e); }
+      await this.d.store.updateOutcome(outcomeId, null, { memoryStatus: "synced", memoryAttempts: (o.memoryAttempts ?? 0) + 1 });
+      this.d.metric?.("MemorySync", 1, "Count", { Result: "ok" }); return "synced";
+    } catch (e) {
+      this.log({ event: "memory_sync_failed", errorName: (e as Error).name });
+      await this.d.store.updateOutcome(outcomeId, null, { memoryStatus: "pending_retry", memoryAttempts: (o.memoryAttempts ?? 0) + 1 });
+      this.d.metric?.("MemorySync", 1, "Count", { Result: "failed" }); return "pending_retry";
+    }
+  }
+  private async writeIssueEvent(i: IssueRecord, e: IssueEvent) {
+    const day = e.at.slice(0, 10);
+    await this.d.memory!.write("organization", i.organizationId, i.issueId, `On ${day} for the issue "${i.description.slice(0, 160)}" (${i.tags.join(", ")}): ${e.type.replace(/_/g, " ")}${e.text ? `: ${e.text}` : ""}. Current status: ${i.status}.`, `ie-${e.eventId}`, new Date(e.at));
+  }
+
+  /** Repeats every pending memory write (idempotent tokens). Reviewer-only; bounded per call. */
+  async reconcileMemory(p: Principal) {
+    requireReviewer(p);
+    const recs = (await this.d.store.listRecords()).filter((o) => o.memoryStatus !== "synced" || !o.memoryStatus).slice(0, 100);
+    const out = { attempted: 0, synced: 0, failed: 0 };
+    for (const o of recs) { out.attempted++; const r = await this.syncMemory(o.outcomeId); if (r === "synced") out.synced++; else if (r === "pending_retry") out.failed++; }
+    return out;
+  }
+
+  /** Retrieval from the published memory. The index is only a candidate list: every hit is re-checked against the CURRENT authoritative record, so a withdrawn case is blocked before any index cleanup. */
+  async publishedRecall(p: Principal, query: string) {
+    const viewer = await this.viewer(p);
+    const hits = await (this.d.memory?.recall("published", "global", query, 8) ?? Promise.resolve([]));
+    const out = [];
+    for (const h of hits) {
+      const m = /case=(rec-[A-Za-z0-9-]+)@(\d+)/.exec(h.text); if (!m) continue;
+      const o = await this.d.store.getOutcome(m[1]);
+      if (o && isEligible(o, viewer) && versionOf(o) === Number(m[2])) out.push(projectCase(o, viewer));
+    }
+    return out;
+  }
+
+  private async myIssue(p: Principal, issueId: string) {
+    requireProducer(p); const profile = await this.profileFor(p);
+    const i = await this.d.store.getIssue(issueId);
+    if (!i || i.organizationId !== profile.organizationId) throw notFound(); // another organization's issue is indistinguishable from a missing one
+    return { i, profile };
+  }
+  /** The organization's issue list (no producer ids). */
+  async listIssues(p: Principal) {
+    requireProducer(p); const profile = await this.profileFor(p);
+    return { items: (await this.d.store.listIssuesByOrganization(profile.organizationId!)).sort((a, b) => b.lastReportedAt.localeCompare(a.lastReportedAt)).map(issueView) };
+  }
+  /** What the finished conversation shows: its issue, the earlier similar issues to ask about, and dated recall from the organization's derived memory. */
+  async issueContext(p: Principal, conversationId: string) {
+    const o = await this.ownRecord(p, conversationId); const profile = await this.profileFor(p); const orgId = profile.organizationId!;
+    const issue = o.issueId ? await this.d.store.getIssue(o.issueId) : undefined;
+    const candidates = (await Promise.all((o.issueCandidates ?? []).map((id) => this.d.store.getIssue(id)))).filter((x): x is IssueRecord => !!x && x.organizationId === orgId);
+    let recall: MemoryHit[] = [];
+    if (this.d.memory?.enabled) recall = await this.d.memory.recall("organization", orgId, confirmedSummary(o).en, 3).catch(() => []);
+    return { issue: issue && issue.organizationId === orgId ? issueView(issue) : null, decision: o.issueDecision ?? "none", candidates: candidates.map(issueView),
+      recall: recall.map((r) => r.text), memoryStatus: o.memoryStatus ?? (this.d.memory?.enabled ? "pending_retry" : "disabled") };
+  }
+  /** Producer says whether the new report is the same problem as an earlier organization issue. */
+  async linkIssue(p: Principal, conversationId: string, req: { issueId?: string; same: boolean }) {
+    const o = await this.ownRecord(p, conversationId); const profile = await this.profileFor(p); const orgId = profile.organizationId!;
+    if (o.issueDecision !== "pending") return this.issueContext(p, conversationId); // already answered: a retry changes nothing
+    if (req.same) {
+      if (!req.issueId || !(o.issueCandidates ?? []).includes(req.issueId)) throw new ApiError(400, "validation_error", "Choose one of the suggested issues.");
+      const { i } = await this.myIssue(p, req.issueId);
+      const type = i.status === "resolved" || i.status === "recurring" ? "recurrence" : "reported";
+      const next = withEvent(i, { eventId: `evt-${type}-${o.outcomeId}`, type, at: o.confirmedAt ?? this.iso(), text: o.summaryEn, producerId: o.producerId, conversationId: o.conversationId, source: "conversation" });
+      if (next !== i && !(await this.d.store.updateIssue(next, i.version))) throw conflict("stale_state", "The issue changed. Please try again.", true);
+      await this.d.store.updateOutcome(o.outcomeId, null, { issueId: i.issueId, issueDecision: "linked" });
+    } else {
+      const issue = await this.newIssue(o, orgId); await this.d.store.updateOutcome(o.outcomeId, null, { issueId: issue.issueId, issueDecision: "separate" });
+    }
+    await this.syncMemory(o.outcomeId);
+    return this.issueContext(p, conversationId);
+  }
+  /** Producer-entered dated facts: what was tried, what happened, a confirmed resolution, a recurrence. A correction supersedes an earlier fact and never erases it. */
+  async addIssueEvent(p: Principal, issueId: string, req: { requestId: string; type: IssueEvent["type"]; text?: string; supersedes?: string }) {
+    const { i, profile } = await this.myIssue(p, issueId);
+    if (req.supersedes && !i.events.some((e) => e.eventId === req.supersedes)) throw new ApiError(400, "validation_error", "Unknown event to supersede.");
+    const ev: IssueEvent = { eventId: `evt-${profile.producerId}-${req.requestId}`, type: req.type, at: this.iso(), text: req.text, producerId: profile.producerId, supersedes: req.supersedes, source: "producer_entry" };
+    const next = withEvent(i, ev);
+    if (next === i) return issueView(i); // retry of the same request
+    if (!(await this.d.store.updateIssue(next, i.version))) throw conflict("stale_state", "The issue changed. Please try again.", true);
+    await this.writeIssueEvent(next, ev).then(() => this.d.metric?.("MemorySync", 1, "Count", { Result: "ok" })).catch(() => this.d.metric?.("MemorySync", 1, "Count", { Result: "failed" })); // reconcile repeats it
+    this.log({ event: "issue_event", type: req.type });
+    return issueView(next);
+  }
+
 
   private async ownRecord(p: Principal, conversationId: string): Promise<Outcome> {
     requireProducer(p);
@@ -203,7 +333,11 @@ export class ServiceV2 extends Service {
     if (cur.publicationStatus !== "pending_publication" && cur.publicationStatus !== "failed") return cur;
     if (!cur.publication) throw conflict("not_approved", "No approved publication payload exists.");
     try {
-      await this.d.publishSideEffect?.(cur); // derived-memory/index update hooks in here; a failure keeps the record unpublished
+      // Published knowledge memory: only the reviewed, permission-filtered payload. A failed write keeps the record "failed", never "published".
+      const pay = cur.publication.payload;
+      await this.d.memory?.write("published", "global", cur.outcomeId, `case=${cur.outcomeId}@${cur.publication.version} challenge: ${pay.challenge} action: ${pay.action ?? "not reported"} result: ${pay.result ?? "not reported"} tags: ${pay.tags.join(", ")}`,
+        `pub-${cur.outcomeId}-v${cur.publication.version}`, new Date(cur.publication.approvedAt));
+      await this.d.publishSideEffect?.(cur);
       const n = await this.d.store.updateOutcome(cur.outcomeId, ["pending_publication", "failed"],
         { publicationStatus: "published", publishedVersion: cur.publication.version, publishedAt: this.iso(), publishError: undefined });
       return n ?? (await this.d.store.getOutcome(cur.outcomeId)) ?? cur;
@@ -344,7 +478,7 @@ export class ServiceV2 extends Service {
         const seen = new Set<string>();
         for (const m of r.matches ?? []) { const x = byId.get(m.caseId); if (x && !seen.has(m.caseId)) { seen.add(m.caseId); picked.push({ c: x.c, relevance: why(x), fit: m.fit, reason: m.reason }); } }
         picked = picked.slice(0, 3);
-      } catch { this.log({ event: "match_failure" }); matchedBy = "rules"; picked = []; }
+      } catch { this.d.metric?.("MatchFallback"); this.log({ event: "match_failure" }); matchedBy = "rules"; picked = []; }
     } else matchedBy = "rules";
     if (matchedBy === "rules") picked = cands.filter((x) => x.shared.length).slice(0, 3).map((x) => ({ c: x.c, relevance: why(x) })); // deterministic fallback
     return { items: picked.map((x) => ({ ...x.c, relevance: x.relevance, fit: x.fit ?? null, reason: x.reason ?? null })), crop, tags, matchedBy, considered: cands.length,

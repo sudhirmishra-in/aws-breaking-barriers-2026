@@ -1,6 +1,6 @@
 import { accessToken } from "./auth";
 import { loadConfig } from "./config";
-import { ApiFailure, type RelatedData, type ReviewProducer, type ReviewRecord, type ReviewStats, type ConversationSummary, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me, type ProducerInfo, type CorrectionDto, type PeerCase, type EvidenceItem, type SharingChoice, type InfoKey, type PublicationStatus } from "../types";
+import { ApiFailure, type RelatedData, type ReviewProducer, type ReviewRecord, type ReviewStats, type ConversationSummary, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me, type ProducerInfo, type CorrectionDto, type PeerCase, type EvidenceItem, type IssueContext, type IssueDto, type SharingChoice, type InfoKey, type PublicationStatus } from "../types";
 
 export const newRequestId = () => crypto.randomUUID();
 
@@ -39,6 +39,10 @@ export const api = {
   feedback: (id: string, helpful: "yes" | "partly" | "no") => call<{ helpful: string }>("POST", `/conversations/${id}/feedback`, { requestId: newRequestId(), helpful }),
   comparable: (id: string) => call<{ items: PeerCase[]; limitation: string | null }>("GET", `/related/${encodeURIComponent(id)}`),
   setLanguage: (id: string, requestId: string, language: Lang) => call<ConversationView>("POST", `/conversations/${id}/language`, { requestId, language }),
+  issueContext: (conversationId: string) => call<IssueContext>("GET", `/issues/for/${encodeURIComponent(conversationId)}`),
+  linkIssue: (conversationId: string, same: boolean, issueId?: string) => call<IssueContext>("POST", `/conversations/${conversationId}/issue-link`, { requestId: newRequestId(), same, ...(issueId ? { issueId } : {}) }),
+  addIssueEvent: (issueId: string, type: "action_planned" | "action" | "outcome" | "resolution_confirmed" | "recurrence", text?: string) =>
+    call<IssueDto>("POST", `/issues/${encodeURIComponent(issueId)}/events`, { requestId: newRequestId(), type, ...(text ? { text } : {}) }),
   producerInfo: () => call<ProducerInfo>("GET", "/producer-info"),
   submitCorrection: (requestId: string, changes: { field: InfoKey; proposed: string }[], explanation?: string) => call<CorrectionDto>("POST", "/corrections", { requestId, changes, ...(explanation ? { explanation } : {}) }),
   peers: (scope: "organization" | "other" | "all") => call<{ items: PeerCase[]; visibility: string }>("GET", `/peers/summaries?scope=${scope}`),

@@ -18,6 +18,28 @@ const kbStack = new ExchangeStack(new cdk.App(), "K", {
 });
 const kt = Template.fromStack(kbStack);
 
+describe("memory and observability", () => {
+  it("three separate AgentCore Memory resources, each with its own namespace, one semantic strategy and bounded event expiry", () => {
+    const mems = Object.values(t.findResources("AWS::BedrockAgentCore::Memory")) as { Properties: { Name: string; EventExpiryDuration: number; MemoryStrategies: { SemanticMemoryStrategy: { NamespaceTemplates: string[] } }[] } }[];
+    expect(mems).toHaveLength(3);
+    expect(mems.map((m) => m.Properties.MemoryStrategies[0].SemanticMemoryStrategy.NamespaceTemplates[0]).sort()).toEqual(["/org/{actorId}/issues/", "/producer/{actorId}/facts/", "/published/{actorId}/cases/"]);
+    expect(mems.every((m) => m.Properties.EventExpiryDuration <= 365)).toBe(true);
+  });
+  it("the API may only create events and retrieve records on those three memories", () => {
+    const stmts = Object.values(t.findResources("AWS::IAM::Policy")).flatMap((r) => (r as { Properties: { PolicyDocument: { Statement: { Action: string | string[]; Resource: unknown }[] } } }).Properties.PolicyDocument.Statement);
+    const mem = stmts.filter((x) => [x.Action].flat().includes("bedrock-agentcore:CreateEvent"));
+    expect(mem).toHaveLength(1); expect(([mem[0].Resource].flat() as unknown[]).length).toBe(3); expect(mem[0].Resource).not.toBe("*");
+    expect([mem[0].Action].flat().sort()).toEqual(["bedrock-agentcore:CreateEvent", "bedrock-agentcore:RetrieveMemoryRecords"]);
+  });
+  it("the agent runtime is auto-instrumented (ADOT) and the stack has a dashboard and alarms for agent failures, memory and latency", () => {
+    t.hasResourceProperties("AWS::BedrockAgentCore::Runtime", Match.objectLike({ EnvironmentVariables: Match.objectLike({ AGENT_OBSERVABILITY_ENABLED: "true", OTEL_PYTHON_DISTRO: "aws_distro" }),
+      AgentRuntimeArtifact: { CodeConfiguration: Match.objectLike({ EntryPoint: ["opentelemetry-instrument", "main.py"] }) } }));
+    t.resourceCountIs("AWS::CloudWatch::Dashboard", 1);
+    const alarms = Object.values(t.findResources("AWS::CloudWatch::Alarm")) as { Properties: { AlarmDescription?: string } }[];
+    for (const d of ["Agent turns failing", "Derived memory writes failing", "Agent turn p90"]) expect(alarms.some((a) => a.Properties.AlarmDescription?.includes(d))).toBe(true);
+  });
+});
+
 describe("knowledge base (optional)", () => {
   it("is absent unless enabled", () => { t.resourceCountIs("AWS::Bedrock::KnowledgeBase", 0); t.resourceCountIs("AWS::S3Vectors::VectorBucket", 0); });
   it("uses a managed KB on an S3 Vectors index with a multilingual embedding model, one chunk per card", () => {

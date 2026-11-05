@@ -4,6 +4,7 @@
 import { computed, ref } from "vue";
 import { onMounted } from "vue";
 import EvidenceCard from "./EvidenceCard.vue";
+import IssueHistory from "./IssueHistory.vue";
 import PeerCases from "./PeerCases.vue";
 import { api } from "../lib/api";
 import { useL } from "../lib/labels";
@@ -46,6 +47,7 @@ const deletion = () => act(async () => { const r = await api.requestDeletion(pro
       </div>
       <p v-else class="hint">{{ l.ins.delDone }}</p>
       <p v-if="msg" class="hint" role="status">{{ msg }}</p></div>
+    <IssueHistory :conversation-id="view.conversation.conversationId" />
     <div class="card"><h3>{{ l.ins.data }}</h3>
       <EvidenceCard v-for="e in evidence" :key="e.evidenceId" :item="e" />
       <h4 v-if="projects.length" class="ev-sub">{{ l.ins.projects }}</h4>

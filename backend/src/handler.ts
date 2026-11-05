@@ -1,10 +1,12 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { ZodError } from "zod";
 import { AgentCoreClient } from "./agent";
-import { CorrectionCreateReq, CorrectionDecisionReq, FinalizeReq, FeedbackReq, SetLanguageReq, PeerQuery, ReconfirmReq, SharingUpdateReq, AskReq, ReviewPatchReq, ReviewProducersQuery, TranscribeReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
+import { CorrectionCreateReq, CorrectionDecisionReq, FinalizeReq, FeedbackReq, IssueEventReq, IssueLinkReq, SetLanguageReq, PeerQuery, ReconfirmReq, SharingUpdateReq, AskReq, ReviewPatchReq, ReviewProducersQuery, TranscribeReq, ConsentReq, CreateConversationReq, EndReq, PlaybackReq, ReviewUpdateReq, SubmitMessageReq } from "./contracts";
 import { DdbStore } from "./ddbStore";
 import { BedrockAgentRuntimeClient, RetrieveCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 import { KnowledgeBaseRetriever, LocalProjectRetriever, type ProjectRetriever } from "./projectEvidence";
+import { AgentCoreMemory } from "./memory";
+import { emf } from "./metrics";
 import { PollySpeaker } from "./speech";
 import { TranscribeStreamingTranscriber } from "./transcribe";
 import { ApiError, invalid, notFound, unauthorized } from "./errors";
@@ -38,6 +40,12 @@ export async function route(svc: ServiceV2, p: Principal, method: string, path: 
   if (method === "GET" && r0 === "producer-info") return svc.producerInformation(p);
   if (method === "GET" && r0 === "related" && r1) return svc.relatedCases(p, r1);
   if (method === "GET" && r0 === "evidence" && r1) return svc.evidence(p, r1);
+  if (r0 === "issues") {
+    if (method === "GET" && !r1) return svc.listIssues(p);
+    if (method === "GET" && r1 === "for" && r2) return svc.issueContext(p, r2);
+    if (method === "POST" && r1 && r2 === "events") return svc.addIssueEvent(p, r1, IssueEventReq.parse(body));
+  }
+  if (method === "POST" && r0 === "memory" && r1 === "reconcile") return svc.reconcileMemory(p);
   if (r0 === "corrections") {
     if (method === "POST" && !r1) return svc.createCorrection(p, CorrectionCreateReq.parse(body));
     if (method === "GET" && !r1) return svc.listMyCorrections(p);
@@ -78,6 +86,7 @@ export async function route(svc: ServiceV2, p: Principal, method: string, path: 
     if (r1 && method === "POST" && r2 === "consent") { const q = ConsentReq.parse(body); return svc.consent(p, r1, q.requestId, q.storeSummary); }
     if (r1 && method === "POST" && r2 === "finalize") { const q = FinalizeReq.parse(body); return svc.finalize(p, r1, q); }
     if (r1 && method === "POST" && r2 === "language") { const q = SetLanguageReq.parse(body); return svc.setConversationLanguage(p, r1, q.requestId, q.language); }
+    if (r1 && method === "POST" && r2 === "issue-link") { const q = IssueLinkReq.parse(body); return svc.linkIssue(p, r1, q); }
     if (r1 && method === "POST" && r2 === "feedback") return svc.feedback(p, r1, FeedbackReq.parse(body));
     if (r1 && method === "POST" && r2 === "sharing") return svc.updateSharing(p, r1, SharingUpdateReq.parse(body));
     if (r1 && method === "POST" && r2 === "reconfirm") return svc.reconfirm(p, r1, ReconfirmReq.parse(body));
@@ -106,6 +115,9 @@ const getSvc = () => (svc ??= new ServiceV2({
   transcriber: new TranscribeStreamingTranscriber(),
   speaker: new PollySpeaker(),
   projects: projectRetriever(),
+  memory: process.env.MEMORY_PERSONAL_ID && process.env.MEMORY_ORG_ID && process.env.MEMORY_PUBLISHED_ID
+    ? new AgentCoreMemory({ personal: process.env.MEMORY_PERSONAL_ID, organization: process.env.MEMORY_ORG_ID, published: process.env.MEMORY_PUBLISHED_ID }) : undefined,
+  metric: emf,
   log: (e) => console.log(JSON.stringify({ level: "info", ...e })), // structured; never message text
 }));
 

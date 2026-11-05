@@ -81,9 +81,22 @@ export const SharingUpdateReq = z.object({ requestId: RequestId, sharing: Sharin
   .refine((v) => !v.identityPermitted || v.sharing === "share_conversation", { message: "identity can only be shared with the conversation choice" });
 export const FeedbackReq = z.object({ requestId: RequestId, helpful: z.enum(["yes", "partly", "no"]), comment: z.string().trim().max(500).optional() }).strict();
 export const SetLanguageReq = z.object({ requestId: RequestId, language: Language }).strict();
+export const ISSUE_EVENT_TYPES = ["action_planned", "action", "outcome", "resolution_confirmed", "recurrence"] as const;
+export const IssueEventReq = z.object({ requestId: RequestId, type: z.enum(ISSUE_EVENT_TYPES), text: z.string().trim().min(1).max(500).optional(), supersedes: z.string().min(3).max(120).optional() }).strict()
+  .refine((v) => v.type === "resolution_confirmed" || !!v.text, { message: "text required" });
+export const IssueLinkReq = z.object({ requestId: RequestId, issueId: z.string().min(3).max(160).optional(), same: z.boolean() }).strict().refine((v) => !v.same || !!v.issueId, { message: "issueId required to link" });
 export const ReconfirmReq = z.object({ requestId: RequestId, summaryHash: z.string().length(64), accept: z.boolean() }).strict();
 export const PeerQuery = z.object({ scope: z.enum(["organization", "other", "all"]).optional() }).strict();
 
+export type IssueStatus = "open" | "action_planned" | "action_in_progress" | "resolved" | "recurring" | "unknown";
+export type IssueEventType = "reported" | "guidance" | (typeof ISSUE_EVENT_TYPES)[number];
+export interface IssueEvent { eventId: string; type: IssueEventType; at: string; text?: string; producerId?: string; conversationId?: string; supersedes?: string; source: "conversation" | "producer_entry" | "seed_synthetic"; synthetic?: boolean }
+/** Authoritative issue history per organization. Retained indefinitely by default (latest requirement); events are dated and corrections supersede, never erase. */
+export interface IssueRecord {
+  issueId: string; organizationId: string; reportingProducerIds: string[]; description: string; tags: string[]; crop: string; geography: string;
+  firstReportedAt: string; lastReportedAt: string; status: IssueStatus; linkedConversations: string[]; events: IssueEvent[]; evidenceRefs: string[];
+  visibility: "organization"; reviewStatus: "pending" | "approved" | "corrected"; version: number; synthetic?: boolean;
+}
 export type CorrectionStatus = "pending" | "accepted_awaiting_source_update" | "applied" | "rejected";
 export type PublicationStatus = "not_shared" | "awaiting_review" | "awaiting_reconfirmation" | "pending_publication" | "published" | "failed" | "withdrawn";
 
@@ -193,6 +206,8 @@ export interface Outcome {
   pendingRevision?: SummaryVersion; // reviewer change awaiting producer re-confirmation
   publicationStatus?: PublicationStatus; publication?: Publication; publishedVersion?: number; publishedAt?: string; publishError?: string;
   deletionRequestedAt?: string;
+  issueId?: string; issueCandidates?: string[]; issueDecision?: "pending" | "linked" | "separate" | "none";
+  memoryStatus?: "synced" | "pending_retry" | "disabled"; memoryAttempts?: number;
   feedback?: { helpful: "yes" | "partly" | "no"; comment?: string; at: string };
   caseCard?: { action?: string | null; result?: string | null; standards?: string[]; citations?: { label: string; url?: string }[] };
   ttl?: number; // DynamoDB TTL (epoch seconds): finalized records are retained 180 days in the sandbox, not indefinitely

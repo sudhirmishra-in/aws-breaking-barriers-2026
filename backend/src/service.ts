@@ -23,6 +23,10 @@ export interface Deps {
   publishSideEffect?: (o: Outcome) => Promise<void>;
   /** Retrieval over public project records (local concept retriever by default; a Bedrock Knowledge Base adapter implements the same port). */
   projects?: import("./projectEvidence").ProjectRetriever;
+  /** Derived memory (AgentCore Memory). Absent in unit tests and when no memory resources are provisioned. */
+  memory?: import("./memory").MemoryPort;
+  /** Metrics sink (CloudWatch EMF in production). */
+  metric?: (name: string, value?: number, unit?: string, dims?: Record<string, string>) => void;
 }
 
 export const MIN_USER_TURNS_BEFORE_PLAYBACK = 2;
@@ -197,8 +201,9 @@ export class Service {
   }
 
   private async runAgent(c: Conversation, profile: ProducerProfile, mode: "intake" | "guidance", history: Message[], newUser: string, allowPlayback: boolean, p: Principal): Promise<AgentTurnResponse> {
+    const t0 = Date.now();
     try {
-      return await this.d.agent.turn({
+      const out = await this.d.agent.turn({
         context: {
           conversationId: c.conversationId, language: c.language, mode, allowPlayback, forcePlayback: allowPlayback && c.userTurns + 1 >= FORCE_PLAYBACK_TURN,
           // Trusted: built from the server-side profile, never from the request.
@@ -207,7 +212,11 @@ export class Service {
         },
         messages: [...history.map((m) => ({ role: m.role, text: m.text })), { role: "user" as const, text: newUser }],
       }, runtimeSessionIdFor(c.conversationId), p.sub);
+      this.d.metric?.("AgentTurnLatencyMs", Date.now() - t0, "Milliseconds", { Mode: mode });
+      if (out.piiFlag) this.d.metric?.("PiiFlagged", 1);
+      return out;
     } catch (e) {
+      this.d.metric?.("AgentFailure", 1, "Count", { Mode: mode });
       this.log({ event: "agent_failure", conversationId: c.conversationId, mode, errorName: (e as Error).name });
       throw new ApiError(502, "agent_unavailable", "The assistant could not answer just now. Your message was not lost; please try again.", true);
     }
@@ -261,7 +270,7 @@ export class Service {
         // A natural first turn; when asking about a colleague's case, the (already authorized, projected) case summary is part of what the producer says.
         const r = await this.runAgent(conv, profile, "intake", [], ref?.challenge ? `${GREETING[language]}. I would like to talk about this case: ${ref.challenge}` : GREETING[language], false, p);
         opener = r.reply;
-      } catch { this.log({ event: "opener_fallback", conversationId: id }); }
+      } catch { this.d.metric?.("OpenerFallback"); this.log({ event: "opener_fallback", conversationId: id }); }
       const count = await this.append(conv, [{ role: "assistant", text: opener }]);
       const result = await this.view(await this.save(conv, { messageCount: count }));
       await this.d.store.putIdem(scope, requestId, result, Math.floor(this.now() / 1000) + IDEM_TTL_S);

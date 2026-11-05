@@ -137,6 +137,11 @@ jobs:
           node ../scripts/assert-tests.mjs "$RUNNER_TEMP/c.json" 4
         working-directory: backend
 
+      - name: Issue history, memory sync and recall tests (>= 12)
+        run: |
+          npx vitest run test/issues.test.ts --reporter=json --outputFile="$RUNNER_TEMP/e.json"
+          node ../scripts/assert-tests.mjs "$RUNNER_TEMP/e.json" 12
+        working-directory: backend
       - name: V2 corrections, sharing, peer retrieval and publication tests (>= 20)
         run: |
           npx vitest run test/v2.test.ts --reporter=json --outputFile="$RUNNER_TEMP/d.json"

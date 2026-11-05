@@ -79,3 +79,7 @@ export interface EvidenceItem { evidenceId: string; geography: string; period: s
   origin: "external_imported" | "ftusa_authored"; curationStatus: "ftusa_curated" | "not_curated"; illustrative: boolean; stale?: boolean; standards: string[];
   kind?: "project_record"; title?: string; recordedStatus?: string; taxonomy?: string; outcome?: string;
   citation?: { label: string; projectId: string; dataVersion: string; contentHash: string } }
+export type IssueStatus = "open" | "action_planned" | "action_in_progress" | "resolved" | "recurring" | "unknown";
+export interface IssueEventDto { eventId: string; type: string; at: string; text: string | null; source: string; synthetic: boolean; supersedes: string | null; superseded: boolean }
+export interface IssueDto { issueId: string; description: string; tags: string[]; crop: string; geography: string; status: IssueStatus; firstReportedAt: string; lastReportedAt: string; reporterCount: number; synthetic: boolean; events: IssueEventDto[] }
+export interface IssueContext { issue: IssueDto | null; decision: "pending" | "linked" | "separate" | "none"; candidates: IssueDto[]; recall: string[]; memoryStatus: "synced" | "pending_retry" | "disabled" }
