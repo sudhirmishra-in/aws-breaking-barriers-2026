@@ -1,5 +1,6 @@
 from .context import TrustedContext
 
+DISPLAY = {"open_meteo": "Open-Meteo"}  # source names as people say them
 LANG_NAME = {"en": "English", "es": "Spanish", "fr": "French"}
 
 
@@ -12,7 +13,7 @@ def fact_sentences(ctx: TrustedContext) -> list[str]:
             continue
         d = float(f["baselineDeltaPct"]); word = "above" if d >= 0 else "below"
         base = str(f.get("baselinePeriod") or "its baseline").split(" ")[0]
-        out.append(f"Year-to-date rainfall at a reference point for {country} was {abs(d):g}% {word} its {base} average ({f.get('dataset')} ERA5 data, {f.get('period')}). This describes one reference point, not your farm.")
+        out.append(f"Year-to-date rainfall at a reference point for {country} was {abs(d):g}% {word} its {base} average ({DISPLAY.get(str(f.get('dataset')), f.get('dataset'))} ERA5 data, {f.get('period')}). This describes one reference point, not your farm.")
     return out
 
 
