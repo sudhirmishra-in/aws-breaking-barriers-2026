@@ -226,7 +226,8 @@ export class DdbStore implements Store {
     return out;
   }
   async updateOutcome(id: string, from: PublicationStatus[] | null, patch: Partial<Outcome>) {
-    const names: Record<string, string> = { "#ps": "publicationStatus" }; const vals: Record<string, unknown> = {}; const sets: string[] = []; const ins: string[] = [];
+    const names: Record<string, string> = from ? { "#ps": "publicationStatus" } : {}; // DynamoDB rejects names that no expression uses
+    const vals: Record<string, unknown> = {}; const sets: string[] = []; const ins: string[] = [];
     Object.entries(patch).forEach(([k, v], i) => { names[`#f${i}`] = k; vals[`:v${i}`] = v; sets.push(`#f${i} = :v${i}`); });
     from?.forEach((f, i) => { vals[`:s${i}`] = f; ins.push(`:s${i}`); });
     // A record created before V2 has no publicationStatus; it reads as "not_shared".
