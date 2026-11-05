@@ -29,7 +29,7 @@
       "seedUsername": "productor.demo2@example.com",
       "preferredLanguage": "es",
       "displayName": "Finca Alto Mirador",
-      "entityType": "smallholder",
+      "entityType": "association",
       "location": "Cauca, Colombia",
       "crop": "coffee",
       "history": [

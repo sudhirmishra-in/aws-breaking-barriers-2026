@@ -1,6 +1,6 @@
 import { accessToken } from "./auth";
 import { loadConfig } from "./config";
-import { ApiFailure, type RelatedData, type ReviewProducer, type ReviewRecord, type ReviewStats, type ConversationSummary, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me } from "../types";
+import { ApiFailure, type RelatedData, type ReviewProducer, type ReviewRecord, type ReviewStats, type ConversationSummary, type AskResponse, type Overview, type ConversationView, type CurrentView, type Lang, type Me, type ProducerInfo, type CorrectionDto, type PeerCase, type EvidenceItem, type IssueContext, type IssueDto, type SharingChoice, type InfoKey, type PublicationStatus } from "../types";
 
 export const newRequestId = () => crypto.randomUUID();
 
@@ -34,7 +34,25 @@ export const api = {
   speech: (id: string, seq: number) => call<{ contentType: string; audio: string; voice: string }>("POST", `/conversations/${encodeURIComponent(id)}/messages/${seq}/speech`, {}),
   remove: (id: string) => call<{ deleted: true }>("DELETE", `/conversations/${encodeURIComponent(id)}`),
   get: (id: string) => call<ConversationView>("GET", `/conversations/${encodeURIComponent(id)}`),
-  create: (language: Lang, requestId: string = newRequestId()) => call<ConversationView>("POST", "/conversations", { requestId, language }),
+  create: (language: Lang | undefined, requestId: string = newRequestId(), referenceCaseId?: string) => call<ConversationView>("POST", "/conversations", { requestId, ...(language ? { language } : {}), ...(referenceCaseId ? { referenceCaseId } : {}) }),
+  evidence: (id: string) => call<{ items: EvidenceItem[]; projects: EvidenceItem[]; facts?: EvidenceItem[]; limitation: string | null }>("GET", `/evidence/${encodeURIComponent(id)}`),
+  feedback: (id: string, helpful: "yes" | "partly" | "no") => call<{ helpful: string }>("POST", `/conversations/${id}/feedback`, { requestId: newRequestId(), helpful }),
+  comparable: (id: string) => call<{ items: PeerCase[]; limitation: string | null }>("GET", `/related/${encodeURIComponent(id)}`),
+  setLanguage: (id: string, requestId: string, language: Lang) => call<ConversationView>("POST", `/conversations/${id}/language`, { requestId, language }),
+  issueContext: (conversationId: string) => call<IssueContext>("GET", `/issues/for/${encodeURIComponent(conversationId)}`),
+  linkIssue: (conversationId: string, same: boolean, issueId?: string) => call<IssueContext>("POST", `/conversations/${conversationId}/issue-link`, { requestId: newRequestId(), same, ...(issueId ? { issueId } : {}) }),
+  addIssueEvent: (issueId: string, type: "action_planned" | "action" | "outcome" | "resolution_confirmed" | "recurrence", text?: string) =>
+    call<IssueDto>("POST", `/issues/${encodeURIComponent(issueId)}/events`, { requestId: newRequestId(), type, ...(text ? { text } : {}) }),
+  followup: (id: string, requestId: string, text: string) => call<ConversationView>("POST", `/conversations/${id}/followup`, { requestId, text }),
+  producerInfo: () => call<ProducerInfo>("GET", "/producer-info"),
+  submitCorrection: (requestId: string, changes: { field: InfoKey; proposed: string }[], explanation?: string) => call<CorrectionDto>("POST", "/corrections", { requestId, changes, ...(explanation ? { explanation } : {}) }),
+  peers: (scope: "organization" | "other" | "all") => call<{ items: PeerCase[]; visibility: string }>("GET", `/peers/summaries?scope=${scope}`),
+  finalize: (id: string, requestId: string, summaryHash: string, sharing: SharingChoice, identityPermitted: boolean) => call<ConversationView>("POST", `/conversations/${id}/finalize`, { requestId, summaryHash, sharing, identityPermitted }),
+  updateSharing: (id: string, sharing: SharingChoice, identityPermitted: boolean) => call<{ sharingChoice: SharingChoice; publicationStatus: PublicationStatus }>("POST", `/conversations/${id}/sharing`, { requestId: newRequestId(), sharing, identityPermitted }),
+  reconfirm: (id: string, summaryHash: string, accept: boolean) => call<{ publicationStatus: PublicationStatus }>("POST", `/conversations/${id}/reconfirm`, { requestId: newRequestId(), summaryHash, accept }),
+  requestDeletion: (id: string) => call<{ note: string; publicationStatus: PublicationStatus }>("POST", `/conversations/${id}/deletion-request`, {}),
+  reviewCorrections: (status = "pending") => call<{ items: CorrectionDto[] }>("GET", `/review/corrections?status=${status}`),
+  decideCorrection: (id: string, decision: "accept" | "reject" | "mark_applied", note?: string) => call<CorrectionDto>("POST", `/review/corrections/${encodeURIComponent(id)}/decision`, { requestId: newRequestId(), decision, ...(note ? { note } : {}) }),
   message: (id: string, requestId: string, text: string) => call<ConversationView>("POST", `/conversations/${id}/messages`, { requestId, text }),
   playback: (id: string, requestId: string, body: { decision: "confirm" | "correct"; correction?: string; profileCorrection?: { field: "location" | "entityType"; value: string } }) =>
     call<ConversationView>("POST", `/conversations/${id}/playback`, { requestId, ...body }),

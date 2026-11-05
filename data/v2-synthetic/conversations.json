@@ -1,0 +1,1253 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "conversations": [
+    {
+      "conversationId": "cv-01",
+      "producerId": "PRD-ANA",
+      "organizationId": "ORG-AND-COL",
+      "language": "es",
+      "daysAgo": 0,
+      "status": "active",
+      "kind": "issue",
+      "topic": "drought",
+      "title": "A dry spell reduced flowering and expected yield this season",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "Hubo sequía este año y las plantas de café perdieron flores."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "A dry spell reduced flowering and expected yield this season."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        },
+        {
+          "role": "user",
+          "text": "Corrección: la sequía fue en la finca de arriba, no en la de abajo."
+        }
+      ],
+      "issueId": "ISS-01",
+      "piiFlag": false,
+      "playbackCorrected": true
+    },
+    {
+      "conversationId": "cv-02",
+      "producerId": "PRD-ANA",
+      "organizationId": "ORG-AND-COL",
+      "language": "es",
+      "daysAgo": 30,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "drought",
+      "title": "A dry spell reduced flowering and expected yield this season",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "Hubo sequía este año y las plantas de café perdieron flores."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "A dry spell reduced flowering and expected yield this season."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        }
+      ],
+      "issueId": "ISS-01",
+      "piiFlag": false,
+      "summaryOriginal": "Hubo sequía este año y las plantas de café perdieron flores.",
+      "summaryEn": "A dry spell reduced flowering and expected yield this season.",
+      "tags": [
+        "climate_weather"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Planned to build water storage tanks",
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-03",
+      "producerId": "PRD-ANA",
+      "organizationId": "ORG-AND-COL",
+      "language": "es",
+      "daysAgo": 90,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "water",
+      "title": "Rainwater storage tanks were built to bridge the dry season.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "Construimos tanques para guardar agua de lluvia."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "Rainwater storage tanks were built to bridge the dry season."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        }
+      ],
+      "issueId": "ISS-02",
+      "piiFlag": false,
+      "summaryOriginal": "Construimos tanques para guardar agua de lluvia.",
+      "summaryEn": "Rainwater storage tanks were built to bridge the dry season.",
+      "tags": [
+        "water"
+      ],
+      "sharingChoice": "share_conversation",
+      "identityPermitted": true,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Installed two rainwater tanks",
+        "result": "Fewer lost harvest days reported by Ana (fictional)",
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-04",
+      "producerId": "PRD-MATEO",
+      "organizationId": "ORG-AND-COL",
+      "language": "es",
+      "daysAgo": 12,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "water",
+      "title": "Rainwater storage tanks were built to bridge the dry season.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "Construimos tanques para guardar agua de lluvia."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "Rainwater storage tanks were built to bridge the dry season."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        }
+      ],
+      "issueId": "ISS-03",
+      "piiFlag": false,
+      "summaryOriginal": "Construimos tanques para guardar agua de lluvia.",
+      "summaryEn": "Rainwater storage tanks were built to bridge the dry season.",
+      "tags": [
+        "water"
+      ],
+      "sharingChoice": "share_conversation",
+      "identityPermitted": true,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Shared irrigation schedule across three farms",
+        "result": "Water use steadier through the dry weeks (fictional)",
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-05",
+      "producerId": "PRD-MATEO",
+      "organizationId": "ORG-AND-COL",
+      "language": "es",
+      "daysAgo": 5,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "drought",
+      "title": "A dry spell reduced flowering and expected yield this season",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "Hubo sequía este año y las plantas de café perdieron flores."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "A dry spell reduced flowering and expected yield this season."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        }
+      ],
+      "issueId": "ISS-01",
+      "piiFlag": false,
+      "summaryOriginal": "Hubo sequía este año y las plantas de café perdieron flores.",
+      "summaryEn": "A dry spell reduced flowering and expected yield this season.",
+      "tags": [
+        "climate_weather"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Mulching trial",
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-06",
+      "producerId": "PRD-ELENA",
+      "organizationId": "ORG-AND-COL",
+      "language": "en",
+      "daysAgo": 2,
+      "status": "completed",
+      "kind": "search",
+      "topic": "drought",
+      "title": "A dry spell reduced flowering and expected yield this season",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What has been difficult recently?"
+        },
+        {
+          "role": "user",
+          "text": "There was a drought this year and the coffee plants lost flowers."
+        },
+        {
+          "role": "assistant",
+          "text": "When did it start and what have you tried?"
+        },
+        {
+          "role": "user",
+          "text": "It started two months ago; I have not tried anything yet."
+        },
+        {
+          "role": "assistant",
+          "text": "A dry spell reduced flowering and expected yield this season."
+        },
+        {
+          "role": "user",
+          "text": "Yes, that's right."
+        }
+      ],
+      "issueId": null,
+      "piiFlag": false
+    },
+    {
+      "conversationId": "cv-07",
+      "producerId": "PRD-ELENA",
+      "organizationId": "ORG-AND-COL",
+      "language": "en",
+      "daysAgo": 40,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "soil",
+      "title": "Soil fertility appears to be declining year over year.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What has been difficult recently?"
+        },
+        {
+          "role": "user",
+          "text": "My soil looks poorer every year."
+        },
+        {
+          "role": "assistant",
+          "text": "When did it start and what have you tried?"
+        },
+        {
+          "role": "user",
+          "text": "It started two months ago; I have not tried anything yet."
+        },
+        {
+          "role": "assistant",
+          "text": "Soil fertility appears to be declining year over year."
+        },
+        {
+          "role": "user",
+          "text": "Yes, that's right."
+        }
+      ],
+      "issueId": "ISS-04",
+      "piiFlag": false,
+      "summaryOriginal": "My soil looks poorer every year.",
+      "summaryEn": "Soil fertility appears to be declining year over year.",
+      "tags": [
+        "soil_land"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "pending",
+      "publicationStatus": "awaiting_review",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": null,
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-08",
+      "producerId": "PRD-LUCIA",
+      "organizationId": "ORG-COP-HON",
+      "language": "es",
+      "daysAgo": 8,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "drought",
+      "title": "A dry spell reduced flowering and expected yield this season",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "Hubo sequía este año y las plantas de café perdieron flores."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "A dry spell reduced flowering and expected yield this season."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        }
+      ],
+      "issueId": "ISS-05",
+      "piiFlag": false,
+      "summaryOriginal": "Hubo sequía este año y las plantas de café perdieron flores.",
+      "summaryEn": "A dry spell reduced flowering and expected yield this season.",
+      "tags": [
+        "climate_weather"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Moved pruning earlier",
+        "result": "Too early to tell (fictional)",
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-09",
+      "producerId": "PRD-LUCIA",
+      "organizationId": "ORG-COP-HON",
+      "language": "es",
+      "daysAgo": 70,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "drought",
+      "title": "A dry spell reduced flowering and expected yield this season",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "Hubo sequía este año y las plantas de café perdieron flores."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "A dry spell reduced flowering and expected yield this season."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        }
+      ],
+      "issueId": "ISS-05",
+      "piiFlag": false,
+      "summaryOriginal": "Hubo sequía este año y las plantas de café perdieron flores.",
+      "summaryEn": "A dry spell reduced flowering and expected yield this season.",
+      "tags": [
+        "climate_weather"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Planted shade trees",
+        "result": "Recurrence in the next season (fictional)",
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-10",
+      "producerId": "PRD-DIEGO",
+      "organizationId": "ORG-COP-HON",
+      "language": "en",
+      "daysAgo": 3,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "price",
+      "title": "A sharp price decline no longer covers production costs.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What has been difficult recently?"
+        },
+        {
+          "role": "user",
+          "text": "The price fell and does not cover my costs."
+        },
+        {
+          "role": "assistant",
+          "text": "When did it start and what have you tried?"
+        },
+        {
+          "role": "user",
+          "text": "It started two months ago; I have not tried anything yet."
+        },
+        {
+          "role": "assistant",
+          "text": "A sharp price decline no longer covers production costs."
+        },
+        {
+          "role": "user",
+          "text": "Yes, that's right."
+        }
+      ],
+      "issueId": "ISS-06",
+      "piiFlag": false,
+      "summaryOriginal": "The price fell and does not cover my costs.",
+      "summaryEn": "A sharp price decline no longer covers production costs.",
+      "tags": [
+        "market_price"
+      ],
+      "sharingChoice": "share_conversation",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Sold part of the harvest through the Premium-funded drying program",
+        "result": "Price risk reduced but income lower (fictional)",
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-11",
+      "producerId": "PRD-DIEGO",
+      "organizationId": "ORG-COP-HON",
+      "language": "en",
+      "daysAgo": 25,
+      "status": "stopped",
+      "kind": "issue",
+      "topic": "price",
+      "title": "A sharp price decline no longer covers production costs.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What has been difficult recently?"
+        },
+        {
+          "role": "user",
+          "text": "The price fell and does not cover my costs."
+        },
+        {
+          "role": "assistant",
+          "text": "When did it start and what have you tried?"
+        },
+        {
+          "role": "user",
+          "text": "It started two months ago; I have not tried anything yet."
+        },
+        {
+          "role": "assistant",
+          "text": "A sharp price decline no longer covers production costs."
+        },
+        {
+          "role": "user",
+          "text": "Yes, that's right."
+        }
+      ],
+      "issueId": "ISS-06",
+      "piiFlag": false
+    },
+    {
+      "conversationId": "cv-12",
+      "producerId": "PRD-ROSA",
+      "organizationId": "ORG-COP-HON",
+      "language": "es",
+      "daysAgo": 6,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "labor",
+      "title": "A shortage of harvest labor delayed picking.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "Faltan trabajadores para la cosecha."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "A shortage of harvest labor delayed picking."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        }
+      ],
+      "issueId": "ISS-07",
+      "piiFlag": false,
+      "summaryOriginal": "Faltan trabajadores para la cosecha.",
+      "summaryEn": "A shortage of harvest labor delayed picking.",
+      "tags": [
+        "labor_migration"
+      ],
+      "sharingChoice": "ftusa_only",
+      "identityPermitted": false,
+      "reviewStatus": "pending",
+      "publicationStatus": "not_shared",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": null,
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-13",
+      "producerId": "PRD-ROSA",
+      "organizationId": "ORG-COP-HON",
+      "language": "es",
+      "daysAgo": 60,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "price",
+      "title": "A sharp price decline no longer covers production costs.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "El precio bajó y no cubre mis costos."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "A sharp price decline no longer covers production costs."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        }
+      ],
+      "issueId": "ISS-08",
+      "piiFlag": false,
+      "summaryOriginal": "El precio bajó y no cubre mis costos.",
+      "summaryEn": "A sharp price decline no longer covers production costs.",
+      "tags": [
+        "market_price"
+      ],
+      "sharingChoice": "ftusa_only",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "not_shared",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": null,
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-14",
+      "producerId": "PRD-AWA",
+      "organizationId": "ORG-NAW-CIV",
+      "language": "fr",
+      "daysAgo": 4,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "labor",
+      "title": "A shortage of harvest labor delayed picking.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "Qu'est-ce qui a été difficile ces derniers temps ?"
+        },
+        {
+          "role": "user",
+          "text": "Il manque de main-d'œuvre pour la récolte."
+        },
+        {
+          "role": "assistant",
+          "text": "Quand cela a-t-il commencé et qu'avez-vous essayé ?"
+        },
+        {
+          "role": "user",
+          "text": "Cela a commencé il y a deux mois ; je n'ai encore rien essayé."
+        },
+        {
+          "role": "assistant",
+          "text": "A shortage of harvest labor delayed picking."
+        },
+        {
+          "role": "user",
+          "text": "Oui, c'est exact."
+        }
+      ],
+      "issueId": "ISS-09",
+      "piiFlag": false,
+      "summaryOriginal": "Il manque de main-d'œuvre pour la récolte.",
+      "summaryEn": "A shortage of harvest labor delayed picking.",
+      "tags": [
+        "labor_migration"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Organized a community harvest exchange",
+        "result": "Harvest finished two weeks earlier (fictional)",
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-15",
+      "producerId": "PRD-AWA",
+      "organizationId": "ORG-NAW-CIV",
+      "language": "fr",
+      "daysAgo": 55,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "labor",
+      "title": "A shortage of harvest labor delayed picking.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "Qu'est-ce qui a été difficile ces derniers temps ?"
+        },
+        {
+          "role": "user",
+          "text": "Il manque de main-d'œuvre pour la récolte."
+        },
+        {
+          "role": "assistant",
+          "text": "Quand cela a-t-il commencé et qu'avez-vous essayé ?"
+        },
+        {
+          "role": "user",
+          "text": "Cela a commencé il y a deux mois ; je n'ai encore rien essayé."
+        },
+        {
+          "role": "assistant",
+          "text": "A shortage of harvest labor delayed picking."
+        },
+        {
+          "role": "user",
+          "text": "Oui, c'est exact."
+        }
+      ],
+      "issueId": "ISS-09",
+      "piiFlag": false,
+      "summaryOriginal": "Il manque de main-d'œuvre pour la récolte.",
+      "summaryEn": "A shortage of harvest labor delayed picking.",
+      "tags": [
+        "labor_migration"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Asked neighbors for help",
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-16",
+      "producerId": "PRD-KOFFI",
+      "organizationId": "ORG-NAW-CIV",
+      "language": "fr",
+      "daysAgo": 9,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "labor",
+      "title": "A shortage of harvest labor delayed picking.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "Qu'est-ce qui a été difficile ces derniers temps ?"
+        },
+        {
+          "role": "user",
+          "text": "Il manque de main-d'œuvre pour la récolte. Mon voisin Yao, téléphone 0102030405, a quitté la ferme."
+        },
+        {
+          "role": "assistant",
+          "text": "Quand cela a-t-il commencé et qu'avez-vous essayé ?"
+        },
+        {
+          "role": "user",
+          "text": "Cela a commencé il y a deux mois ; je n'ai encore rien essayé."
+        },
+        {
+          "role": "assistant",
+          "text": "A shortage of harvest labor delayed picking."
+        },
+        {
+          "role": "user",
+          "text": "Oui, c'est exact."
+        }
+      ],
+      "issueId": "ISS-09",
+      "piiFlag": true,
+      "summaryOriginal": "Il manque de main-d'œuvre pour la récolte.",
+      "summaryEn": "A shortage of harvest labor delayed picking.",
+      "tags": [
+        "labor_migration"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "pending",
+      "publicationStatus": "awaiting_review",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": null,
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-17",
+      "producerId": "PRD-KOFFI",
+      "organizationId": "ORG-NAW-CIV",
+      "language": "fr",
+      "daysAgo": 35,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "price",
+      "title": "A sharp price decline no longer covers production costs.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "Qu'est-ce qui a été difficile ces derniers temps ?"
+        },
+        {
+          "role": "user",
+          "text": "Le prix a baissé."
+        },
+        {
+          "role": "assistant",
+          "text": "Quand cela a-t-il commencé et qu'avez-vous essayé ?"
+        },
+        {
+          "role": "user",
+          "text": "Cela a commencé il y a deux mois ; je n'ai encore rien essayé."
+        },
+        {
+          "role": "assistant",
+          "text": "A sharp price decline no longer covers production costs."
+        },
+        {
+          "role": "user",
+          "text": "Oui, c'est exact."
+        }
+      ],
+      "issueId": "ISS-10",
+      "piiFlag": false,
+      "summaryOriginal": "Le prix a baissé.",
+      "summaryEn": "A sharp price decline no longer covers production costs.",
+      "tags": [
+        "market_price"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "corrected",
+      "publicationStatus": "awaiting_reconfirmation",
+      "summaryVersion": 2,
+      "caseCard": {
+        "action": null,
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      },
+      "pendingRevision": {
+        "summaryEn": "A sharp price decline no longer covers production costs. (reviewer edit)"
+      }
+    },
+    {
+      "conversationId": "cv-18",
+      "producerId": "PRD-MARIAM",
+      "organizationId": "ORG-NAW-CIV",
+      "language": "en",
+      "daysAgo": 1,
+      "status": "completed",
+      "kind": "search",
+      "topic": "soil",
+      "title": "Soil fertility appears to be declining year over year.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What has been difficult recently?"
+        },
+        {
+          "role": "user",
+          "text": "My soil looks poorer every year."
+        },
+        {
+          "role": "assistant",
+          "text": "When did it start and what have you tried?"
+        },
+        {
+          "role": "user",
+          "text": "It started two months ago; I have not tried anything yet."
+        },
+        {
+          "role": "assistant",
+          "text": "Soil fertility appears to be declining year over year."
+        },
+        {
+          "role": "user",
+          "text": "Yes, that's right."
+        }
+      ],
+      "issueId": null,
+      "piiFlag": false
+    },
+    {
+      "conversationId": "cv-19",
+      "producerId": "PRD-MARIAM",
+      "organizationId": "ORG-NAW-CIV",
+      "language": "en",
+      "daysAgo": 20,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "soil",
+      "title": "Soil fertility appears to be declining year over year.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What has been difficult recently?"
+        },
+        {
+          "role": "user",
+          "text": "My soil looks poorer every year."
+        },
+        {
+          "role": "assistant",
+          "text": "When did it start and what have you tried?"
+        },
+        {
+          "role": "user",
+          "text": "It started two months ago; I have not tried anything yet."
+        },
+        {
+          "role": "assistant",
+          "text": "Soil fertility appears to be declining year over year."
+        },
+        {
+          "role": "user",
+          "text": "Yes, that's right."
+        }
+      ],
+      "issueId": "ISS-11",
+      "piiFlag": false,
+      "summaryOriginal": "My soil looks poorer every year.",
+      "summaryEn": "Soil fertility appears to be declining year over year.",
+      "tags": [
+        "soil_land"
+      ],
+      "sharingChoice": "share_conversation",
+      "identityPermitted": true,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Added compost and cover crops",
+        "result": "Early signs of better leaf color (fictional)",
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-20",
+      "producerId": "PRD-MARIAM",
+      "organizationId": "ORG-NAW-CIV",
+      "language": "en",
+      "daysAgo": 45,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "drought",
+      "title": "A dry spell reduced flowering and expected yield this season",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What has been difficult recently?"
+        },
+        {
+          "role": "user",
+          "text": "There was a drought this year and the coffee plants lost flowers."
+        },
+        {
+          "role": "assistant",
+          "text": "When did it start and what have you tried?"
+        },
+        {
+          "role": "user",
+          "text": "It started two months ago; I have not tried anything yet."
+        },
+        {
+          "role": "assistant",
+          "text": "A dry spell reduced flowering and expected yield this season."
+        },
+        {
+          "role": "user",
+          "text": "Yes, that's right."
+        }
+      ],
+      "issueId": "ISS-12",
+      "piiFlag": false,
+      "summaryOriginal": "There was a drought this year and the coffee plants lost flowers.",
+      "summaryEn": "A dry spell reduced flowering and expected yield this season.",
+      "tags": [
+        "climate_weather"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "withdrawn",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": null,
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-21",
+      "producerId": "PRD-ELENA",
+      "organizationId": "ORG-AND-COL",
+      "language": "en",
+      "daysAgo": 100,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "water",
+      "title": "Rainwater storage tanks were built to bridge the dry season.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What has been difficult recently?"
+        },
+        {
+          "role": "user",
+          "text": "We built tanks to store rainwater."
+        },
+        {
+          "role": "assistant",
+          "text": "When did it start and what have you tried?"
+        },
+        {
+          "role": "user",
+          "text": "It started two months ago; I have not tried anything yet."
+        },
+        {
+          "role": "assistant",
+          "text": "Rainwater storage tanks were built to bridge the dry season."
+        },
+        {
+          "role": "user",
+          "text": "Yes, that's right."
+        }
+      ],
+      "issueId": "ISS-03",
+      "piiFlag": false,
+      "summaryOriginal": "We built tanks to store rainwater.",
+      "summaryEn": "Rainwater storage tanks were built to bridge the dry season.",
+      "tags": [
+        "water"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": "Attended a water-management workshop",
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-22",
+      "producerId": "PRD-MATEO",
+      "organizationId": "ORG-AND-COL",
+      "language": "es",
+      "daysAgo": 120,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "soil",
+      "title": "Soil fertility appears to be declining year over year.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "¿Qué ha sido difícil últimamente?"
+        },
+        {
+          "role": "user",
+          "text": "El suelo se ve más pobre cada año."
+        },
+        {
+          "role": "assistant",
+          "text": "¿Cuándo empezó y qué intentó?"
+        },
+        {
+          "role": "user",
+          "text": "Empezó hace dos meses; todavía no he hecho nada."
+        },
+        {
+          "role": "assistant",
+          "text": "Soil fertility appears to be declining year over year."
+        },
+        {
+          "role": "user",
+          "text": "Sí, es correcto."
+        }
+      ],
+      "issueId": "ISS-04",
+      "piiFlag": false,
+      "summaryOriginal": "El suelo se ve más pobre cada año.",
+      "summaryEn": "Soil fertility appears to be declining year over year.",
+      "tags": [
+        "soil_land"
+      ],
+      "sharingChoice": "ftusa_only",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "not_shared",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": null,
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    },
+    {
+      "conversationId": "cv-23",
+      "producerId": "PRD-AWA",
+      "organizationId": "ORG-NAW-CIV",
+      "language": "fr",
+      "daysAgo": 15,
+      "status": "completed",
+      "kind": "out_of_scope",
+      "topic": "price",
+      "title": "A sharp price decline no longer covers production costs.",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "Qu'est-ce qui a été difficile ces derniers temps ?"
+        },
+        {
+          "role": "user",
+          "text": "Le prix a baissé."
+        },
+        {
+          "role": "assistant",
+          "text": "Quand cela a-t-il commencé et qu'avez-vous essayé ?"
+        },
+        {
+          "role": "user",
+          "text": "Cela a commencé il y a deux mois ; je n'ai encore rien essayé."
+        },
+        {
+          "role": "assistant",
+          "text": "A sharp price decline no longer covers production costs."
+        },
+        {
+          "role": "user",
+          "text": "Oui, c'est exact."
+        }
+      ],
+      "issueId": null,
+      "piiFlag": false
+    },
+    {
+      "conversationId": "cv-24",
+      "producerId": "PRD-DIEGO",
+      "organizationId": "ORG-COP-HON",
+      "language": "en",
+      "daysAgo": 75,
+      "status": "completed",
+      "kind": "issue",
+      "topic": "drought",
+      "title": "A dry spell reduced flowering and expected yield this season",
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What has been difficult recently?"
+        },
+        {
+          "role": "user",
+          "text": "There was a drought this year and the coffee plants lost flowers."
+        },
+        {
+          "role": "assistant",
+          "text": "When did it start and what have you tried?"
+        },
+        {
+          "role": "user",
+          "text": "It started two months ago; I have not tried anything yet."
+        },
+        {
+          "role": "assistant",
+          "text": "A dry spell reduced flowering and expected yield this season."
+        },
+        {
+          "role": "user",
+          "text": "Yes, that's right."
+        }
+      ],
+      "issueId": "ISS-05",
+      "piiFlag": false,
+      "summaryOriginal": "There was a drought this year and the coffee plants lost flowers.",
+      "summaryEn": "A dry spell reduced flowering and expected yield this season.",
+      "tags": [
+        "climate_weather"
+      ],
+      "sharingChoice": "share_summary",
+      "identityPermitted": false,
+      "reviewStatus": "approved",
+      "publicationStatus": "published",
+      "summaryVersion": 1,
+      "caseCard": {
+        "action": null,
+        "result": null,
+        "standards": [],
+        "standards_status": "supplied APS/FPS clauses required; none invented"
+      }
+    }
+  ]
+}

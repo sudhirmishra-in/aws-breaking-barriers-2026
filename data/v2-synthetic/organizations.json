@@ -1,0 +1,69 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "organizations": [
+    {
+      "organizationId": "ORG-AND-COL",
+      "name": "Andean Coffee Cooperative",
+      "info": {
+        "accountSk": "ACC-COL-0000412873",
+        "accountCategoryName": "Producer organization (cooperative)",
+        "productCategoryName": [
+          "Coffee (green, washed arabica)",
+          "Specialty micro-lots"
+        ],
+        "accountTypeName": "Small producer organization (SPO)",
+        "certificationScopeName": "Coffee production and cooperative wet milling",
+        "certificationStatusName": "Certified",
+        "countryName": "Colombia",
+        "rawSupplyChainRoleTxt": [
+          "Grower (member farms)",
+          "Primary processor (wet mill)",
+          "Exporter"
+        ],
+        "structureTxt": "Cooperative of 640 member farms in 14 veredas, general assembly and elected board"
+      }
+    },
+    {
+      "organizationId": "ORG-COP-HON",
+      "name": "Copán Coffee Association",
+      "info": {
+        "accountSk": "ACC-HND-0000377120",
+        "accountCategoryName": "Producer association",
+        "productCategoryName": [
+          "Coffee (green, washed arabica)"
+        ],
+        "accountTypeName": "Small producer organization (SPO)",
+        "certificationScopeName": "Coffee production",
+        "certificationStatusName": "Certified",
+        "countryName": "Honduras",
+        "rawSupplyChainRoleTxt": [
+          "Grower (member farms)",
+          "Dry mill operator"
+        ],
+        "structureTxt": "Association of 210 smallholder members in 9 communities"
+      }
+    },
+    {
+      "organizationId": "ORG-NAW-CIV",
+      "name": "Nawa Cocoa Cooperative",
+      "info": {
+        "accountSk": "ACC-CIV-0000559004",
+        "accountCategoryName": "Producer organization (cooperative)",
+        "productCategoryName": [
+          "Cocoa (fermented, dried beans)",
+          "Plantain (intercrop)"
+        ],
+        "accountTypeName": "Small producer organization (SPO)",
+        "certificationScopeName": "Cocoa production, fermentation and bulk aggregation",
+        "certificationStatusName": "Certification suspended pending audit follow-up",
+        "countryName": "Côte d'Ivoire",
+        "rawSupplyChainRoleTxt": [
+          "Grower (member farms)",
+          "Aggregator",
+          "Fermentation and drying"
+        ],
+        "structureTxt": "Cooperative of 1,150 members in 22 village sections, supervised by a management committee"
+      }
+    }
+  ]
+}

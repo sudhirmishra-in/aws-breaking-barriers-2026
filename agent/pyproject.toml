@@ -2,10 +2,12 @@
 name = "ftusa-exchange-agent"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["strands-agents", "bedrock-agentcore", "boto3", "pydantic>=2", "shapely"]
+dependencies = ["strands-agents", "bedrock-agentcore", "boto3", "pydantic>=2", "aws-opentelemetry-distro>=0.18.0"]
 
 [dependency-groups]
 dev = ["pytest"]
+# Offline ingest only (builds the country gazetteer and fetches data). Deliberately NOT a runtime dependency: the agent never imports shapely.
+ingest = ["shapely"]
 
 [tool.pytest.ini_options]
 # "app" is this agent's package. ".." is the repo root, where the Component 5

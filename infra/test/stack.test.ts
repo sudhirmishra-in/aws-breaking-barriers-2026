@@ -8,9 +8,64 @@ const app = new cdk.App();
 const stack = new ExchangeStack(app, "T", {
   env: { account: "111111111111", region: "us-west-2" }, envName: "test", modelId: "us.anthropic.claude-haiku-4-5-20251001-v1:0",
   extraCallbackUrls: ["http://localhost:5173/auth/callback"], extraLogoutUrls: ["http://localhost:5173/"],
-  agentZip: "../agent/dist/agent.zip", webDist: "../web/dist", gitSha: "abc123", enableCiClient: true,
+  agentZip: "../agent/dist/agent.zip", webDist: "../web/dist", gitSha: "abc123", enableCiClient: true, enableKnowledgeBase: false, knowledgeBaseCards: "../data/v2-synthetic",
 });
 const t = Template.fromStack(stack);
+const kbStack = new ExchangeStack(new cdk.App(), "K", {
+  env: { account: "111111111111", region: "us-west-2" }, envName: "test", modelId: "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  extraCallbackUrls: ["http://localhost:5173/auth/callback"], extraLogoutUrls: ["http://localhost:5173/"],
+  agentZip: "../agent/dist/agent.zip", webDist: "../web/dist", gitSha: "abc123", enableCiClient: true, enableKnowledgeBase: true, knowledgeBaseCards: "../data/v2-synthetic",
+});
+const kt = Template.fromStack(kbStack);
+
+describe("external environmental data", () => {
+  it("a facts table keyed by region, encrypted with the CMK, readable by the agent runtime and the API", () => {
+    t.hasResourceProperties("AWS::DynamoDB::GlobalTable", Match.objectLike({ TableName: "ftusa-environmental-facts-test", KeySchema: [{ AttributeName: "region_key", KeyType: "HASH" }, { AttributeName: "fact_key", KeyType: "RANGE" }] }));
+    const json = JSON.stringify(t.toJSON());
+    expect(json).toContain("ENVIRONMENTAL_FACTS_TABLE");
+    const policies = Object.values(t.findResources("AWS::IAM::Policy")) as { Properties: { PolicyName: string; PolicyDocument: { Statement: { Action: string | string[] }[] } } }[];
+    const readers = policies.filter((p) => JSON.stringify(p.Properties.PolicyDocument).includes("EnvironmentalFacts"));
+    expect(readers.length).toBeGreaterThanOrEqual(2); // runtime role and API function
+    for (const p of readers) for (const st of p.Properties.PolicyDocument.Statement) expect([st.Action].flat().some((a) => /PutItem|DeleteItem|UpdateItem|BatchWrite/.test(a)) && JSON.stringify(st).includes("EnvironmentalFacts")).toBe(false);
+  });
+});
+
+describe("memory and observability", () => {
+  it("three separate AgentCore Memory resources, each with its own namespace, one semantic strategy and bounded event expiry", () => {
+    const mems = Object.values(t.findResources("AWS::BedrockAgentCore::Memory")) as { Properties: { Name: string; EventExpiryDuration: number; MemoryStrategies: { SemanticMemoryStrategy: { NamespaceTemplates: string[] } }[] } }[];
+    expect(mems).toHaveLength(3);
+    expect(mems.map((m) => m.Properties.MemoryStrategies[0].SemanticMemoryStrategy.NamespaceTemplates[0]).sort()).toEqual(["/org/{actorId}/issues/", "/producer/{actorId}/facts/", "/published/{actorId}/cases/"]);
+    expect(mems.every((m) => m.Properties.EventExpiryDuration <= 365)).toBe(true);
+  });
+  it("the API may only create events and retrieve records on those three memories", () => {
+    const stmts = Object.values(t.findResources("AWS::IAM::Policy")).flatMap((r) => (r as { Properties: { PolicyDocument: { Statement: { Action: string | string[]; Resource: unknown }[] } } }).Properties.PolicyDocument.Statement);
+    const mem = stmts.filter((x) => [x.Action].flat().includes("bedrock-agentcore:CreateEvent"));
+    expect(mem).toHaveLength(1); expect(([mem[0].Resource].flat() as unknown[]).length).toBe(3); expect(mem[0].Resource).not.toBe("*");
+    expect([mem[0].Action].flat().sort()).toEqual(["bedrock-agentcore:CreateEvent", "bedrock-agentcore:RetrieveMemoryRecords"]);
+  });
+  it("the agent runtime is auto-instrumented (ADOT) and the stack has a dashboard and alarms for agent failures, memory and latency", () => {
+    t.hasResourceProperties("AWS::BedrockAgentCore::Runtime", Match.objectLike({ EnvironmentVariables: Match.objectLike({ AGENT_OBSERVABILITY_ENABLED: "true", OTEL_PYTHON_DISTRO: "aws_distro" }),
+      AgentRuntimeArtifact: { CodeConfiguration: Match.objectLike({ EntryPoint: ["opentelemetry-instrument", "main.py"] }) } }));
+    t.resourceCountIs("AWS::CloudWatch::Dashboard", 1);
+    const alarms = Object.values(t.findResources("AWS::CloudWatch::Alarm")) as { Properties: { AlarmDescription?: string } }[];
+    for (const d of ["Agent turns failing", "Derived memory writes failing", "Agent turn p90"]) expect(alarms.some((a) => a.Properties.AlarmDescription?.includes(d))).toBe(true);
+  });
+});
+
+describe("knowledge base (optional)", () => {
+  it("is absent unless enabled", () => { t.resourceCountIs("AWS::Bedrock::KnowledgeBase", 0); t.resourceCountIs("AWS::S3Vectors::VectorBucket", 0); });
+  it("uses a managed KB on an S3 Vectors index with a multilingual embedding model, one chunk per card", () => {
+    kt.hasResourceProperties("AWS::Bedrock::KnowledgeBase", Match.objectLike({ StorageConfiguration: Match.objectLike({ Type: "S3_VECTORS" }) }));
+    kt.hasResourceProperties("AWS::S3Vectors::Index", Match.objectLike({ Dimension: 1024, DistanceMetric: "cosine" }));
+    kt.hasResourceProperties("AWS::Bedrock::DataSource", Match.objectLike({ VectorIngestionConfiguration: { ChunkingConfiguration: { ChunkingStrategy: "NONE" } } }));
+    expect(JSON.stringify(kt.toJSON())).toContain("amazon.titan-embed-text-v2:0");
+  });
+  it("the API may only retrieve from that one knowledge base", () => {
+    const stmts = Object.values(kt.findResources("AWS::IAM::Policy")).flatMap((r) => (r as { Properties: { PolicyDocument: { Statement: { Action: string | string[]; Resource: unknown }[] } } }).Properties.PolicyDocument.Statement);
+    const retr = stmts.filter((x) => [x.Action].flat().includes("bedrock:Retrieve"));
+    expect(retr).toHaveLength(1); expect(JSON.stringify(retr[0].Resource)).toContain("knowledge-base/"); expect(retr[0].Resource).not.toBe("*");
+  });
+});
 
 describe("stack", () => {
   it("uses a public PKCE client without a secret and no password flows", () => {
@@ -28,6 +83,9 @@ describe("stack", () => {
   });
   it("conversations table has the owner history index", () => {
     t.hasResourceProperties("AWS::DynamoDB::GlobalTable", { GlobalSecondaryIndexes: Match.arrayWith([Match.objectLike({ IndexName: "owner-index" })]) });
+  });
+  it("V2: outcomes table has the organization index and expires records (no indefinite retention)", () => {
+    t.hasResourceProperties("AWS::DynamoDB::GlobalTable", { GlobalSecondaryIndexes: Match.arrayWith([Match.objectLike({ IndexName: "org-index" })]), TimeToLiveSpecification: { Enabled: true, AttributeName: "ttl" } });
   });
   it("API role can start Transcribe streaming and nothing broader on Transcribe", () => {
     const pol = JSON.stringify(Object.values(t.findResources("AWS::IAM::Policy")));

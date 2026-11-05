@@ -1,0 +1,125 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "producers": [
+    {
+      "producerId": "PRD-ANA",
+      "displayName": "Ana",
+      "organizationId": "ORG-AND-COL",
+      "applicationUserId": "user-ana",
+      "preferredLanguage": "es",
+      "entityType": "cooperative",
+      "seedUsername": "ana.demo@example.com",
+      "location": "Huila, Colombia",
+      "crop": "coffee",
+      "synthetic": true
+    },
+    {
+      "producerId": "PRD-MATEO",
+      "displayName": "Mateo",
+      "organizationId": "ORG-AND-COL",
+      "applicationUserId": "user-mateo",
+      "preferredLanguage": "es",
+      "entityType": "cooperative",
+      "seedUsername": "mateo.demo@example.com",
+      "location": "Huila, Colombia",
+      "crop": "coffee",
+      "synthetic": true
+    },
+    {
+      "producerId": "PRD-ELENA",
+      "displayName": "Elena",
+      "organizationId": "ORG-AND-COL",
+      "applicationUserId": "user-elena",
+      "preferredLanguage": "en",
+      "entityType": "cooperative",
+      "seedUsername": "elena.demo@example.com",
+      "location": "Huila, Colombia",
+      "crop": "coffee",
+      "synthetic": true
+    },
+    {
+      "producerId": "PRD-LUCIA",
+      "displayName": "Lucía",
+      "organizationId": "ORG-COP-HON",
+      "applicationUserId": "user-lucia",
+      "preferredLanguage": "es",
+      "entityType": "association",
+      "seedUsername": "lucia.demo@example.com",
+      "location": "Copán, Honduras",
+      "crop": "coffee",
+      "synthetic": true
+    },
+    {
+      "producerId": "PRD-DIEGO",
+      "displayName": "Diego",
+      "organizationId": "ORG-COP-HON",
+      "applicationUserId": "user-diego",
+      "preferredLanguage": "en",
+      "entityType": "association",
+      "seedUsername": "diego.demo@example.com",
+      "location": "Copán, Honduras",
+      "crop": "coffee",
+      "synthetic": true
+    },
+    {
+      "producerId": "PRD-ROSA",
+      "displayName": "Rosa",
+      "organizationId": "ORG-COP-HON",
+      "applicationUserId": "user-rosa",
+      "preferredLanguage": "es",
+      "entityType": "association",
+      "seedUsername": "rosa.demo@example.com",
+      "location": "Copán, Honduras",
+      "crop": "coffee",
+      "synthetic": true
+    },
+    {
+      "producerId": "PRD-AWA",
+      "displayName": "Awa",
+      "organizationId": "ORG-NAW-CIV",
+      "applicationUserId": "user-awa",
+      "preferredLanguage": "fr",
+      "entityType": "cooperative",
+      "seedUsername": "awa.demo@example.com",
+      "location": "Nawa, Côte d'Ivoire",
+      "crop": "cocoa",
+      "synthetic": true
+    },
+    {
+      "producerId": "PRD-KOFFI",
+      "displayName": "Koffi",
+      "organizationId": "ORG-NAW-CIV",
+      "applicationUserId": "user-koffi",
+      "preferredLanguage": "fr",
+      "entityType": "cooperative",
+      "seedUsername": "koffi.demo@example.com",
+      "location": "Nawa, Côte d'Ivoire",
+      "crop": "cocoa",
+      "synthetic": true
+    },
+    {
+      "producerId": "PRD-MARIAM",
+      "displayName": "Mariam",
+      "organizationId": "ORG-NAW-CIV",
+      "applicationUserId": "user-mariam",
+      "preferredLanguage": "en",
+      "entityType": "cooperative",
+      "seedUsername": "mariam.demo@example.com",
+      "location": "Nawa, Côte d'Ivoire",
+      "crop": "cocoa",
+      "synthetic": true
+    }
+  ],
+  "reviewers": [
+    {
+      "reviewerId": "REV-1",
+      "displayName": "Reviewer One",
+      "seedUsername": "reviewer1.demo@example.com"
+    },
+    {
+      "reviewerId": "REV-2",
+      "displayName": "Reviewer Two",
+      "seedUsername": "reviewer2.demo@example.com"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "evidence": [
+    {
+      "evidenceId": "EV-01",
+      "geography": "Huila, Colombia",
+      "period": "2025-12 to 2026-03",
+      "tag": "climate_weather",
+      "finding": "Rainfall was below the multi-year average during the flowering window (illustrative).",
+      "origin": "external_imported",
+      "source": "Synthetic climate table",
+      "curationStatus": "not_curated",
+      "illustrative": true,
+      "standards": []
+    },
+    {
+      "evidenceId": "EV-02",
+      "geography": "Huila, Colombia",
+      "period": "2026",
+      "tag": "water",
+      "finding": "Household rainwater storage is a documented drought buffer (illustrative).",
+      "origin": "ftusa_authored",
+      "source": "FTUSA guidance note (synthetic)",
+      "curationStatus": "ftusa_curated",
+      "illustrative": true,
+      "standards": []
+    },
+    {
+      "evidenceId": "EV-03",
+      "geography": "Copán, Honduras",
+      "period": "2026-Q2",
+      "tag": "market_price",
+      "finding": "Reference prices declined over the quarter (illustrative).",
+      "origin": "external_imported",
+      "source": "Synthetic market table",
+      "curationStatus": "ftusa_curated",
+      "illustrative": true,
+      "standards": []
+    },
+    {
+      "evidenceId": "EV-04",
+      "geography": "Nawa, Côte d'Ivoire",
+      "period": "2025",
+      "tag": "soil_land",
+      "finding": "Soil organic matter below target on sampled plots (illustrative; sample is small, so treat as a limitation).",
+      "origin": "external_imported",
+      "source": "Synthetic soil survey",
+      "curationStatus": "not_curated",
+      "illustrative": true,
+      "standards": []
+    },
+    {
+      "evidenceId": "EV-05",
+      "geography": "Nawa, Côte d'Ivoire",
+      "period": "2024",
+      "tag": "labor_migration",
+      "finding": "Older figures; newer data conflicts (stale/conflicting evidence fixture).",
+      "origin": "external_imported",
+      "source": "Synthetic labor table",
+      "curationStatus": "not_curated",
+      "illustrative": true,
+      "stale": true,
+      "conflictsWith": "EV-06",
+      "standards": []
+    },
+    {
+      "evidenceId": "EV-06",
+      "geography": "Nawa, Côte d'Ivoire",
+      "period": "2026",
+      "tag": "labor_migration",
+      "finding": "Different labor estimate for the same area (conflicting fixture).",
+      "origin": "external_imported",
+      "source": "Synthetic labor table v2",
+      "curationStatus": "not_curated",
+      "illustrative": true,
+      "standards": []
+    }
+  ]
+}

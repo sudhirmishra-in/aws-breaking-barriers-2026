@@ -91,6 +91,18 @@ jobs:
       - run: npm run typecheck -w backend
       - run: npm test -w backend
       - run: npm run build -w backend
+      - name: Synthetic dataset contract (counts, scenario coverage, privacy rules) and seed builder smoke test
+        run: |
+          python3 scripts/validate_v2_dataset.py
+          python3 scripts/validate_nonprofit_outputs.py
+          python3 -c "
+          import sys; sys.path.insert(0, 'scripts')
+          from datetime import datetime, timezone
+          import seed_v2
+          subs = {p['producerId']: 'sub-' + p['producerId'] for p in seed_v2.load('people.json')['producers']}
+          ct, ot = seed_v2.build(datetime.now(timezone.utc), subs)
+          assert len(ct) > 100 and len(ot) >= 20, (len(ct), len(ot))
+          print('seed builder ok', len(ct), len(ot))"
 
   security-behaviour:
     name: Authorization, consent and idempotency tests
@@ -123,6 +135,17 @@ jobs:
         run: |
           npx vitest run test/service.test.ts -t "retries and concurrency" --reporter=json --outputFile="$RUNNER_TEMP/c.json"
           node ../scripts/assert-tests.mjs "$RUNNER_TEMP/c.json" 4
+        working-directory: backend
+
+      - name: Issue history, memory sync and recall tests (>= 12)
+        run: |
+          npx vitest run test/issues.test.ts --reporter=json --outputFile="$RUNNER_TEMP/e.json"
+          node ../scripts/assert-tests.mjs "$RUNNER_TEMP/e.json" 12
+        working-directory: backend
+      - name: V2 corrections, sharing, peer retrieval and publication tests (>= 20)
+        run: |
+          npx vitest run test/v2.test.ts --reporter=json --outputFile="$RUNNER_TEMP/d.json"
+          node ../scripts/assert-tests.mjs "$RUNNER_TEMP/d.json" 20
         working-directory: backend
 
   agent:

@@ -6,6 +6,8 @@ Authenticated vertical slice: Cognito sign-in (Vue 3) -> HTTP API with JWT autho
 
 Status: deployed 2026-11-03 to the breaking-barriers-ny account, us-west-2, stack `FtusaExchange-sandbox`. Verified live: unauthenticated and bad-token API calls return 401; the AgentCore runtime answers (Spanish opener, PII flagged not blocked, out-of-scope declined, evidence reported unavailable). NOT yet verified: browser sign-in and the authenticated API path end to end. See `docs/ARCHITECTURE.md`.
 
+> **V2 redesign in progress (branch `redesign-v2`)**: see [docs/REDESIGN_V2.md](docs/REDESIGN_V2.md) for what is implemented, the requirement overrides, retention policy and the remaining work. [docs/DEMO_ACCOUNTS_AND_SCENARIOS.md](docs/DEMO_ACCOUNTS_AND_SCENARIOS.md) lists the synthetic accounts.
+
 ## Layout
 | Path | What |
 |---|---|

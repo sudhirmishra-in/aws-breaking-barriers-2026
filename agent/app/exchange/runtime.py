@@ -4,9 +4,9 @@ import logging
 import os
 from typing import Callable
 
-from .context import TurnRequest, TurnResponse, TurnOutput
+from .context import MatchOutput, MatchRequest, MatchResponse, TurnRequest, TurnResponse, TurnOutput
 from .guardrail import check_pii
-from .prompts import system_prompt
+from .prompts import LANG_NAME, system_prompt
 from .tools import build_tools
 
 log = logging.getLogger("exchange")
@@ -91,6 +91,56 @@ def resolve_output(structured, force, text: str, conversation_id: str = "") -> T
     raise RuntimeError("model returned no structured output")
 
 
+MATCH_PROMPT = """You match a Fair Trade producer's problem to cases that other producers reported. This is a synthetic demonstration.
+You get the producer's confirmed account and a list of candidate cases. Pick ONLY the cases that are truly similar in substance: the same kind of problem
+with similar circumstances (crop, cause, timing, severity). Prefer cases where the producer took an action and a result is reported.
+Rules:
+- Choose at most 3. It is correct, and often best, to choose fewer or none. Never pad the list.
+- fit=strong only when the problem and circumstances clearly match; fit=partial when one important aspect matches.
+- Use only caseId values from the candidates. Never invent cases, outcomes, numbers or standards.
+- reason: one plain sentence in {lang} saying what makes the case similar. Do not give advice.
+"""
+
+
+def build_match_runner(req: MatchRequest) -> Callable[[str], MatchOutput]:
+    from strands import Agent
+    from strands.models import BedrockModel
+
+    model = BedrockModel(model_id=os.environ["MODEL_ID"], region_name=os.environ.get("AWS_REGION", "us-west-2"), max_tokens=700, temperature=0.0,
+                         guardrail_id=os.environ["GUARDRAIL_ID"], guardrail_version=os.environ["GUARDRAIL_VERSION"], guardrail_trace="disabled")
+    agent = Agent(model=model, system_prompt=MATCH_PROMPT.format(lang=LANG_NAME[req.language]), callback_handler=None)
+
+    def run(prompt: str) -> MatchOutput:
+        result = agent(prompt, structured_output_model=MatchOutput)
+        if result.stop_reason in BLOCKED_STOP_REASONS:
+            raise GuardrailBlocked(result.stop_reason)
+        if result.structured_output is None:
+            raise RuntimeError("model returned no structured output")
+        return result.structured_output
+
+    return run
+
+
+def handle_match(payload: dict, runner_factory: Callable[[MatchRequest], Callable[[str], MatchOutput]] = build_match_runner) -> dict:
+    """The model ranks; the application guarantees the result: only supplied caseIds, no duplicates, at most 3."""
+    req = MatchRequest.model_validate(payload)
+    if not req.candidates:
+        return MatchResponse(matches=[], considered=0).model_dump()
+    lines = [f"Producer's confirmed account: {req.account}", f"Challenge tags: {', '.join(req.tags) or 'none'}", "Candidates:"]
+    for c in req.candidates:
+        lines.append(f"- caseId={c.caseId} | challenge: {c.challenge} | action: {c.action or 'not reported'} | result: {c.result or 'not reported'} | "
+                     f"tags: {', '.join(c.tags)} | same organization: {c.sameOrganization} | same country: {c.sameCountry}")
+    out = runner_factory(req)("\n".join(lines))
+    allowed = {c.caseId for c in req.candidates}
+    seen: set[str] = set()
+    kept = []
+    for m in out.matches:
+        if m.caseId in allowed and m.caseId not in seen:
+            seen.add(m.caseId); kept.append(m)
+    log.info("match considered=%d kept=%d", len(req.candidates), len(kept))
+    return MatchResponse(matches=kept[:3], considered=len(req.candidates)).model_dump()
+
+
 def _pii_client():
     import boto3
 
@@ -102,6 +152,8 @@ def handle_turn(
     runner_factory: Callable[[TurnRequest], AgentRunner] = _build_real_runner,
     pii_checker: Callable[[str], list[str]] | None = None,
 ) -> dict:
+    if isinstance(payload, dict) and payload.get("task") == "match":
+        return handle_match(payload)
     req = TurnRequest.model_validate(payload)
     last = req.messages[-1]
     if last.role != "user":
@@ -127,10 +179,10 @@ def handle_turn(
         phase = "intake"
     if req.context.mode == "guidance":
         phase = "guidance"
-    if req.context.mode == "ask":
+    if req.context.mode in ("ask", "followup"):
         phase = "answer"
     playback = out.playback_summary if phase == "playback" else None
-    if req.context.mode == "ask":
+    if req.context.mode in ("ask", "followup"):
         playback = None
     if phase == "playback" and not playback:
         phase = "intake"

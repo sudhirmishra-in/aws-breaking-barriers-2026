@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 
-from external_data import access, gazetteer as gaz
+from external_data import access, keys
 
 logger = logging.getLogger("external_data.tool")
 
@@ -57,7 +57,7 @@ def get_environmental_context(
     stress, soil, forest, protected areas, prices — instead of inventing a
     figure. Every returned fact carries its dataset, period, method, and a
     baseline comparison, so you can cite the source and say "X% below the
-    1981-2010 average".
+    1991-2020 average".
 
     Args:
         location: {"country": str, "region": str (optional)} — the session's
@@ -75,7 +75,7 @@ def get_environmental_context(
         (not an error) when nothing matches — then say "no external data for
         that" rather than inventing a number.
     """
-    country = location.get("country") if isinstance(location, dict) else location
+    country = keys.country_of(location)
     if not country:
         logger.info("get_environmental_context: no country in location=%r -> []", location)
         return []
@@ -86,7 +86,7 @@ def get_environmental_context(
         logger.info("get_environmental_context %s tags=%s: no matching theme -> []",
                     country, tags)
         return []
-    facts = access.get_facts(gaz.region_key(country), themes=themes, horizon=horizon)
+    facts = access.get_facts(keys.region_key(country), themes=themes, horizon=horizon)
     # NFR-4 observability: log the request and the returned facts' attribution
     # flags, so a reviewer can trace exactly what the agent was grounded on.
     summary = [(f["dataset"], f["indicator"],

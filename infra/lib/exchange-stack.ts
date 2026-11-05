@@ -18,6 +18,8 @@ import * as authorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as bedrock from "aws-cdk-lib/aws-bedrock";
 import * as agentcore from "aws-cdk-lib/aws-bedrockagentcore";
+import * as s3vectors from "aws-cdk-lib/aws-s3vectors";
+import * as cw from "aws-cdk-lib/aws-cloudwatch";
 
 export interface ExchangeProps extends cdk.StackProps {
   envName: string;
@@ -27,6 +29,8 @@ export interface ExchangeProps extends cdk.StackProps {
   agentZip: string;
   webDist: string;
   gitSha: string; // recorded on the runtime, stack tag and output so a deploy can be tied to a commit
+  enableKnowledgeBase: boolean; // provisions the project-evidence Knowledge Base (S3 Vectors); off by default
+  knowledgeBaseCards: string; // directory of Markdown cards + .metadata.json produced by scripts/nonprofit_ingest.py
   enableCiClient: boolean; // sandbox only: adds an IAM-gated (admin API) client for smoke tests; the browser client is unchanged
 }
 
@@ -49,9 +53,13 @@ export class ExchangeStack extends cdk.Stack {
     });
     const outcomes = new ddb.TableV2(this, "Outcomes", {
       tableName: n("outcomes"), partitionKey: { name: "outcomeId", type: ddb.AttributeType.STRING },
-      billing: ddb.Billing.onDemand(), encryption: ddb.TableEncryptionV2.customerManagedKey(key),
+      billing: ddb.Billing.onDemand(), encryption: ddb.TableEncryptionV2.customerManagedKey(key), timeToLiveAttribute: "ttl", // records are retained 180 days, not indefinitely
       pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true }, removalPolicy: removal,
-      globalSecondaryIndexes: [{ indexName: "kind-index", partitionKey: { name: "gsiKind", type: ddb.AttributeType.STRING }, sortKey: { name: "createdAt", type: ddb.AttributeType.STRING } }],
+      globalSecondaryIndexes: [
+        { indexName: "kind-index", partitionKey: { name: "gsiKind", type: ddb.AttributeType.STRING }, sortKey: { name: "createdAt", type: ddb.AttributeType.STRING } },
+        // V2: records and correction requests of one organization (peer summaries, producer-information pending corrections).
+        { indexName: "org-index", partitionKey: { name: "organizationId", type: ddb.AttributeType.STRING }, sortKey: { name: "createdAt", type: ddb.AttributeType.STRING } },
+      ],
     });
     // Component 5: pre-extracted environmental/climate facts. Read-only at
     // runtime (the agent queries it); populated by an offline ingest (manual).
@@ -136,6 +144,7 @@ export class ExchangeStack extends cdk.Stack {
     agentAsset.grantRead(runtimeRole);
     runtimeRole.addToPolicy(new iam.PolicyStatement({ actions: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams"],
       resources: [`arn:${this.partition}:logs:${this.region}:${this.account}:log-group:/aws/bedrock-agentcore/runtimes/*`] }));
+    runtimeRole.addToPolicy(new iam.PolicyStatement({ actions: ["logs:PutResourcePolicy"], resources: [`arn:${this.partition}:logs:${this.region}:${this.account}:log-group:/aws/bedrock-agentcore/runtimes/*`] }));
     runtimeRole.addToPolicy(new iam.PolicyStatement({ actions: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"], resources: ["*"] }));
     runtimeRole.addToPolicy(new iam.PolicyStatement({ actions: ["cloudwatch:PutMetricData"], resources: ["*"], conditions: { StringEquals: { "cloudwatch:namespace": "bedrock-agentcore" } } }));
     // Component 5: the agent's get_environmental_context tool queries this table.
@@ -145,13 +154,49 @@ export class ExchangeStack extends cdk.Stack {
       agentRuntimeName: `ftusa_exchange_${p.envName}`.replace(/[^A-Za-z0-9_]/g, "_"),
       description: "Producer exchange agent (Strands)",
       roleArn: runtimeRole.roleArn,
-      agentRuntimeArtifact: { codeConfiguration: { code: { s3: { bucket: agentAsset.s3BucketName, prefix: agentAsset.s3ObjectKey } }, entryPoint: ["main.py"], runtime: "PYTHON_3_13" } },
+      agentRuntimeArtifact: { codeConfiguration: { code: { s3: { bucket: agentAsset.s3BucketName, prefix: agentAsset.s3ObjectKey } }, entryPoint: ["opentelemetry-instrument", "main.py"], runtime: "PYTHON_3_13" } },
       networkConfiguration: { networkMode: "PUBLIC" },
       protocolConfiguration: "HTTP",
       lifecycleConfiguration: { idleRuntimeSessionTimeout: 900, maxLifetime: 3600 },
-      environmentVariables: { MODEL_ID: p.modelId, GUARDRAIL_ID: guardrail.attrGuardrailId, GUARDRAIL_VERSION: guardrailVersion.attrVersion, ENV_NAME: p.envName, DEPLOYED_COMMIT: p.gitSha, ENVIRONMENTAL_FACTS_TABLE: environmentalFacts.tableName },
+      environmentVariables: { AGENT_OBSERVABILITY_ENABLED: "true", OTEL_PYTHON_DISTRO: "aws_distro", OTEL_PYTHON_CONFIGURATOR: "aws_configurator", OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf", OTEL_TRACES_SAMPLER: "always_on", /* spans were dropped as unsampled when the caller sends no sampled trace context */ OTEL_RESOURCE_ATTRIBUTES: `service.name=ftusa-exchange-agent-${p.envName}`, ENVIRONMENTAL_FACTS_TABLE: environmentalFacts.tableName, MODEL_ID: p.modelId, GUARDRAIL_ID: guardrail.attrGuardrailId, GUARDRAIL_VERSION: guardrailVersion.attrVersion, ENV_NAME: p.envName, DEPLOYED_COMMIT: p.gitSha },
     });
     runtime.node.addDependency(runtimeRole);
+
+
+    // ---- project-evidence Knowledge Base (public project cards; managed, S3 Vectors store). Optional: -c enableKnowledgeBase=true -------------
+    let kbId: string | undefined;
+    if (p.enableKnowledgeBase) {
+      const embedModel = `arn:${this.partition}:bedrock:${this.region}::foundation-model/amazon.titan-embed-text-v2:0`; // multilingual, 1024 dimensions
+      const cards = new s3.Bucket(this, "KbCards", { blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL, enforceSSL: true, encryption: s3.BucketEncryption.S3_MANAGED, removalPolicy: removal, autoDeleteObjects: removal === cdk.RemovalPolicy.DESTROY });
+      new s3deploy.BucketDeployment(this, "KbCardsDeploy", { destinationBucket: cards, destinationKeyPrefix: "project-cards", prune: true, sources: [s3deploy.Source.asset(path.resolve(process.cwd(), p.knowledgeBaseCards))] });
+      const vb = new s3vectors.CfnVectorBucket(this, "KbVectors", { vectorBucketName: `${n("kb-vectors")}-${this.account}`.toLowerCase() });
+      const index = new s3vectors.CfnIndex(this, "KbIndex", { vectorBucketName: vb.vectorBucketName!, indexName: "project-cards", dimension: 1024, distanceMetric: "cosine", dataType: "float32",
+        metadataConfiguration: { nonFilterableMetadataKeys: ["AMAZON_BEDROCK_TEXT", "AMAZON_BEDROCK_METADATA"] } });
+      index.addDependency(vb);
+      const kbRole = new iam.Role(this, "KbRole", { assumedBy: new iam.ServicePrincipal("bedrock.amazonaws.com", { conditions: { StringEquals: { "aws:SourceAccount": this.account } } }) });
+      cards.grantRead(kbRole);
+      kbRole.addToPolicy(new iam.PolicyStatement({ actions: ["bedrock:InvokeModel"], resources: [embedModel] }));
+      kbRole.addToPolicy(new iam.PolicyStatement({ actions: ["s3vectors:GetIndex", "s3vectors:QueryVectors", "s3vectors:PutVectors", "s3vectors:GetVectors", "s3vectors:DeleteVectors", "s3vectors:ListVectors"], resources: [index.attrIndexArn] }));
+      const kb = new bedrock.CfnKnowledgeBase(this, "ProjectKb", { name: n("project-evidence"), description: "Public project records as evidence cards (not FTUSA-curated)", roleArn: kbRole.roleArn,
+        knowledgeBaseConfiguration: { type: "VECTOR", vectorKnowledgeBaseConfiguration: { embeddingModelArn: embedModel } },
+        storageConfiguration: { type: "S3_VECTORS", s3VectorsConfiguration: { indexArn: index.attrIndexArn } } });
+      kb.node.addDependency(kbRole); kb.addDependency(index);
+      const ds = new bedrock.CfnDataSource(this, "ProjectKbSource", { knowledgeBaseId: kb.attrKnowledgeBaseId, name: "project-cards",
+        dataSourceConfiguration: { type: "S3", s3Configuration: { bucketArn: cards.bucketArn, inclusionPrefixes: ["project-cards/"] } },
+        vectorIngestionConfiguration: { chunkingConfiguration: { chunkingStrategy: "NONE" } } }); // one card = one chunk, so a citation points at exactly one project
+      kbId = kb.attrKnowledgeBaseId;
+      new cdk.CfnOutput(this, "KnowledgeBaseId", { value: kb.attrKnowledgeBaseId });
+      new cdk.CfnOutput(this, "KnowledgeBaseDataSourceId", { value: ds.attrDataSourceId });
+      new cdk.CfnOutput(this, "KnowledgeBaseCardsBucket", { value: cards.bucketName });
+    }
+
+    // ---- AgentCore Memory: three SEPARATE resources (private, organization, published). DynamoDB stays authoritative; these are derived and rebuildable. ----
+    const mkMemory = (id: string, name: string, description: string, ns: string) => new agentcore.CfnMemory(this, id, { name: `${name}_${p.envName}`.replace(/[^A-Za-z0-9_]/g, "_"), description, eventExpiryDuration: 365,
+      memoryStrategies: [{ semanticMemoryStrategy: { name: `${name}_semantic`.replace(/[^A-Za-z0-9_]/g, "_"), namespaceTemplates: [ns] } }] });
+    const memPersonal = mkMemory("MemoryPersonal", "ftusa_personal", "Private notes about one producer's own conversations", "/producer/{actorId}/facts/");
+    const memOrg = mkMemory("MemoryOrg", "ftusa_org", "Authorized organization summaries and issue events, never transcripts", "/org/{actorId}/issues/");
+    const memPublished = mkMemory("MemoryPublished", "ftusa_published", "Reviewed, shared case payloads only", "/published/{actorId}/cases/");
+    const memId = (m: agentcore.CfnMemory) => m.getAtt("MemoryId").toString();
 
     // ---- API ----------------------------------------------------------------
     const apiLogs = new logs.LogGroup(this, "ApiFnLogs", { retention: logs.RetentionDays.ONE_MONTH, removalPolicy: cdk.RemovalPolicy.DESTROY });
@@ -160,13 +205,16 @@ export class ExchangeStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64, memorySize: 512, timeout: cdk.Duration.seconds(60), logGroup: apiLogs, reservedConcurrentExecutions: undefined,
       environment: {
         CONVERSATIONS_TABLE: conversations.tableName, OUTCOMES_TABLE: outcomes.tableName, AGENT_RUNTIME_ARN: runtime.attrAgentRuntimeArn,
-        USER_POOL_CLIENT_ID: client.userPoolClientId, ALLOWED_CLIENT_IDS: [client.userPoolClientId, ...(ciClient ? [ciClient.userPoolClientId] : [])].join(","), ISSUER: issuer, NODE_OPTIONS: "--enable-source-maps",
+        USER_POOL_CLIENT_ID: client.userPoolClientId, ALLOWED_CLIENT_IDS: [client.userPoolClientId, ...(ciClient ? [ciClient.userPoolClientId] : [])].join(","), ISSUER: issuer, NODE_OPTIONS: "--enable-source-maps", ENVIRONMENTAL_FACTS_TABLE: environmentalFacts.tableName, MEMORY_PERSONAL_ID: memId(memPersonal), MEMORY_ORG_ID: memId(memOrg), MEMORY_PUBLISHED_ID: memId(memPublished), ...(kbId ? { KNOWLEDGE_BASE_ID: kbId } : {}),
       },
       bundling: { minify: true, sourceMap: true, target: "node22" },
       depsLockFilePath: path.join(__dirname, "../../package-lock.json"),
       projectRoot: path.join(__dirname, "../.."),
     });
-    conversations.grantReadWriteData(fn); outcomes.grantReadWriteData(fn); key.grantEncryptDecrypt(fn);
+    conversations.grantReadWriteData(fn); outcomes.grantReadWriteData(fn); environmentalFacts.grantReadData(fn); key.grantEncryptDecrypt(fn);
+    if (kbId) fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["bedrock:Retrieve"], resources: [`arn:${this.partition}:bedrock:${this.region}:${this.account}:knowledge-base/${kbId}`] }));
+    fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["bedrock-agentcore:CreateEvent", "bedrock-agentcore:RetrieveMemoryRecords"],
+      resources: [memPersonal, memOrg, memPublished].map((m) => m.memoryRef.memoryArn) }));
     // Dictation: Transcribe streaming has no resource-level permissions. Audio is not stored.
     fn.addToRolePolicy(new iam.PolicyStatement({ actions: ["transcribe:StartStreamTranscription"], resources: ["*"] }));
     // Read aloud: Polly speech synthesis has no resource-level permissions (only lexicons do). Audio is not stored.
@@ -202,6 +250,24 @@ export class ExchangeStack extends cdk.Stack {
     // ---- operational diagnostics ----------------------------------------------
     new cdk.aws_cloudwatch.Alarm(this, "Api5xx", { metric: fn.metricErrors({ period: cdk.Duration.minutes(5) }), threshold: 3, evaluationPeriods: 1, alarmDescription: "API Lambda errors" });
 
+
+    // ---- observability: dashboard + alarms (agent traces flow through ADOT + CloudWatch Transaction Search; see scripts/enable_transaction_search.py) ----
+    const app = (metricName: string, stat: string, dims: Record<string, string> = {}, label?: string) => new cw.Metric({ namespace: "FtusaExchange", metricName, dimensionsMap: dims, statistic: stat, period: cdk.Duration.minutes(5), label });
+    const agentSearch = (name: string, stat: string, label: string) => new cw.MathExpression({ expression: `SEARCH('{AWS/Bedrock-AgentCore} MetricName="${name}"', '${stat}', 300)`, label, period: cdk.Duration.minutes(5) });
+    const dashboard = new cw.Dashboard(this, "Observability", { dashboardName: n("agent-observability") });
+    dashboard.addWidgets(
+      new cw.TextWidget({ width: 24, height: 2, markdown: `## Producer Exchange agent observability (${p.envName})\nTraces, sessions and token use: CloudWatch > GenAI Observability > Bedrock AgentCore, service \`ftusa-exchange-agent-${p.envName}\`. No message text is ever recorded in the application metrics below.` }),
+      new cw.GraphWidget({ title: "Agent turns (app)", width: 8, left: [app("AgentTurnLatencyMs", "p90", { Mode: "intake" }, "intake p90 ms"), app("AgentTurnLatencyMs", "p90", { Mode: "guidance" }, "guidance p90 ms")] }),
+      new cw.GraphWidget({ title: "Agent failures and fallbacks", width: 8, left: [app("AgentFailure", "Sum", { Mode: "intake" }, "failures intake"), app("AgentFailure", "Sum", { Mode: "guidance" }, "failures guidance"), app("OpenerFallback", "Sum"), app("MatchFallback", "Sum")] }),
+      new cw.GraphWidget({ title: "Safety and memory", width: 8, left: [app("PiiFlagged", "Sum", {}, "PII flagged"), app("MemorySync", "Sum", { Result: "ok" }, "memory ok"), app("MemorySync", "Sum", { Result: "failed" }, "memory failed")] }),
+      new cw.GraphWidget({ title: "AgentCore runtime", width: 8, left: [agentSearch("Invocations", "Sum", "Invocations"), agentSearch("SystemErrors", "Sum", "System errors"), agentSearch("Throttles", "Sum", "Throttles")] }),
+      new cw.GraphWidget({ title: "AgentCore latency (ms)", width: 8, left: [agentSearch("Latency", "p90", "Latency p90"), agentSearch("OverheadLatency", "p90", "Platform overhead p90")] }),
+      new cw.GraphWidget({ title: "API and Lambda", width: 8, left: [fn.metricErrors({ period: cdk.Duration.minutes(5) }), fn.metricDuration({ statistic: "p90", period: cdk.Duration.minutes(5) })], right: [api.metricServerError({ period: cdk.Duration.minutes(5) })] }),
+    );
+    new cw.Alarm(this, "AgentFailureAlarm", { metric: app("AgentFailure", "Sum", { Mode: "intake" }), threshold: 3, evaluationPeriods: 1, treatMissingData: cw.TreatMissingData.NOT_BREACHING, alarmDescription: "Agent turns failing" });
+    new cw.Alarm(this, "MemoryFailureAlarm", { metric: app("MemorySync", "Sum", { Result: "failed" }), threshold: 3, evaluationPeriods: 1, treatMissingData: cw.TreatMissingData.NOT_BREACHING, alarmDescription: "Derived memory writes failing; run memory reconcile" });
+    new cw.Alarm(this, "AgentLatencyAlarm", { metric: app("AgentTurnLatencyMs", "p90", { Mode: "intake" }), threshold: 25000, evaluationPeriods: 2, treatMissingData: cw.TreatMissingData.NOT_BREACHING, alarmDescription: "Agent turn p90 above 25 s (API limit is 30 s)" });
+
     if (ciClient) new cdk.CfnOutput(this, "CiClientId", { value: ciClient.userPoolClientId });
     new cdk.CfnOutput(this, "DeployedCommit", { value: p.gitSha });
     new cdk.CfnOutput(this, "WebUrl", { value: webUrl });
@@ -212,6 +278,8 @@ export class ExchangeStack extends cdk.Stack {
     new cdk.CfnOutput(this, "AgentRuntimeArn", { value: runtime.attrAgentRuntimeArn });
     new cdk.CfnOutput(this, "OutcomesTable", { value: outcomes.tableName });
     new cdk.CfnOutput(this, "ConversationsTable", { value: conversations.tableName });
+    new cdk.CfnOutput(this, "MemoryOrgId", { value: memId(memOrg) }); new cdk.CfnOutput(this, "MemoryPersonalId", { value: memId(memPersonal) }); new cdk.CfnOutput(this, "MemoryPublishedId", { value: memId(memPublished) });
+    new cdk.CfnOutput(this, "DashboardName", { value: dashboard.dashboardName });
     new cdk.CfnOutput(this, "EnvironmentalFactsTable", { value: environmentalFacts.tableName });
     new cdk.CfnOutput(this, "GuardrailId", { value: guardrail.attrGuardrailId });
   }

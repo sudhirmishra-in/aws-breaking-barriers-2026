@@ -1,0 +1,77 @@
+{
+  "headers": {
+    "accountsAlsoSupplied": 14,
+    "accountsInHeaders": 51,
+    "headersWithUnknownSurvey": 0,
+    "total": 16857
+  },
+  "ingestionVersion": "b3e2e7617b565641",
+  "multi_choice": {
+    "classification": {
+      "account_conflict": 6999,
+      "consistent": 20074,
+      "consistent_account_not_supplied": 24049,
+      "no_header": 4305
+    },
+    "quarantinedRows": 35353,
+    "servedRows": 20074,
+    "total": 55427
+  },
+  "note": "Quarantine means not served for account-scoped answers; the rows are kept in build/nonprofit/quarantine and may represent a different export scope or account mapping.",
+  "parquet": "written",
+  "projectCards": 342,
+  "projects": {
+    "flags": {
+      "country_alias": 9,
+      "country_conflict": 6,
+      "date_start_epoch_placeholder": 1,
+      "geography_needs_review": 3
+    },
+    "sampleRows": {
+      "country_alias": [
+        57,
+        90,
+        91,
+        93,
+        97,
+        99,
+        176,
+        184,
+        240
+      ],
+      "country_conflict": [
+        69,
+        109,
+        228,
+        233,
+        246,
+        258
+      ],
+      "date_start_epoch_placeholder": [
+        176
+      ],
+      "geography_needs_review": [
+        228,
+        233,
+        258
+      ]
+    },
+    "served": 349,
+    "total": 349
+  },
+  "single_choice": {
+    "classification": {
+      "account_conflict": 1440,
+      "consistent": 3297,
+      "consistent_account_not_supplied": 11880,
+      "no_header": 16536
+    },
+    "quarantinedRows": 29856,
+    "servedRows": 3297,
+    "total": 33153
+  },
+  "uniqueness": {
+    "accounts": true,
+    "responseHeaders": true
+  }
+}

@@ -2,7 +2,7 @@ name: Ingest environmental facts
 
 # Populates the environmental-facts DynamoDB table from the Open-Meteo (ERA5)
 # archive: current-year year-to-date rainfall at each country's centroid, plus the
-# same-window 1981-2010 baseline. Runs three ways:
+# same-window 1991-2020 baseline. Runs three ways:
 #   - on a schedule (daily) to keep the year-to-date snapshot fresh
 #   - after a successful "Deploy sandbox" run (workflow_run), so a first deploy
 #     self-populates the table instead of waiting for the next scheduled run
@@ -50,7 +50,7 @@ jobs:
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           python-version: '3.13'
-      - run: uv sync --locked
+      - run: uv sync --locked --group ingest   # shapely builds the country geometry; it is not an agent runtime dependency
         working-directory: agent
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:

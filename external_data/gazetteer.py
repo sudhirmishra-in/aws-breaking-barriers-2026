@@ -39,7 +39,9 @@ def list_countries() -> list[str]:
 
 
 def has_country(country: str) -> bool:
-    return country.strip().lower() in _load()
+    from external_data.keys import country_of
+    c = country_of(country)
+    return bool(c) and c in _load()
 
 
 def get_geometry(country: str) -> BaseGeometry | None:
@@ -48,14 +50,9 @@ def get_geometry(country: str) -> BaseGeometry | None:
     MultiPolygon for countries with islands (e.g. Mexico); the full geometry is
     kept so raster masking covers every part of the country.
     """
-    return _load().get(country.strip().lower())
+    from external_data.keys import country_of
+    c = country_of(country)
+    return _load().get(c) if c else None
 
 
-def region_key(country: str, region_name: str | None = None) -> str:
-    """The DynamoDB partition key for a region.
-
-    The demo resolves every region to its **country** partition (OPEN-7), so the
-    key is always ``<country>#COUNTRY``. Sub-region resolution
-    (``<country>#<region>``) is the extension path, not the demo.
-    """
-    return f"{country.strip().lower()}#COUNTRY"
+from external_data.keys import region_key  # noqa: E402,F401  (kept here for existing callers; pure, no shapely needed)

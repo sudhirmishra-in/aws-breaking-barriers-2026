@@ -17,7 +17,7 @@ datasets:
       Always cached; the tool never pulls a dataset on a call.
     answers: >-
       what the environment/climate data shows for this region and challenge —
-      e.g. "rainfall in your country was X mm in 2025, Y% vs the 1981-2010 average"
+      e.g. "rainfall in your country was X mm in 2025, Y% vs the 1991-2020 average"
     source_store: DynamoDB environmental_facts (PK region_key, SK dataset#indicator#horizon)
     fields:
       region_key:        partition key, <country>#COUNTRY (country-level demo)
@@ -26,9 +26,9 @@ datasets:
       unit:              unit of value (e.g. mm/year)
       period:            the period the value covers (e.g. "2025")
       method:            how it was computed (attribution)
-      baseline_value:    the long-term reference value (e.g. 1981-2010 mean)
+      baseline_value:    the long-term reference value (e.g. 1991-2020 mean)
       baseline_delta_pct: value vs baseline, in percent
-      baseline_period:   the baseline reference period (e.g. "1981-2010")
+      baseline_period:   the baseline reference period (e.g. "1991-2020")
       is_projection:     true if a forward-looking projection (reserved in demo)
       is_stand_in:       true if a flagged stand-in value (fetch failed / no credential)
       theme:             the dataset theme (climate, water, soil_land, ...)

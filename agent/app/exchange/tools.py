@@ -68,7 +68,7 @@ def build_tools(producer: ProducerRef):
         instead of an invented figure. Each fact returned carries its dataset,
         indicator, value, unit, period, method and a baseline comparison, so you can
         cite the source and say e.g. "rainfall in your country was 14% above the
-        1981-2010 average this year". Pass the matching challenge tag(s): "climate and
+        1991-2020 average this year". Pass the matching challenge tag(s): "climate and
         weather", "drought", "floods", "water", "water scarcity", "soil and land",
         "soil health", "biodiversity and conservation", "market and price", "social and
         community" or "infrastructure"; horizon is "current" (the only horizon with
@@ -76,7 +76,7 @@ def build_tools(producer: ProducerRef):
         they type. An EMPTY list means no data for that topic: then say plainly there is
         none and never guess a number.
         """
-        return _environmental_context({"country": producer.location}, tags, horizon)
+        return _environmental_context({"country": producer.country or producer.location}, tags, horizon)
 
     return [get_my_history, get_regional_evidence, get_peer_examples, get_standards_clause,
             get_environmental_context]

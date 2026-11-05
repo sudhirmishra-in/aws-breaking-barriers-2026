@@ -5,12 +5,17 @@ import { AlertTriangle, Bot, Check, CheckCircle2, Copy, EyeOff, Heart, Keyboard,
 import DictateButton from "../components/DictateButton.vue";
 import HistoryPanel from "../components/HistoryPanel.vue";
 import ProgressPanel from "../components/ProgressPanel.vue";
+import InsightsPanel from "../components/InsightsPanel.vue";
+import ProducerInfo from "../components/ProducerInfo.vue";
+import SharingStep from "../components/SharingStep.vue";
+import type { SharingChoice } from "../types";
+import { L } from "../lib/labels";
 import { api, newRequestId } from "../lib/api";
 import { renderMarkdown } from "../lib/markdown";
 import { audioSupported, playMp3, stopAudio, unlockAudio } from "../lib/speech";
 import { markExpired, state } from "../session";
 import { t } from "../lib/i18n";
-import { ApiFailure, LANGS, type ConversationDto, type ConversationView, type Lang, type Message, type Stage } from "../types";
+import { ApiFailure, type ConversationDto, type ConversationView, type Message, type Stage } from "../types";
 
 const s = computed(() => t(state.ui));
 const route = useRoute();
@@ -22,7 +27,6 @@ const loading = ref(true);
 const missing = ref(false);
 const error = ref<{ text: string; retry?: () => Promise<void> } | null>(null);
 const draft = ref("");
-const startLang = ref<Lang>(state.ui);
 const correcting = ref(false);
 const corr = ref({ text: "", location: "", entity: "" });
 const confirmEnd = ref(false);
@@ -39,15 +43,22 @@ const box = ref<HTMLTextAreaElement | null>(null);
 
 const STAGE_OF: Record<ConversationDto["workflow"], Stage> = { intake: "intake", playback_pending: "playback", guidance_pending: "response", consent_pending: "consent", closed: "consent" };
 const closed = computed(() => conv.value?.workflow === "closed");
-const lang = computed(() => conv.value?.language ?? state.ui);
-const stage = computed<Stage>(() => STAGE_OF[conv.value?.workflow ?? "intake"]);
-const outcome = computed(() => (!closed.value ? null : conv.value?.consent === "granted" ? "saved" : "declined") as "saved" | "declined" | null);
+const feedback = computed(() => (view.value?.record?.feedback?.helpful ?? null) as "yes" | "partly" | "no" | null);
+const stage = computed<Stage>(() => (closed.value && feedback.value ? "feedback" : STAGE_OF[conv.value?.workflow ?? "intake"]));
+// Follow-up questions open after "partly" or "no"; "yes" ends the conversation.
+const followupOpen = computed(() => conv.value?.status === "completed" && (feedback.value === "partly" || feedback.value === "no"));
+const mainMsgs = computed(() => messages.value.filter((m) => m.stage !== "feedback"));
+const followMsgs = computed(() => messages.value.filter((m) => m.stage === "feedback"));
+const followDraft = ref("");
+const outcome = computed(() => (!closed.value ? null : conv.value?.status === "completed" ? "saved" : "declined") as "saved" | "declined" | null);
+const stopped = computed(() => conv.value?.status === "stopped");
+const view = ref<ConversationView | null>(null);
 const reached = computed(() => [...new Set(messages.value.map((m) => m.stage).filter(Boolean))] as Stage[]);
 const showChips = computed(() => conv.value?.workflow === "intake" && !busy.value && !draft.value && messages.value.filter((m) => m.role === "user").length === 0);
 const heading = computed(() => (conv.value ? conv.value.title || s.value.untitled : s.value.newConversation));
 
 function scrollDown() { nextTick(() => log.value?.scrollTo({ top: log.value.scrollHeight })); }
-function apply(v: { conversation: ConversationDto | null; messages?: Message[] }) { conv.value = v.conversation; messages.value = v.messages ?? []; scrollDown(); }
+function apply(v: { conversation: ConversationDto | null; messages?: Message[] }) { conv.value = v.conversation; messages.value = v.messages ?? []; view.value = v.conversation ? (v as ConversationView) : null; scrollDown(); }
 const maxAgentSeq = () => Math.max(0, ...messages.value.filter((m) => m.role === "assistant").map((m) => m.seq));
 
 function setMode(m: "text" | "voice") {
@@ -99,6 +110,8 @@ async function load() {
     else if (f.status === 404) { missing.value = true; apply({ conversation: null }); }
     else error.value = { text: f.message, retry: load };
   } finally { loading.value = false; lastSeenSeq = maxAgentSeq(); }
+  // "Ask about this": start the conversation right away, about that case (validated server-side), instead of showing an empty start screen.
+  if (!id && !conv.value && typeof route.query.case === "string" && !error.value) await start();
 }
 watch(() => [route.params.conversationId, route.query.new], () => { stopAudio(); speakingSeq.value = null; void load(); }, { immediate: true });
 
@@ -117,10 +130,19 @@ async function run(action: (requestId: string) => Promise<ConversationView>, req
     scrollDown(); return false;
   } finally { busy.value = false; }
 }
-const start = () => run((rid) => api.create(startLang.value, rid));
+// Switching the interface language during an open conversation also switches the language of the agent's later replies (this conversation only; the profile is never changed).
+/** Makes the open conversation use the interface language. Called when the dropdown changes AND before every agent turn, so a conversation started in another language (or a failed earlier switch) cannot keep answering in the old one. */
+async function syncLanguage(): Promise<void> {
+  const cur = conv.value; const ui = state.ui;
+  if (!cur || cur.status !== "active" || cur.language === ui) return;
+  try { const v = await api.setLanguage(cur.conversationId, newRequestId(), ui); if (conv.value?.conversationId === cur.conversationId) conv.value = v.conversation; } catch { /* the turn still proceeds in the saved language */ }
+}
+watch(() => state.ui, () => { if (!busy.value) void syncLanguage(); });
+const start = () => run((rid) => api.create(state.ui, rid, typeof route.query.case === "string" ? route.query.case : undefined));
 async function send() {
   const text = draft.value.trim(); if (!text || !conv.value || busy.value) return;
   const id = conv.value.conversationId;
+  await syncLanguage();
   // Show the producer's message immediately (optimistic); the server response replaces the list.
   messages.value = [...messages.value, { seq: -1, role: "user", text, at: "", stage: stage.value }]; scrollDown();
   const before = draft.value; draft.value = "";
@@ -128,10 +150,18 @@ async function send() {
 }
 // Enter sends, Shift+Enter adds a line; Enter while composing accented or non-Latin text must not send (spec CHAT-20).
 function onEnter(e: KeyboardEvent) { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); void send(); }
+async function sendFollowup() {
+  const text = followDraft.value.trim(); if (!text || !conv.value || busy.value) return;
+  const id = conv.value.conversationId; const before = followDraft.value; followDraft.value = "";
+  messages.value = [...messages.value, { seq: -1, role: "user", text, at: "", stage: "feedback" }]; scrollDown(); // shown at once; the server response replaces the list
+  if (!(await run((rid) => api.followup(id, rid, text)))) { messages.value = messages.value.filter((m) => m.seq !== -1); followDraft.value = before; }
+}
+function onFollowEnter(e: KeyboardEvent) { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); void sendFollowup(); }
 function addDictation(text: string) { draft.value = (draft.value.trim() + " " + text).trim(); nextTick(() => box.value?.focus()); }
 function pick(text: string) { draft.value = text; nextTick(() => box.value?.focus()); }
-const confirm = () => run((rid) => api.playback(conv.value!.conversationId, rid, { decision: "confirm" }));
+const confirm = async () => { await syncLanguage(); return run((rid) => api.playback(conv.value!.conversationId, rid, { decision: "confirm" })); };
 async function sendCorrection() {
+  await syncLanguage();
   const body: Parameters<typeof api.playback>[2] = { decision: "correct" };
   if (corr.value.text.trim()) body.correction = corr.value.text.trim();
   const field = corr.value.entity ? ({ field: "entityType", value: corr.value.entity } as const) : corr.value.location.trim() ? ({ field: "location", value: corr.value.location.trim() } as const) : undefined;
@@ -139,7 +169,10 @@ async function sendCorrection() {
   if (!body.correction && !body.profileCorrection) return;
   if (await run((rid) => api.playback(conv.value!.conversationId, rid, body))) { correcting.value = false; corr.value = { text: "", location: "", entity: "" }; }
 }
+const finalize = (hash: string, sharing: SharingChoice, identity: boolean) => run((rid) => api.finalize(conv.value!.conversationId, rid, hash, sharing, identity));
 const decide = (store: boolean) => run((rid) => api.consent(conv.value!.conversationId, rid, store));
+const reload = async () => { if (conv.value) apply(await api.get(conv.value.conversationId)); };
+const askAbout = (caseId: string) => { conv.value = null; messages.value = []; void router.push({ path: "/chat", query: { new: "1", case: caseId } }); };
 async function endNow() { confirmEnd.value = false; await run((rid) => api.end(conv.value!.conversationId, rid)); }
 async function copy(m: Message) { try { await navigator.clipboard.writeText(m.text); copiedSeq.value = m.seq; setTimeout(() => (copiedSeq.value = null), 1800); } catch { /* clipboard unavailable */ } }
 
@@ -154,7 +187,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
     <section class="chat-main" aria-label="Conversation">
       <header class="chat-hd">
         <div class="chat-actions">
-          <button type="button" class="btn primary sm" @click="newConversation"><Plus :size="14" aria-hidden="true" />{{ s.newConversation }}</button>
+          <button v-if="conv" type="button" class="btn primary sm" @click="newConversation"><Plus :size="14" aria-hidden="true" />{{ s.newConversation }}</button>
           <HistoryPanel :current-id="conv?.conversationId" @open="openConversation" @deleted="onDeleted" />
         </div>
         <div class="chat-titlebar">
@@ -172,7 +205,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
             <button type="button" class="btn sm" @click="endNow">{{ s.end }}</button><button type="button" class="btn sm" @click="confirmEnd = false">{{ s.cancel }}</button></span>
         </template>
       </header>
-      <ProgressPanel v-if="conv" class="only-narrow" variant="inline" :stage="stage" :outcome="outcome" :reached="reached" @jump="jump" />
+      <ProgressPanel v-if="conv" class="only-narrow" variant="inline" :stage="stage" :outcome="outcome" :reached="reached" :feedback="feedback" @jump="jump" />
 
       <div v-if="loading" class="chat-body" role="status"><span class="pill">…</span></div>
 
@@ -184,9 +217,6 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
             <h1>{{ s.welcome }}</h1>
             <span class="bar" aria-hidden="true" />
             <p>{{ s.about }}</p>
-            <div class="seg" role="group" :aria-label="s.language">
-              <button v-for="l in LANGS" :key="l.code" :aria-pressed="startLang === l.code" :lang="l.code" @click="startLang = l.code">{{ l.name }}</button>
-            </div>
             <div><button class="btn primary" :disabled="busy" @click="start"><MessageCircle :size="16" aria-hidden="true" />{{ busy ? s.sending : s.start }}</button></div>
             <div v-if="error" class="banner error" role="alert">{{ error.text }} <button v-if="error.retry" class="btn sm" @click="error.retry()">{{ s.retry }}</button></div>
           </div>
@@ -194,17 +224,19 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
         <div class="grid3">
           <div class="card feat"><span class="ic brand-gradient"><MessageCircle :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat1 }}</h3><p>{{ s.feat1d }}</p></div></div>
           <div class="card feat"><span class="ic brand-gradient"><CheckCircle2 :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat2 }}</h3><p>{{ s.feat2d }}</p></div></div>
-          <div class="card feat"><span class="ic brand-gradient"><EyeOff :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat3 }}</h3><p>{{ s.feat3d }}</p></div></div>
+          <div class="card feat"><span class="ic brand-gradient"><EyeOff :size="16" aria-hidden="true" /></span><div><h3>{{ s.feat3 }}</h3><p>{{ L(state.ui).landing.choice }}</p></div></div>
         </div>
-        <details class="card"><summary><ShieldCheck :size="14" aria-hidden="true" style="vertical-align:-2px" /> {{ s.privacyTitle }}</summary><p>{{ s.privacy }}</p></details>
+        <ProducerInfo />
+        <details class="card"><summary><ShieldCheck :size="14" aria-hidden="true" style="vertical-align:-2px" /> {{ s.privacyTitle }}</summary><p>{{ L(state.ui).share.retention }}</p></details>
       </div>
 
       <!-- A conversation: active or closed -->
       <template v-else>
+        <div v-if="view?.referencedCaseCard" class="banner info" role="note" style="margin:.5rem"><b>{{ L(state.ui).peer.askingAbout }}</b><br />{{ view.referencedCaseCard.challenge }}<span v-if="view.referencedCaseCard.action"> · {{ view.referencedCaseCard.action }}</span></div>
         <div ref="log" class="log chat-body" role="log" aria-live="polite" aria-label="Messages">
-          <template v-for="(m, i) in messages" :key="m.seq">
-            <div v-if="m.role === 'user'" class="bubble-u fade-up" :data-stage="m.stage !== messages[i - 1]?.stage ? m.stage : undefined">{{ m.text }}</div>
-            <div v-else class="row-a fade-up" :data-stage="m.stage !== messages[i - 1]?.stage ? m.stage : undefined">
+          <template v-for="(m, i) in mainMsgs" :key="m.seq">
+            <div v-if="m.role === 'user'" class="bubble-u fade-up" :data-stage="m.stage !== mainMsgs[i - 1]?.stage ? m.stage : undefined">{{ m.text }}</div>
+            <div v-else class="row-a fade-up" :data-stage="m.stage !== mainMsgs[i - 1]?.stage ? m.stage : undefined">
               <span class="av brand-gradient"><Bot :size="16" aria-hidden="true" /><span class="sr">{{ s.assistant }}</span></span>
               <div style="min-width:0;flex:1">
                 <div class="md" v-html="renderMarkdown(m.text)" />
@@ -248,11 +280,12 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
 
           <div v-if="conv.workflow === 'guidance_pending'" class="decision pop"><button class="btn primary" :disabled="busy" @click="confirm">{{ s.continue }}</button></div>
 
-          <div v-if="conv.workflow === 'consent_pending'" class="decision pop" role="group" :aria-label="s.consentTitle" data-stage="consent">
-            <p class="banner info" style="margin:0">{{ s.noEvidence }}</p>
+          <SharingStep v-if="conv.workflow === 'consent_pending' && view?.confirmation" :confirmation="view.confirmation" :busy="busy" @confirm="finalize" />
+          <!-- Fallback for a backend that predates V2 (no confirmation hash): the original store-or-not question, so the flow never dead-ends. -->
+          <div v-else-if="conv.workflow === 'consent_pending'" class="decision pop" role="group" :aria-label="s.consentTitle" data-stage="consent">
             <h2>{{ s.consentTitle }}</h2>
             <p style="margin:0;font-size:.875rem;color:var(--muted)">{{ s.consentText }}</p>
-            <blockquote class="quote" :lang="lang">{{ conv.summaryOriginal ?? conv.summaryEn }}</blockquote>
+            <blockquote class="quote" :lang="conv.language">{{ conv.summaryOriginal ?? conv.summaryEn }}</blockquote>
             <div class="row">
               <button class="btn primary" :disabled="busy" @click="decide(true)"><ShieldCheck :size="16" aria-hidden="true" />{{ s.storeYes }}</button>
               <button class="btn" :disabled="busy" @click="decide(false)">{{ s.storeNo }}</button>
@@ -261,12 +294,25 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
 
           <div v-if="closed" class="decision closed-note" role="status">
             <span class="done-ic"><Heart v-if="outcome === 'saved'" :size="18" aria-hidden="true" /><Check v-else :size="18" aria-hidden="true" /></span>
-            <p style="margin:0">{{ outcome === "saved" ? s.doneStored : s.doneDeclined }}</p>
-            <p v-if="outcome === 'saved'" class="hint" style="margin:0">{{ messages.length ? s.readOnly : s.transcriptGone }}</p>
+            <p style="margin:0">{{ outcome === "saved" ? L(state.ui).ins.thanksDone : stopped ? L(state.ui).ins.stoppedDone : s.doneDeclined }}</p>
+            <p v-if="outcome === 'saved' || stopped" class="hint" style="margin:0">{{ s.readOnly }}</p>
             <div><button type="button" class="btn primary" @click="newConversation"><Plus :size="16" aria-hidden="true" />{{ s.newConversation }}</button></div>
           </div>
+          <InsightsPanel v-if="closed && outcome === 'saved' && view" :view="view" @changed="reload" @ask="askAbout" />
+          <template v-for="m in followMsgs" :key="m.seq">
+            <div v-if="m.role === 'user'" class="bubble-u fade-up">{{ m.text }}</div>
+            <div v-else class="row-a fade-up"><span class="av brand-gradient"><Bot :size="16" aria-hidden="true" /><span class="sr">{{ s.assistant }}</span></span><div style="min-width:0;flex:1"><div class="md" v-html="renderMarkdown(m.text)" /></div></div>
+          </template>
         </div>
 
+        <div v-if="followupOpen" class="dock">
+          <p class="hint" style="margin:0 0 .4rem">{{ L(state.ui).ins.fbAsk }}</p>
+          <form class="composer" @submit.prevent="sendFollowup">
+            <label for="fmsg" class="sr">{{ s.messageLabel }}</label>
+            <textarea id="fmsg" v-model="followDraft" rows="1" maxlength="1500" :placeholder="s.placeholder" :disabled="busy" @keydown.enter.exact="onFollowEnter" />
+            <button class="send" type="submit" :disabled="busy || !followDraft.trim()" :aria-label="s.send"><SendHorizontal :size="18" aria-hidden="true" /></button>
+          </form>
+        </div>
         <div v-if="conv.workflow === 'intake'" class="dock">
           <div v-if="showChips" class="fade-up"><p style="margin:0 0 .4rem;font-size:.8rem;color:var(--muted)">{{ s.chipsTitle }}</p>
             <div class="chips"><button v-for="c in s.chips" :key="c" class="chip" type="button" @click="pick(c)">{{ c }}</button></div></div>
@@ -281,7 +327,7 @@ function jump(st: Stage) { log.value?.querySelector<HTMLElement>(`[data-stage="$
     </section>
 
     <aside v-if="conv" class="chat-progress only-wide" :aria-label="s.progressTitle">
-      <ProgressPanel variant="panel" :stage="stage" :outcome="outcome" :reached="reached" @jump="jump" />
+      <ProgressPanel variant="panel" :stage="stage" :outcome="outcome" :reached="reached" :feedback="feedback" @jump="jump" />
     </aside>
   </div>
 </template>

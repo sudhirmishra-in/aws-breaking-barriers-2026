@@ -22,7 +22,8 @@ SOURCES = [
 ]
 
 # Pilot countries (CON-4): Colombia / Peru / Mexico / Honduras (+ Vietnam).
-PILOT = {"colombia", "peru", "mexico", "honduras", "vietnam"}
+PILOT = {"colombia", "peru", "mexico", "honduras", "vietnam", "ivory coast"}  # Natural Earth calls Cote d'Ivoire "Ivory Coast" (the demo's cocoa country)
+DISPLAY = {"ivory coast": "Côte d'Ivoire"}
 
 OUT = Path(__file__).resolve().parent.parent / "external_data" / "data" / "countries.geojson"
 UA = {"User-Agent": "ftusa-gazetteer-build/1.0 (hackathon)"}
@@ -70,7 +71,7 @@ def main() -> int:
             feats.append({
                 "type": "Feature",
                 "properties": {
-                    "name": display,
+                    "name": DISPLAY.get(match_key, display),
                     "iso_n3": props.get("ISO_N3"),
                 },
                 "geometry": feat["geometry"],

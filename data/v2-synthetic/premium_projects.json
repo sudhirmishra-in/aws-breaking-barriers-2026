@@ -1,0 +1,149 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Fictional organizations, people, conversations and outcomes. Not FTUSA data.",
+  "projects": [
+    {
+      "projectId": "PRJ-V2-01",
+      "organizationId": "ORG-AND-COL",
+      "year": 2024,
+      "title": "Rainwater catchment tanks",
+      "tags": [
+        "water"
+      ],
+      "amountUsd": 8000,
+      "status": "completed",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-02",
+      "organizationId": "ORG-AND-COL",
+      "year": 2025,
+      "title": "Shade-tree nursery",
+      "tags": [
+        "climate_weather"
+      ],
+      "amountUsd": 5200,
+      "status": "completed",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-03",
+      "organizationId": "ORG-AND-COL",
+      "year": 2023,
+      "title": "Soil testing lab access",
+      "tags": [
+        "soil_land"
+      ],
+      "amountUsd": 3000,
+      "status": "in_progress",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-04",
+      "organizationId": "ORG-AND-COL",
+      "year": 2024,
+      "title": "Community scholarship",
+      "tags": [
+        "education"
+      ],
+      "amountUsd": 4000,
+      "status": "completed",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-05",
+      "organizationId": "ORG-COP-HON",
+      "year": 2025,
+      "title": "Solar drying beds",
+      "tags": [
+        "market_price"
+      ],
+      "amountUsd": 7000,
+      "status": "completed",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-06",
+      "organizationId": "ORG-COP-HON",
+      "year": 2023,
+      "title": "Pruning training",
+      "tags": [
+        "climate_weather"
+      ],
+      "amountUsd": 2500,
+      "status": "in_progress",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-07",
+      "organizationId": "ORG-COP-HON",
+      "year": 2024,
+      "title": "Harvest worker housing",
+      "tags": [
+        "labor_migration"
+      ],
+      "amountUsd": 9000,
+      "status": "planned",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-08",
+      "organizationId": "ORG-COP-HON",
+      "year": 2025,
+      "title": "Credit guarantee fund",
+      "tags": [
+        "financial_capital"
+      ],
+      "amountUsd": 6000,
+      "status": "completed",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-09",
+      "organizationId": "ORG-NAW-CIV",
+      "year": 2023,
+      "title": "Village water point",
+      "tags": [
+        "water"
+      ],
+      "amountUsd": 7500,
+      "status": "completed",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-10",
+      "organizationId": "ORG-NAW-CIV",
+      "year": 2024,
+      "title": "Cocoa seedling distribution",
+      "tags": [
+        "soil_land"
+      ],
+      "amountUsd": 4800,
+      "status": "in_progress",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-11",
+      "organizationId": "ORG-NAW-CIV",
+      "year": 2025,
+      "title": "Harvest labor exchange",
+      "tags": [
+        "labor_migration"
+      ],
+      "amountUsd": 3500,
+      "status": "in_progress",
+      "synthetic": true
+    },
+    {
+      "projectId": "PRJ-V2-12",
+      "organizationId": "ORG-NAW-CIV",
+      "year": 2023,
+      "title": "Health post supplies",
+      "tags": [
+        "health"
+      ],
+      "amountUsd": 3000,
+      "status": "completed",
+      "synthetic": true
+    }
+  ]
+}

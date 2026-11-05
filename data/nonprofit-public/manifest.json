@@ -1,0 +1,164 @@
+{
+  "attribution": "Supplied public nonprofit data files; the user states they are public and usable for the demo. Not FTUSA-curated.",
+  "demoAccounts": [
+    "691F055F8DA798187584F41E6871D1AF",
+    "A7F700B04BCE55512CB026A71121426C",
+    "FA9ADCCE1553D4FADD64C87CA6219F97",
+    "CED2DEE8ED99922FA5C6244DEF177AF3"
+  ],
+  "files": {
+    "accounts": {
+      "bytes": 15699,
+      "columns": [
+        "account_sk",
+        "account_category_name",
+        "product_category_name",
+        "account_type_name",
+        "certification_scope_name",
+        "certification_status_name",
+        "country_name",
+        "raw_supply_chain_role_txt",
+        "structure_txt"
+      ],
+      "file": "Producer Accounts.csv",
+      "rows": 146,
+      "sha256": "d8dd6c6f5e58fbf04b727d3148eb11b10367e0affaee8f310f5b76a71547e525"
+    },
+    "headers": {
+      "bytes": 3296801,
+      "columns": [
+        "survey_response_sk",
+        "survey_sk",
+        "account_sk",
+        "survey_id",
+        "response_id",
+        "response_type_name",
+        "completion_pct",
+        "duration_minutes_nbr",
+        "distribution_channel_txt",
+        "raw_user_language_code",
+        "start_date",
+        "end_date",
+        "recorded_date",
+        "is_active_ind",
+        "is_deleted_ind"
+      ],
+      "file": "Survey Response Header.csv",
+      "rows": 16857,
+      "sha256": "e067cc94e7b439c53c1359a4785cf064998ddcc0aa3f0062c0106af9ea2508e3"
+    },
+    "multi": {
+      "bytes": 12692041,
+      "columns": [
+        "fssrrm_sk",
+        "survey_response_sk",
+        "account_sk",
+        "survey_sk",
+        "survey_id",
+        "response_id",
+        "extended_question_id",
+        "question_label_txt",
+        "question_choice_nbr",
+        "question_choice_txt"
+      ],
+      "file": "Survey Response Questions Multiple Choice.csv",
+      "rows": 55427,
+      "sha256": "7d5a48d4299c09414689f5088af81073344c470345a6476d9881359b70d1a959"
+    },
+    "projects": {
+      "bytes": 143580,
+      "columns": [
+        "account_sk",
+        "project_name",
+        "project_description_txt",
+        "country_name",
+        "country_region_name",
+        "category_taxonomy_term_txt",
+        "sub_category_taxonomy_term_txt",
+        "project_start_date",
+        "project_end_date",
+        "project_status_name"
+      ],
+      "file": "Premium Projects Environmental.csv",
+      "rows": 349,
+      "sha256": "b83a6f5c0d9cd703aa8a2612dac0783fca0d47d315326333f6099de9c70a41a7"
+    },
+    "single": {
+      "bytes": 9437082,
+      "columns": [
+        "survey_response_sk",
+        "account_sk",
+        "survey_sk",
+        "survey_id",
+        "response_id",
+        "response_date",
+        "country_name",
+        "survey_type_code",
+        "is_ft_certified_code",
+        "farm_area_ha_nbr",
+        "farm_area_measurement_unit_name",
+        "harvest_volume_measurement_unit_name",
+        "currency_code",
+        "has_hired_labor_code",
+        "worker_type_name",
+        "harvest_changed_code",
+        "has_integrated_pest_management_practices_name",
+        "red_pesticide_code",
+        "has_received_fertilizer_training_code",
+        "coverted_natural_land_to_cropland_code",
+        "hectare_natural_land_converted_nbr",
+        "has_forest_protection_practices_code",
+        "has_water_conservation_practices_code",
+        "has_water_contamination_prevention_practices_code",
+        "has_soil_conservation_practices_code",
+        "yield_sold_per_hectare_nbr",
+        "yield_produced_per_hectare_nbr",
+        "water_access_distance_name",
+        "water_access_sources_name",
+        "non_drinking_water_sources_name",
+        "non_drinking_water_condition_name",
+        "has_water_treatment_plant_code",
+        "drinking_water_treatment_method_name",
+        "running_water_code",
+        "boat_ownership_name",
+        "waste_management_name",
+        "handle_broken_fishing_gear_name",
+        "has_noticed_fishing_changes_code",
+        "fishing_changes_name",
+        "adaption_strategies_name",
+        "future_concerns_name",
+        "is_household_survey_ind"
+      ],
+      "file": "Survey Response Questions Single Choice.csv",
+      "rows": 33153,
+      "sha256": "dc664b182483ea6e3d0e14bfb320420a38441bf3afb46edf20934d929ed3f9b6"
+    },
+    "survey_defs": {
+      "bytes": 9438,
+      "columns": [
+        "survey_sk",
+        "survey_name",
+        "total_response_cnt",
+        "auditable_response_cnt",
+        "generated_response_cnt",
+        "deleted_response_cnt",
+        "survey_id",
+        "is_household_survey_ind",
+        "is_active_ind",
+        "is_deleted_ind"
+      ],
+      "file": "Household Survey Header.csv",
+      "rows": 83,
+      "sha256": "771c5aa798f4e756b6805a0796597594819dfbb882bd6b33e457427034a73859"
+    }
+  },
+  "ingestionVersion": "b3e2e7617b565641",
+  "pipelineVersion": "1.0.1",
+  "provenance": {
+    "consentToShare": "not_applicable_public_source",
+    "curationStatus": "not_curated",
+    "origin": "public_source_data",
+    "synthetic": false
+  },
+  "schemaVersion": "nonprofit-csv-2026-10-29"
+}
